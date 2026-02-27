@@ -6,14 +6,21 @@ export const theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: "#949F71",  
-    background: "#E9EDC9", // The main screen background
-    card: "#E9EDC9",       
+    background: "#E9EDC9", 
+    card: "#CCD5AE",       
     text: "#000000",     
-    border: "#CCD5AE",  // to be changed
+    border: "#949F71",  // to be changed
     text: "#000000",
-    tabIconDefault: "#CCD5AE",
+    tabIconDefault: "#FEFAE0",
     tabIconSelected: "#949F71"
   },
+  sizes: {
+    padding: 16, //tbd
+    textSize: 14, //tbd
+    h1Size: 24, //tbd
+    h2Size: 20, //tbd
+    h3Size: 18, //tbd
+  }
 };
 
 

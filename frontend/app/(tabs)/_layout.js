@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 
-import { HapticTab } from "../../components";
+import { CustomHeader, HapticTab } from "../../components";
 import { IconSymbol } from "../../components/ui";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -10,15 +10,15 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: theme.tint,
-        headerShown: true,
+        tabBarActiveTintColor: theme.colors.tabIconSelected,
         tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
         name="inventory"
         options={{
-          // title: 'Inventory',
+          title: 'Inventory',
+          header: () => <CustomHeader page="inventory" />,
           tabBarIcon: ({ focused }) => (
             <FontAwesome6
               size={20}
@@ -39,6 +39,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
+          header: () => <CustomHeader page="home" />,
           title: "Home",
           tabBarIcon: ({ focused }) => (
             <IconSymbol
@@ -60,6 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="recommendations"
         options={{
+          header: () => <CustomHeader page="recommendations" />,
           title: "Recommendations",
           tabBarIcon: ({ focused }) => (
             <Ionicons name="sparkles-sharp" size={24} color={
