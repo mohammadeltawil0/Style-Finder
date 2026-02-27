@@ -38,7 +38,8 @@ export const CustomHeader = ({ page }) => {
                 color: theme.colors.text,
               }}
             >
-              Home
+              Home 
+              {/* TO DO: get the user's name from UserContext here */}
             </Text>
           </>
         )}
