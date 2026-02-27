@@ -6,13 +6,12 @@ export const theme = {
   colors: {
     ...DefaultTheme.colors,
     primary: "#949F71",  
-    background: "#E9EDC9", 
-    card: "#CCD5AE",       
-    text: "#000000",     
-    border: "#949F71",  // to be changed
+    background: "#EDEDE9", 
+    card: "#D5BDAF",       
+    border: "#F5EBE0",  // to be changed
     text: "#000000",
-    tabIconDefault: "#FEFAE0",
-    tabIconSelected: "#949F71"
+    tabIconDefault: "#EDEDE9",
+    tabIconSelected: "#B4907B"  
   },
   sizes: {
     padding: 16, //tbd

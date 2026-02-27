@@ -14,6 +14,7 @@
     "scheme": "frontend",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "edgeToEdgeEnabled": true,
     "ios": {
       "supportsTablet": true
     },

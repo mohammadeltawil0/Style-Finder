@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -10,7 +11,7 @@ export const CustomHeader = ({ page }) => {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
+    <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card, height: 50 }}>
       <View
         style={{
           height: 50,
@@ -67,7 +68,7 @@ export const CustomHeader = ({ page }) => {
             </Text>
           )}
         </View>
-        <Ionicons name="settings-sharp" size={24} color="black" />
+        <Ionicons name="settings-sharp" size={24} color={theme.colors.text} />
       </View>
     </SafeAreaView>
   );

@@ -6,7 +6,7 @@ export default function HomeScreen() {
   
   return (
     <ThemedView
-      gradient={true}
+      gradient={false}
       style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
     >
       <ThemedText>Home Screen</ThemedText>
