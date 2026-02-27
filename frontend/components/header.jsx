@@ -1,4 +1,5 @@
 import { Text, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Logo } from "./ui/logo";
@@ -9,28 +10,41 @@ export const CustomHeader = ({ page }) => {
   const theme = useTheme();
 
   return (
-    <View
-      style={{
-        height: 50,
-        backgroundColor: theme.colors.card,
-        alignItems: "center",
-        flexDirection: "row",
-        justifyContent: "space-between",
-        paddingHorizontal: 15,
-      }}
-    >
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#000000' }}>
       <View
-        className="logo-title"
         style={{
-          flexDirection: "row",
-          gap: 10,
+          height: 50,
+          backgroundColor: theme.colors.card,
           alignItems: "center",
+          flexDirection: "row",
+          justifyContent: "space-between",
+          paddingHorizontal: 15,
         }}
       >
-        {page === "home" && (
-          <>
-            <Logo />
-            {/* unless we want logo to persist for all tabs */}
+        <View
+          className="logo-title"
+          style={{
+            flexDirection: "row",
+            gap: 10,
+            alignItems: "center",
+          }}
+        >
+          {page === "home" && (
+            <>
+              <Logo />
+              {/* unless we want logo to persist for all tabs */}
+              <Text
+                style={{
+                  fontSize: theme.sizes.h2Size,
+                  fontWeight: "bold",
+                  color: theme.colors.text,
+                }}
+              >
+                Home
+              </Text>
+            </>
+          )}
+          {page === "inventory" && (
             <Text
               style={{
                 fontSize: theme.sizes.h2Size,
@@ -38,34 +52,23 @@ export const CustomHeader = ({ page }) => {
                 color: theme.colors.text,
               }}
             >
-              Home
+              Inventory
             </Text>
-          </>
-        )}
-        {page === "inventory" && (
-          <Text
-            style={{
-              fontSize: theme.sizes.h2Size,
-              fontWeight: "bold",
-              color: theme.colors.text,
-            }}
-          >
-            Inventory
-          </Text>
-        )}
-        {page === "recommendations" && (
-          <Text
-            style={{
-              fontSize: theme.sizes.h2Size,
-              fontWeight: "bold",
-              color: theme.colors.text,
-            }}
-          >
-            Recommendations
-          </Text>
-        )}
+          )}
+          {page === "recommendations" && (
+            <Text
+              style={{
+                fontSize: theme.sizes.h2Size,
+                fontWeight: "bold",
+                color: theme.colors.text,
+              }}
+            >
+              Recommendations
+            </Text>
+          )}
+        </View>
+        <Ionicons name="settings-sharp" size={24} color="black" />
       </View>
-      <Ionicons name="settings-sharp" size={24} color="black" />
-    </View>
+    </SafeAreaView>
   );
 };
