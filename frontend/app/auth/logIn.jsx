@@ -1,17 +1,22 @@
 import { TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, GradientBackground } from "../../components";
-import { useRouter } from "expo-router";
+import { useState } from "react";
 
-const router = useRouter();
+
+//TO DO: connect with backend, add basic validation, and add router to navigate to (tabs)
+const [email, setEmail] = useState("");
+const [password, setPassword] = useState("");
+
+//TO DO: implment handleLogin function
 
 export default function Login(){
     const theme = useTheme();
     return(
         <ThemedView style={[StyleSheet.card, { backgroundColor: theme.colors.background}]}>
             <ThemedText style={[styles.title, {fontFamily: theme.fonts.bold, fontSize: theme.sizes.h1}]}> WELCOME BACK </ThemedText>
-            <TextInput placeholder="Email" placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontfamily: theme.fonts.regular}]}/>
-            <TextInput placeholder="Password" secureTextEntry placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontFamily: theme.fonts.regular}]}/>
+            <TextInput placeholder="Email" value={email} onChangeText={setEmail} placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontfamily: theme.fonts.regular}]}/>
+            <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontFamily: theme.fonts.regular}]}/>
             <View style={styles.row}>
                 <ThemedText style={{fontFamily: theme.fonts.light }}>Forgot Password?</ThemedText>
                 <View style={styles.rememberContainer}>
@@ -20,7 +25,7 @@ export default function Login(){
                 </View>
             </View>
 
-            <TouchableOpacity style={[styles.button, {backgroundColor: theme.colors.background}]} onPress={() => router.replace("/(tabs)")}> 
+            <TouchableOpacity style={[styles.button, {backgroundColor: theme.colors.background}]}> 
                 <ThemedText style={{fontFamily: theme.fonts.semiBold}}>Sign In</ThemedText>
             </TouchableOpacity>
 
