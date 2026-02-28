@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
+import { useRouter } from "expo-router";
+
 
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
@@ -40,8 +42,9 @@ function LiveTyping({ text }) {
 }
 
 export default function Register() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
-   const [username, setUserName] = useState("");
+  const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [firstName, setName] = useState(""); 
@@ -147,26 +150,24 @@ export default function Register() {
         />
 
         <TouchableOpacity
-            onPress={handleSignUp}
-            activeOpacity={0.7}
-            style={{
-                backgroundColor: "#ffffff",
-                borderRadius: 12,
-                borderWidth: 2,
-                borderColor: "#ccc",
-                alignItems: "center",
-                marginTop: 10,
-                paddingVertical: 10, 
-            }}
-            >
-            <ThemedText style={{ fontSize: 18, fontWeight: "bold" }}>
-                Sign Up
-            </ThemedText>
+          onPress={handleSignUp}
+          activeOpacity={0.7}
+          style={{
+              backgroundColor: "#ffffff",
+              borderRadius: 12,
+              borderWidth: 2,
+              borderColor: "#ccc",
+              alignItems: "center",
+              marginTop: 10,
+              paddingVertical: 10, 
+          }}
+        >
+        <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}>
+          Sign Up
+        </ThemedText>
         </TouchableOpacity>
-
       </View>
     </KeyboardAvoidingView>
-
     </ThemedView>
   );
 }
