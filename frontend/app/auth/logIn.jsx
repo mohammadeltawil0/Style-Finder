@@ -1,66 +1,132 @@
-import { TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import React, { useState } from "react";
+import {View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
+import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
-import { ThemedText, ThemedView, GradientBackground } from "../../components";
-import { useState } from "react";
 
+export default function Login() {
+  const { colors, fonts } = useTheme();
 
-//TO DO: connect with backend, add basic validation, and add router to navigate to (tabs)
-const [email, setEmail] = useState("");
-const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
-//TO DO: implment handleLogin function
+  const handleLogin = () => {
+    if (!email || !password) {
+      alert("Please enter email and password");
+      return;
+    }
 
-export default function Login(){
-    const theme = useTheme();
-    return(
-        <ThemedView style={[StyleSheet.card, { backgroundColor: theme.colors.background}]}>
-            <ThemedText style={[styles.title, {fontFamily: theme.fonts.bold, fontSize: theme.sizes.h1}]}> WELCOME BACK </ThemedText>
-            <TextInput placeholder="Email" value={email} onChangeText={setEmail} placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontfamily: theme.fonts.regular}]}/>
-            <TextInput placeholder="Password" secureTextEntry value={password} onChangeText={setPassword} placeholderTextColor="#666" style={[styles.input, {backgroundColor: theme.colors.background, color: theme.colors.text, fontFamily: theme.fonts.regular}]}/>
-            <View style={styles.row}>
-                <ThemedText style={{fontFamily: theme.fonts.light }}>Forgot Password?</ThemedText>
-                <View style={styles.rememberContainer}>
-                    <View style={[styles.checkbox, {backgroundColor: theme.colors.background}]}/>
-                    <ThemedText style={{marginLeft: 6, fontFamily: theme.fonts.light }}> Remember Me?</ThemedText>
-                </View>
-            </View>
+    console.log("Logging in:", email, password);
+    // TODO: connect backend + navigate
+  };
 
-            <TouchableOpacity style={[styles.button, {backgroundColor: theme.colors.background}]}> 
-                <ThemedText style={{fontFamily: theme.fonts.semiBold}}>Sign In</ThemedText>
-            </TouchableOpacity>
+  return (
+    <ThemedView gradient style={{ flex: 1 }}>
+      <KeyboardAvoidingView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 16,
+        }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.lightBrown }
+          ]}
+        >
+          <ThemedText
+            style={{
+              fontSize: 28,
+              marginBottom: 20,
+              fontFamily: fonts.bold,
+            }}
+          >
+            Welcome Back
+          </ThemedText>
 
-            <ThemedText style={[styles.singupText, {fontfamily: theme.fonts.light}]}>Don't have an account?{" "}
-                <ThemedText style={{fontFamily: theme.fonts.semiBold, textDecorationLine: "underline"}}>SIGN UP</ThemedText>
+          <TextInput
+            placeholder="Email"
+            value={email}
+            onChangeText={setEmail}
+            style={styles.input}
+          />
+
+          <TextInput
+            placeholder="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+          />
+
+          <TouchableOpacity
+            onPress={handleLogin}
+            activeOpacity={0.7}
+            style={[
+              styles.button,
+              { backgroundColor: colors.primary }
+            ]}
+          >
+            <ThemedText
+              style={{
+                fontSize: 18,
+                fontWeight: "bold",
+                color: "#fff",
+              }}
+            >
+              Sign In
             </ThemedText>
+          </TouchableOpacity>
 
-        </ThemedView>
-    );
+          <ThemedText
+            style={{
+              textAlign: "center",
+              marginTop: 20,
+              fontFamily: fonts.light,
+            }}
+          >
+            Don’t have an account?{" "}
+            <ThemedText
+              style={{
+                fontFamily: fonts.semiBold,
+                textDecorationLine: "underline",
+              }}
+            >
+              SIGN UP
+            </ThemedText>
+          </ThemedText>
+        </View>
+      </KeyboardAvoidingView>
+    </ThemedView>
+  );
 }
+
 const styles = StyleSheet.create({
-    card: {
-        width: "85%",
-        alignSelf: "center",
-        marginTop: "40%",
-        padding: 24,
-        borderRadius: 20,
-        shadowColor: "#000",
-        shadowOpacity: 0.15,
-        shandowRadius: 10,
-        elevation: 8,
-    },
-    title: {
-        textAlign: "center",
-        marginBottom: 20,
-    },
-    input: {
-        padding: 14,
-        borderRadius: 10,
-        marginBottom: 16,
-    },
-    button: {
-        padding: 16,
-        borderRadius: 30,
-        alignItems: "center",
-        marginTop: 10,
-    },
+  card: {
+    width: "100%",
+    maxWidth: 400,
+    padding: 25,
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8,
+  },
+  input: {
+    backgroundColor: "#ffffff",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+  },
+  button: {
+    borderRadius: 12,
+    alignItems: "center",
+    marginTop: 10,
+    paddingVertical: 12,
+  },
 });
