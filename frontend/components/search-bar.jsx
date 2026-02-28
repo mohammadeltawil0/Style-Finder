@@ -12,6 +12,8 @@ export const SearchBar = ({ value, onChangeText, onSubmit }) => {
             flexDirection: 'row',
             alignItems: 'center',
             backgroundColor: theme.colors.lightBrown,
+            // borderWidth: 1,
+            // borderColor: theme.colors.border,
             borderRadius: 10,
             marginHorizontal: 30,
             marginTop: 30
