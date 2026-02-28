@@ -32,7 +32,7 @@ export const Items = ({ category }) => {
                     // borderWidth: 1,
                     backgroundColor: theme.colors.lightBrown,
                     borderRadius: 10, marginBottom: 20, width: "48%" }}>
-                    <View className="item-image" style={{ height: 150, marginBottom: 10 }} />
+                    <View className="item-image" style={{ height: 175, marginBottom: 10 }} />
                     {/* TO DO: add logic and possible placeholder for when user has no item for image */}
                     {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
 
