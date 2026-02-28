@@ -5,7 +5,7 @@ import { ThemedText } from "./themed-text";
 export const Items = ({ category }) => {
     const theme = useTheme();
 
-    // TO DO: get all the items based on category; for now just have 4 dummy items with no images
+    // TO DO: get all the items based on category; for now just have dummy items with no images
     const items = [
         { id: '1', name: 'Item 1' },
         { id: '2', name: 'Item 2' },

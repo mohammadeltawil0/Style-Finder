@@ -1,13 +1,46 @@
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 import { InventoryToggle, Items, SearchBar, ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function InventoryScreen() {
   const [isItems, setIsItems] = useState(true);
   const [searchText, setSearchText] = useState(""); // state to hold the input when user presses enter
   const [category, setCategory] = useState("all"); // state to hold the selected category
+  const params = useLocalSearchParams();
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadTabState = async () => {
+        try {
+          // navigating in home screen logic
+          if (params.tab === "outfits") {
+            setIsItems(false);
+            await AsyncStorage.setItem('inventoryTab', 'outfits');
+            params.tab = null; // clear the param so that it doesn't override future state changes
+          } else if (params.tab === "items") {
+            setIsItems(true);
+            await AsyncStorage.setItem('inventoryTab', 'items');
+            params.tab = null; // clear the param so that it doesn't override future state changes
+          } else {
+            const savedTab = await AsyncStorage.getItem('inventoryTab');
+            setIsItems(savedTab !== 'outfits');
+          }
+        } catch (e) {
+          console.error('Error loading tab state:', e);
+        }
+      };
+      loadTabState();
+    }, [params.tab])
+  );
+
+  const handleToggleItems = async (value) => {
+    setIsItems(value);
+    await AsyncStorage.setItem('inventoryTab', value ? 'items' : 'outfits');
+  };
 
   const theme = useTheme();
   const handleSearchSubmit = () => {
@@ -23,7 +56,7 @@ export default function InventoryScreen() {
       gradient={false}
       style={{ flex: 1, alignItems: "center" }}
     >
-      <InventoryToggle isItems={isItems} toggleItems={setIsItems} onClick={() => setIsItems(true)} />
+      <InventoryToggle isItems={isItems} toggleItems={handleToggleItems} />
       <SearchBar
         value={searchText}
         onChangeText={(text) => setSearchText(text)}
@@ -31,7 +64,7 @@ export default function InventoryScreen() {
       />
       {isItems && (
         <>
-          <View className="item-categories" style={{ flexDirection: "row", gap: 33, justifyContent: "space-between", padding: 15 }}>
+          <View className="item-categories" style={{ flexDirection: "row", gap: 38, justifyContent: "space-between", padding: 15 }}>
             <Pressable className="tops-category" style={{ backgroundColor: theme.colors.lightBrown, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }} onPress={() => setCategory("tops")}>
               <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Tops</ThemedText>
             </Pressable>

@@ -40,7 +40,7 @@ export const theme = {
   fonts: Fonts, 
   sizes: {
     text: 16, //tbd
-    h1: 24, //tbd
+    h1: 35, //tbd
     h2: 20, //tbd
     h3: 18, //tbd
   }
