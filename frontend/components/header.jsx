@@ -11,10 +11,9 @@ export const CustomHeader = ({ page }) => {
   const theme = useTheme();
 
   return (
-    <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card, height: 50 }}>
+    <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card}}>
       <View
         style={{
-          height: 50,
           backgroundColor: theme.colors.card,
           alignItems: "center",
           flexDirection: "row",
@@ -36,7 +35,7 @@ export const CustomHeader = ({ page }) => {
               {/* unless we want logo to persist for all tabs */}
               <Text
                 style={{
-                  fontSize: theme.sizes.h2Size,
+                  fontSize: theme.sizes.h2,
                   fontWeight: "bold",
                   color: theme.colors.text,
                 }}
@@ -48,18 +47,18 @@ export const CustomHeader = ({ page }) => {
           {page === "inventory" && (
             <Text
               style={{
-                fontSize: theme.sizes.h2Size,
+                fontSize: theme.sizes.h2,
                 fontWeight: "bold",
                 color: theme.colors.text,
               }}
             >
-              Inventory
+              INVENTORY
             </Text>
           )}
           {page === "recommendations" && (
             <Text
               style={{
-                fontSize: theme.sizes.h2Size,
+                fontSize: theme.sizes.h2,
                 fontWeight: "bold",
                 color: theme.colors.text,
               }}

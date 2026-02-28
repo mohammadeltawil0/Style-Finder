@@ -10,11 +10,13 @@ export function ThemedText({
 }) {
 
   const theme = useTheme();
-
+  const fontFamily = theme.fonts ? theme.fonts.sans : 'System';
+  
   return (
     <Text
       style={[
-        { color: theme.text },
+        { fontFamily, color: theme.colors.text },
+        styles[type],
         style
       ]}
       {...rest}
