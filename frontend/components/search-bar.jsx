@@ -2,7 +2,7 @@ import { View, StyleSheet, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from "@react-navigation/native";
 
-export const SearchBar = ({ value, onChangeText }) => {
+export const SearchBar = ({ value, onChangeText, onSubmit }) => {
     const theme = useTheme();
 
     //TO DO: implement search backend/api here!
@@ -20,6 +20,7 @@ export const SearchBar = ({ value, onChangeText }) => {
             <TextInput
                 style={{
                     color: '#424242',
+                    fontFamily: theme.fonts.regular,
                     flex: 1,
                     height: 50,
                     paddingTop: 10,
@@ -31,6 +32,7 @@ export const SearchBar = ({ value, onChangeText }) => {
                 placeholder="Search items inventory..."
                 value={value}
                 onChangeText={onChangeText}
+                onSubmitEditing={onSubmit}
                 underlineColorAndroid="transparent"
             />
         </View >

@@ -38,11 +38,11 @@ export const CustomHeader = ({ page }) => {
               <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
-                  fontFamily: theme.fonts.regular,
+                  fontFamily: theme.fonts.bold,
                   color: theme.colors.text,
                 }}
               >
-                Home
+                HOME
               </ThemedText>
             </>
           )}
@@ -61,11 +61,11 @@ export const CustomHeader = ({ page }) => {
             <ThemedText
               style={{
                 fontSize: theme.sizes.h2,
-                fontFamily: theme.fonts.regular,
+                fontFamily: theme.fonts.bold,
                 color: theme.colors.text,
               }}
             >
-              Recommendations
+              RECOMMENDATIONS
             </ThemedText>
           )}
         </View>

@@ -10,6 +10,11 @@ export default function InventoryScreen() {
   const [category, setCategory] = useState("all"); // state to hold the selected category
 
   const theme = useTheme();
+  const handleSearchSubmit = () => {
+    console.log("Search submitted with text:", searchText);
+    setSearchText(""); 
+    // TO DO: implement search functionality here; for now just log the search text when user presses enter
+  }
 
   // TO DO: implement tops/bottoms/dresses category filtering logic here (probably just set another state variable for category and filter items based on that when rendering)
 
@@ -21,8 +26,8 @@ export default function InventoryScreen() {
       <InventoryToggle isInventory={isInventory} toggleInventory={setIsInventory} onClick={() => setIsInventory(true)} />
       <SearchBar
         value={searchText}
-        onChangeText={(text) => { setSearchText(text); console.log("Searching for:", text); }}
-      // TO DO: implement setSearchText("") to clear after search is submitted
+        onChangeText={(text) => setSearchText(text)}
+        onSubmit={handleSearchSubmit}
       />
       <View className="item-categories" style={{ flexDirection: "row", gap: 33, justifyContent: "space-between", padding: 15 }}>
         <Pressable className="tops-category" style={{ backgroundColor: theme.colors.lightBrown, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }} onPress={() => setCategory("tops")}>

@@ -31,7 +31,7 @@ export const theme = {
     primary: "#949F71",  
     background: "#EDEDE9", 
     card: "#D5BDAF",       
-    border: "#F5EBE0",  // to be changed
+    border: "#B4907B",  // to be changed
     lightBrown: "#E3D5CA",
     text: "#000000",
     tabIconDefault: "#EDEDE9",

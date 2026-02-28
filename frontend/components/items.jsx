@@ -27,12 +27,16 @@ export const Items = ({ category }) => {
                 gap: 15 
             }}
             renderItem={({ item }) => (
-                <View className="item" style={{ backgroundColor: theme.colors.lightBrown, padding: 20, borderRadius: 10, marginBottom: 20, width: "48%" }}>
+                <View className="item" style={{ 
+                    borderColor: theme.colors.border, 
+                    // borderWidth: 1,
+                    backgroundColor: theme.colors.lightBrown,
+                    borderRadius: 10, marginBottom: 20, width: "48%" }}>
                     <View className="item-image" style={{ height: 150, marginBottom: 10 }} />
                     {/* TO DO: add logic and possible placeholder for when user has no item for image */}
                     {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
 
-                    <View className="item-footer" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <View className="item-footer" style={{ backgroundColor: theme.colors.card, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderTopColor: theme.colors.border, flexDirection: "row", justifyContent: "space-between", padding: 10, alignItems: "center" }}>
                         <ThemedText>
                             {item.name}
                         </ThemedText>
