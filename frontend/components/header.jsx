@@ -4,6 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { Logo } from "./ui/logo";
+import { ThemedText } from "./themed-text";
+
 //TO DO: Add a settings page and link the settings icon to it
 //TO DO: Add a back button to header based on navigation state
 
@@ -18,7 +20,7 @@ export const CustomHeader = ({ page }) => {
           alignItems: "center",
           flexDirection: "row",
           justifyContent: "space-between",
-          paddingHorizontal: 15,
+          paddingHorizontal: 30,
         }}
       >
         <View
@@ -33,38 +35,38 @@ export const CustomHeader = ({ page }) => {
             <>
               <Logo />
               {/* unless we want logo to persist for all tabs */}
-              <Text
+              <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
-                  fontWeight: "bold",
+                  fontFamily: theme.fonts.regular,
                   color: theme.colors.text,
                 }}
               >
                 Home
-              </Text>
+              </ThemedText>
             </>
           )}
           {page === "inventory" && (
-            <Text
+            <ThemedText  
               style={{
                 fontSize: theme.sizes.h2,
-                fontWeight: "bold",
+                fontFamily: theme.fonts.bold,
                 color: theme.colors.text,
               }}
             >
               INVENTORY
-            </Text>
+            </ThemedText>
           )}
           {page === "recommendations" && (
-            <Text
+            <ThemedText
               style={{
                 fontSize: theme.sizes.h2,
-                fontWeight: "bold",
+                fontFamily: theme.fonts.regular,
                 color: theme.colors.text,
               }}
             >
               Recommendations
-            </Text>
+            </ThemedText>
           )}
         </View>
         <Ionicons name="settings-sharp" size={24} color={theme.colors.text} />

@@ -1,51 +1,20 @@
-import { StyleSheet, Text } from "react-native";
-import { useTheme } from '@react-navigation/native';
+import { useTheme } from "@react-navigation/native";
+import { Text } from "react-native";
 
-export function ThemedText({
-  style,
-  lightColor,
-  darkColor,
-  type = "default",
-  ...rest
-}) {
-
+export const ThemedText = ({ style, type = 'regular', ...props }) => {
   const theme = useTheme();
-  const fontFamily = theme.fonts ? theme.fonts.sans : 'System';
   
+  // Use a fallback font in case the theme hasn't loaded properly yet
+  const fontFamily = theme.fonts ? theme.fonts[type] : 'System';
+
   return (
     <Text
-      style={[
-        { fontFamily, color: theme.colors.text },
-        styles[type],
-        style
-      ]}
-      {...rest}
+      style={[{ 
+        fontFamily: fontFamily, 
+        fontSize: theme.sizes?.text || 16, // Using your custom sizes
+        color: theme.colors.text 
+      }, style]}
+      {...props}
     />
   );
-}
-
-const styles = StyleSheet.create({
-  default: {
-    fontSize: 16,
-    lineHeight: 24,
-  },
-  defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: "600",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    lineHeight: 32,
-  },
-  subtitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-  },
-  link: {
-    lineHeight: 30,
-    fontSize: 16,
-    color: "#0a7ea4",
-  },
-});
+};

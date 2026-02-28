@@ -1,7 +1,7 @@
-import { FlatList, Pressable, Text, View } from "react-native";
+import { FlatList, Pressable, View } from "react-native";
 import Feather from '@expo/vector-icons/Feather';
 import { useTheme } from "@react-navigation/native";
-
+import { ThemedText } from "./themed-text";
 export const Items = ({ category }) => {
     const theme = useTheme();
 
@@ -28,14 +28,14 @@ export const Items = ({ category }) => {
             }}
             renderItem={({ item }) => (
                 <View className="item" style={{ backgroundColor: theme.colors.lightBrown, padding: 20, borderRadius: 10, marginBottom: 20, width: "48%" }}>
-                    <View className="item-image" style={{ backgroundColor: theme.colors.card, height: 150, marginBottom: 10 }} />
+                    <View className="item-image" style={{ height: 150, marginBottom: 10 }} />
                     {/* TO DO: add logic and possible placeholder for when user has no item for image */}
                     {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
 
                     <View className="item-footer" style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                        <Text>
+                        <ThemedText>
                             {item.name}
-                        </Text>
+                        </ThemedText>
                         <Pressable>
                             <Feather name="more-horizontal" size={20} color={theme.colors.text} />
                         </Pressable>

@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
-import { InventoryToggle, Items, SearchBar, ThemedView } from "../../components";
+import { Pressable, View } from "react-native";
+import { InventoryToggle, Items, SearchBar, ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import Ionicons from '@expo/vector-icons/Ionicons';
 
@@ -26,13 +26,13 @@ export default function InventoryScreen() {
       />
       <View className="item-categories" style={{ flexDirection: "row", gap: 33, justifyContent: "space-between", padding: 15 }}>
         <Pressable className="tops-category" style={{ backgroundColor: theme.colors.lightBrown, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }} onPress={() => setCategory("tops")}>
-          <Text style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Tops</Text>
+          <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Tops</ThemedText>
         </Pressable>
         <Pressable className="bottoms-category" style={{ backgroundColor: theme.colors.lightBrown, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }} onPress={() => setCategory("bottoms")}>
-          <Text style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Bottoms</Text>
+          <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Bottoms</ThemedText>
         </Pressable>
         <Pressable className="dresses-category" style={{ backgroundColor: theme.colors.lightBrown, borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 }} onPress={() => setCategory("dresses")}>
-          <Text style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Dresses</Text>
+          <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>Dresses</ThemedText>
         </Pressable>
       </View>
 

@@ -1,5 +1,6 @@
-import { Text, View, Pressable } from "react-native"; // Add Pressable here
+import { View, Pressable } from "react-native"; // Add Pressable here
 import { useTheme } from "@react-navigation/native";
+import { ThemedText } from "./themed-text";
 
 export const InventoryToggle = ({ isInventory, toggleInventory }) => {
     const theme = useTheme();
@@ -21,12 +22,12 @@ export const InventoryToggle = ({ isInventory, toggleInventory }) => {
                     alignItems: "center"   // Centers text perfectly
                 }}
             >
-                <Text style={{ 
+                <ThemedText style={{ 
                     color: theme.colors.text, 
                     fontSize: theme.sizes.h3,
                 }}>
                     Items
-                </Text>
+                </ThemedText>
             </Pressable>
 
             {/* OUTFITS TAB */}
@@ -39,12 +40,12 @@ export const InventoryToggle = ({ isInventory, toggleInventory }) => {
                     alignItems: "center"
                 }}
             >
-                <Text style={{ 
+                <ThemedText style={{ 
                     color: theme.colors.text, 
                     fontSize: theme.sizes.h3,
                 }}>
                     Outfits
-                </Text>
+                </ThemedText>
             </Pressable>
         </View>
     );
