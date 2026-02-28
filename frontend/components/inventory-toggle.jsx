@@ -2,7 +2,7 @@ import { View, Pressable } from "react-native"; // Add Pressable here
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
 
-export const InventoryToggle = ({ isInventory, toggleInventory }) => {
+export const InventoryToggle = ({ isItems, toggleItems }) => {
     const theme = useTheme();
 
     return (
@@ -14,9 +14,9 @@ export const InventoryToggle = ({ isInventory, toggleInventory }) => {
         }}>
             {/* INVENTORY TAB */}
             <Pressable
-                onPress={() => toggleInventory(true)}
+                onPress={() => toggleItems(true)}
                 style={{ 
-                    backgroundColor: isInventory ? theme.colors.tabIconSelected : theme.colors.lightBrown, 
+                    backgroundColor: isItems ? theme.colors.tabIconSelected : theme.colors.lightBrown, 
                     flex: 1,               // Automatically takes up 50%
                     justifyContent: "center", 
                     alignItems: "center"   // Centers text perfectly
@@ -32,9 +32,9 @@ export const InventoryToggle = ({ isInventory, toggleInventory }) => {
 
             {/* OUTFITS TAB */}
             <Pressable
-                onPress={() => toggleInventory(false)}
+                onPress={() => toggleItems(false)}
                 style={{ 
-                    backgroundColor: !isInventory ? theme.colors.tabIconSelected : theme.colors.lightBrown, 
+                    backgroundColor: !isItems ? theme.colors.tabIconSelected : theme.colors.lightBrown, 
                     flex: 1, 
                     justifyContent: "center", 
                     alignItems: "center"
