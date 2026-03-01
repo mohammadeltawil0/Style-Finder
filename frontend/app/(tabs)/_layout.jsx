@@ -77,6 +77,6 @@ export default function TabLayout() {
           tabBarShowLabel: false,
         }}
       />
-    </Tabs>
+    </Tabs> 
   );
 }

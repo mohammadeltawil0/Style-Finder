@@ -2,9 +2,12 @@ import { useState } from "react";
 import {View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
+  const router = useRouter();
+  
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -87,15 +90,18 @@ export default function Login() {
               fontFamily: fonts.light,
             }}
           >
-            Don’t have an account?{" "}
+            Don’t have an account?{"  "}
+            <TouchableOpacity onPress={() => router.replace("/auth/register")}>
             <ThemedText
               style={{
+                fontSize:13,
                 fontFamily: fonts.semiBold,
                 textDecorationLine: "underline",
               }}
             >
               SIGN UP
             </ThemedText>
+          </TouchableOpacity>
           </ThemedText>
         </View>
       </KeyboardAvoidingView>
