@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
-
+import { Alert } from "react-native";
 
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
@@ -42,17 +42,57 @@ function LiveTyping({ text }) {
 }
 
 export default function Register() {
-  const router = useRouter();
+  const router = useRouter(); // TODO: once sign up done should take to home page !!
+ 
+  const [firstName, setName] = useState(""); 
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [firstName, setName] = useState(""); 
 
   const handleSignUp = () => {
-    // sign up will be handle here 
-    alert("Signed UP")
+    if(password !== confirmPassword){
+      Alert.alert("Error", "Passwords do not match"); 
+      return; 
+    }
+
+    // for debugging - remove later
+    console.log(firstName)
+    console.log(email)
+    console.log(username)
+    console.log(password)
+
+    Alert.alert( "Confirm Sign Up",
+    `First Name: ${firstName}
+      Email: ${email}
+      Username: ${username}
+      Password: ${password}`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        {
+          text: "Confirm",
+          onPress: () => { processSignUp();}
+        }
+      ]
+    );
   };
+
+  const processSignUp = () => {
+
+    // TODO: Sign Up will be handle here (Backend + DB)
+    Alert.alert("Success", "Signed Up Successfully!"); 
+
+    
+    // clear fields 
+    setName("");
+    setEmail("");
+    setUserName("");
+    setPassword("");
+    setConfirmPassword("");
+  }
 
   return (
     <ThemedView
@@ -63,90 +103,49 @@ export default function Register() {
       style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ThemedText style={{fontSize: 30, marginBottom: 10}}> <LiveTyping text="Let's get started!" /> </ThemedText>
-      <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up for To Plan For Outfits</ThemedText>
 
-      <View style={{
-          width: "100%",
-          maxWidth: 400,
-          padding: 25,
-          backgroundColor: "#E3D5CA",
-          borderRadius: 15,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8,
-        }}
-      >
-        <ThemedText style={{ fontSize: 28, marginBottom: 20}}> Create An Account </ThemedText>
+      <LiveTyping text="Let's get started!" />
+      <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
+
+      <View style={styles.card} >
         
+        <ThemedText style={{ fontSize: 28, marginBottom: 20}}> Create An Account </ThemedText>
+
         <TextInput
           placeholder="First Name"
           value={firstName}
           onChangeText={setName}
-          style={{
-            backgroundColor: "#ffffff",
-            marginBottom: 15,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 10,
-          }}
+          style={styles.input}
         />
         <TextInput
           placeholder="Email"
           value={email}
           onChangeText={setEmail}
-          style={{
-            backgroundColor: "#ffffff",
-            marginBottom: 15,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 10,
-          }}
+          style={styles.input}
         />
         <TextInput
           placeholder="Username"
           value={username}
           onChangeText={setUserName}
-          style={{
-            backgroundColor: "#ffffff",
-            marginBottom: 15,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 10,
-          }}
+          style={styles.input}
         />
         <TextInput
-          placeholder="Password"
+          placeholder = "Password"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={{
-            backgroundColor: "#ffffff",
-            marginBottom: 15,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 10,
-          }}
+          style={styles.input}
+          autoCapitalize="none"
+          autoCorrect={false}
+          textContentType="none"
         />
+
+        {/* TODO: ASK FIONA WHY secureTextEntry DOESNOT WORK */}
         <TextInput
-          placeholder="Confirm Password"
+          placeholder = "Confirm Password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry
-          style={{
-            backgroundColor: "#ffffff",
-            marginBottom: 15,
-            borderWidth: 1,
-            borderColor: "#ccc",
-            padding: 12,
-            borderRadius: 10,
-          }}
+          style={styles.input}
         />
 
         <TouchableOpacity
@@ -171,3 +170,24 @@ export default function Register() {
     </ThemedView>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {width: "100%",
+          maxWidth: 400,
+          padding: 25,
+          backgroundColor: "#E3D5CA",
+          borderRadius: 15,
+          shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.3,
+          shadowRadius: 6,
+          elevation: 8,},
+  input: {
+    backgroundColor: "#ffffff",
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    padding: 12,
+    borderRadius: 10,
+  },
+});
