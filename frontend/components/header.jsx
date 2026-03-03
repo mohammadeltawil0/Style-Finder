@@ -48,7 +48,7 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "inventory" && (
+          {page === "closet" && (
             <ThemedText  
               style={{
                 fontSize: theme.sizes.h2,
@@ -56,7 +56,7 @@ export const CustomHeader = ({ page }) => {
                 color: theme.colors.text,
               }}
             >
-              INVENTORY
+              CLOSET
             </ThemedText>
           )}
           {page === "recommendations" && (

@@ -2,7 +2,7 @@ import { View, Pressable } from "react-native"; // Add Pressable here
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
 
-export const InventoryToggle = ({ isItems, toggleItems }) => {
+export const ClosetToggle = ({ isItems, toggleItems }) => {
     const theme = useTheme();
 
     return (
@@ -12,7 +12,7 @@ export const InventoryToggle = ({ isItems, toggleItems }) => {
             height: 50, 
             width: "100%"
         }}>
-            {/* INVENTORY TAB */}
+            {/* CLOSET TAB */}
             <Pressable
                 onPress={() => toggleItems(true)}
                 style={{ 
