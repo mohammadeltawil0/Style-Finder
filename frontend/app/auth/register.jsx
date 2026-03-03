@@ -144,6 +144,7 @@ export default function Register() {
         <TextInput
           placeholder = "Confirm Password"
           value={confirmPassword}
+          secureTextEntry
           onChangeText={setConfirmPassword}
           style={styles.input}
         />
