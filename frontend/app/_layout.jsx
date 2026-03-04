@@ -8,6 +8,7 @@ import { theme } from "../constants";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { CustomHeader } from "../components";
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
@@ -39,10 +40,30 @@ export default function RootLayout() {
     <ThemeProvider value={theme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
+        <Stack.Screen
+          name="screens/settings"
+          options={{
+            header: () => <CustomHeader page="settings" />,
+          }}
+        />
+        <Stack.Screen
+          name="auth/logIn"
+          options={{
+            header: () => <CustomHeader page="logIn" />,
+          }}
+        />
+        <Stack.Screen
+          name="auth/register"
+          options={{
+            header: () => <CustomHeader page="register" />,
+          }}
+        />
         <Stack.Screen
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}
         />
+        
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>
