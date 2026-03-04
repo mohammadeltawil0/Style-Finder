@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
-import { InventoryToggle, Items, SearchBar, ThemedText, ThemedView } from "../../components";
+import { ClosetToggle, Items, SearchBar, ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-export default function InventoryScreen() {
+export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
   const [searchText, setSearchText] = useState(""); // state to hold the input when user presses enter
   const [category, setCategory] = useState("all"); // state to hold the selected category
@@ -19,14 +19,14 @@ export default function InventoryScreen() {
           // navigating in home screen logic
           if (params.tab === "outfits") {
             setIsItems(false);
-            await AsyncStorage.setItem('inventoryTab', 'outfits');
+            await AsyncStorage.setItem('closetTab', 'outfits');
             params.tab = null; // clear the param so that it doesn't override future state changes
           } else if (params.tab === "items") {
             setIsItems(true);
-            await AsyncStorage.setItem('inventoryTab', 'items');
+            await AsyncStorage.setItem('closetTab', 'items');
             params.tab = null; // clear the param so that it doesn't override future state changes
           } else {
-            const savedTab = await AsyncStorage.getItem('inventoryTab');
+            const savedTab = await AsyncStorage.getItem('closetTab');
             setIsItems(savedTab !== 'outfits');
           }
         } catch (e) {
@@ -39,7 +39,7 @@ export default function InventoryScreen() {
 
   const handleToggleItems = async (value) => {
     setIsItems(value);
-    await AsyncStorage.setItem('inventoryTab', value ? 'items' : 'outfits');
+    await AsyncStorage.setItem('closetTab', value ? 'items' : 'outfits');
   };
 
   const theme = useTheme();
@@ -56,7 +56,7 @@ export default function InventoryScreen() {
       gradient={false}
       style={{ flex: 1, alignItems: "center" }}
     >
-      <InventoryToggle isItems={isItems} toggleItems={handleToggleItems} />
+      <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
       <SearchBar
         value={searchText}
         onChangeText={(text) => setSearchText(text)}

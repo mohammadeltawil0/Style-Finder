@@ -19,7 +19,7 @@ export default function HomeScreen() {
 
   const handleNavigate = (target) => {
     router.push({
-      pathname: "/inventory",
+      pathname: "/closet",
       params: { tab: target }
     });
   };

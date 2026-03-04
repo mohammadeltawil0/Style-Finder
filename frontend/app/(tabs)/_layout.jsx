@@ -16,10 +16,10 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="inventory"
+        name="closet"
         options={{
-          title: 'Inventory',
-          header: () => <CustomHeader page="inventory" />,
+          title: 'Closet',
+          header: () => <CustomHeader page="closet" />,
           tabBarIcon: ({ focused }) => (
             <FontAwesome6
               size={20}

@@ -48,15 +48,15 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "inventory" && (
-            <ThemedText
+          {page === "closet" && (
+            <ThemedText  
               style={{
                 fontSize: theme.sizes.h2,
                 fontFamily: theme.fonts.bold,
                 color: theme.colors.text,
               }}
             >
-              INVENTORY
+              CLOSET
             </ThemedText>
           )}
           {page === "recommendations" && (
