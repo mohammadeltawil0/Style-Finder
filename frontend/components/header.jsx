@@ -14,6 +14,12 @@ export const CustomHeader = ({ page }) => {
   const theme = useTheme();
   const router = useRouter();
 
+  const hideSettingsIcon =
+    page === "settings" ||
+    page === "logIn" ||
+    page === "register";
+
+
   return (
     <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card }}>
       <View
@@ -71,6 +77,15 @@ export const CustomHeader = ({ page }) => {
             </ThemedText>
           )}
           {page === "settings" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons
+                name="arrow-back"
+                size={24}
+                color={theme.colors.text}
+              />
+            </TouchableOpacity>
+          )}
+          {page === "settings" && (
               <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
@@ -105,9 +120,15 @@ export const CustomHeader = ({ page }) => {
             )}
         </View>
         {/* <Ionicons name="settings-sharp" size={24} color={theme.colors.text} /> */}
-        <TouchableOpacity onPress={() => router.push("/screens/settings")} >
-          <Ionicons name="settings-sharp" size={24} color={theme.colors.text} />
-        </TouchableOpacity>
+       {!hideSettingsIcon && (
+          <TouchableOpacity onPress={() => router.push("/screens/settings")}>
+            <Ionicons
+              name="settings-sharp"
+              size={24}
+              color={theme.colors.text}
+            />
+          </TouchableOpacity>
+        )}
       </View>
     </SafeAreaView>
   );

@@ -3,6 +3,7 @@ import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform,
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
 import { Alert } from "react-native";
+import { ScrollView } from "react-native";
 
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
@@ -103,6 +104,16 @@ export default function Register() {
       style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+    <ScrollView
+      contentContainerStyle={{
+      flexGrow: 1,
+      justifyContent: "center",
+      alignItems: "center",
+      padding: 16,
+      }}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
 
       <LiveTyping text="Let's get started!" />
       <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
@@ -167,6 +178,8 @@ export default function Register() {
         </ThemedText>
         </TouchableOpacity>
       </View>
+
+    </ScrollView>
     </KeyboardAvoidingView>
     </ThemedView>
   );
