@@ -44,7 +44,13 @@
           "backgroundColor": "#B08968"
         }
       ],
-      "expo-font"
+      "expo-font",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
+        }
+      ]
     ]
   }
 }

@@ -1,0 +1,40 @@
+import { Pressable, View } from "react-native";
+import { Image } from "expo-image";
+import { useTheme } from "@react-navigation/native";
+import { ThemedText } from "./themed-text";
+import { useEffect, useState } from "react";
+import Entypo from '@expo/vector-icons/Entypo';
+
+export function TogglePreview({ uri }) {
+    const [imageFailed, setImageFailed] = useState(false);
+    const [togglePreview, setTogglePreview] = useState(false);
+
+    const theme = useTheme();
+
+    useEffect(() => {
+        setImageFailed(false);
+    }, [uri]);
+
+    return (
+        uri && !imageFailed && (
+            <View style={{ alignItems: "center", paddingHorizontal: 30, width: "100%" }}>
+                <Pressable
+                    className="toggleHeader"
+                    onPress={() => setTogglePreview(!togglePreview)}
+                    style={{ alignItems: "center", backgroundColor: theme.colors.lightBrown, borderRadius: 10, flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 30, paddingHorizontal: 30, paddingVertical: 10, width: "100%" }}>
+                    <ThemedText style={{ fontSize: theme.sizes.h2, color: theme.colors.text, textAlign: "center" }}>
+                    Preview Image
+                </ThemedText>
+                <Entypo name="chevron-small-down" size={24} color="black" />
+                </Pressable>
+                {togglePreview &&
+                    (<Image
+                        source={{ uri }}
+                        contentFit="contain"
+                        style={{ width: "90%", height: 400 }}
+                        onError={() => setImageFailed(true)}
+                    />)}
+            </View>
+        )
+    )
+}

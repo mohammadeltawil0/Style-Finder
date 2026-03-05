@@ -3,7 +3,7 @@ import { Pressable, View } from "react-native";
 import { InventoryToggle, Items, SearchBar, ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import { useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function InventoryScreen() {
@@ -11,6 +11,7 @@ export default function InventoryScreen() {
   const [searchText, setSearchText] = useState(""); // state to hold the input when user presses enter
   const [category, setCategory] = useState("all"); // state to hold the selected category
   const params = useLocalSearchParams();
+  const router = useRouter();
 
   useFocusEffect(
     useCallback(() => {
@@ -90,7 +91,7 @@ export default function InventoryScreen() {
             shadowRadius: 3.84,
             elevation: 5,
           }}
-            onPress={() => console.log("Add new item")} // TO DO: link this to add item page
+            onPress={() => router.push("/inventory/add-item")}
           >
             <Ionicons name="add-sharp" size={40} color="black" />
           </Pressable>

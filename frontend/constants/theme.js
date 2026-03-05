@@ -28,12 +28,12 @@ export const theme = {
   ...DefaultTheme, 
   colors: {
     ...DefaultTheme.colors,
-    primary: "#949F71",  
     background: "#EDEDE9", 
     card: "#D5BDAF",       
     border: "#B4907B",  // to be changed
     lightBrown: "#E3D5CA",
-    text: "#000000",
+    text: "#4A3A33",
+    // text: "#000000",
     tabIconDefault: "#EDEDE9",
     tabIconSelected: "#B4907B"  
   },
@@ -41,7 +41,7 @@ export const theme = {
   sizes: {
     text: 16, //tbd
     h1: 35, //tbd
-    h2: 20, //tbd
-    h3: 18, //tbd
+    h2: 25, //tbd
+    h3: 20, //tbd
   }
 };
