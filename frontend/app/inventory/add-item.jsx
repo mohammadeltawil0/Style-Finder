@@ -30,14 +30,14 @@ export default function AddItemScreen() {
       )}
       {page === 2 && (
         <ThemedView gradient={true}
-          style={{ flex: 1, backgroundColor: theme.colors.background,  justifyContent: "center"  }}>
+          style={{ flex: 1, backgroundColor: theme.colors.background, justifyContent: "center" }}>
           <View
             style={styles.togglePreviewContainer}
             pointerEvents="box-none" // allows you to press options 
           >
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
-          <View className="question" style={{  marginTop: !uri ? -50 : 0, paddingHorizontal: 30, paddingBottom: 30, zIndex: 1 }}>
+          <View className="question" style={{ marginTop: !uri ? -50 : 0, paddingHorizontal: 30, paddingBottom: 30, zIndex: 1 }}>
             <ThemedText
               style={{ fontSize: theme.sizes.h1, color: theme.colors.text, fontFamily: theme.fonts.bold, }}>
               What category is
@@ -126,6 +126,33 @@ export default function AddItemScreen() {
           <View style={styles.navigationButtons}>
             <Pressable
               onPress={() => setPage(1)}
+              //TO DO: if next is not visible, make this flex-start or figure it out
+              style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}>
+              <ThemedText style={{ textAlign: "center" }}>
+                Back
+              </ThemedText>
+            </Pressable>
+            {category && (
+              <Pressable
+                style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}
+                onPress={() => setPage(3)}
+              >
+                <ThemedText style={{ textAlign: "center" }}>
+                  Next
+                </ThemedText>
+              </Pressable>
+            )}
+          </View>
+        </ThemedView>
+
+      )}
+      {page === 3 && (
+        <ThemedView gradient={true} style={{ backgroundColor: theme.colors.background, flex: 1 }}>
+          <ThemedText style={{ fontSize: theme.sizes.h1, color: theme.colors.text, textAlign: "center" }}>
+            This is where you can add details about the item and save it to your closet!
+          </ThemedText><View style={styles.navigationButtons}>
+            <Pressable
+              onPress={() => setPage(2)}
               style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}>
               <ThemedText style={{ textAlign: "center" }}>
                 Back
@@ -133,7 +160,7 @@ export default function AddItemScreen() {
             </Pressable>
             <Pressable
               style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}
-              onPress={() => setPage(2)}
+              onPress={() => setPage(3)}
             >
               <ThemedText style={{ textAlign: "center" }}>
                 Next
@@ -141,7 +168,6 @@ export default function AddItemScreen() {
             </Pressable>
           </View>
         </ThemedView>
-
       )}
     </>
   );
