@@ -40,7 +40,6 @@ export default function RootLayout() {
     <ThemeProvider value={theme}>
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-
         <Stack.Screen
           name="screens/settings"
           options={{
@@ -63,7 +62,12 @@ export default function RootLayout() {
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}
         />
-        
+        <Stack.Screen
+          name="closet/add-item"
+          options={{
+            header: () => <CustomHeader page="add-item" />,
+          }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

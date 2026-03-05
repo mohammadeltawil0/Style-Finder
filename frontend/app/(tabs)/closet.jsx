@@ -108,7 +108,7 @@ export default function ClosetScreen() {
             shadowRadius: 3.84,
             elevation: 5,
           }}
-            onPress={() => console.log("Add new item")} // TO DO: link this to add item page
+            onPress={() => router.push("../closet/add-item")} // TO DO: link this to add item page
           >
             <Ionicons name="add-sharp" size={40} color="black" />
           </Pressable>

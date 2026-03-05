@@ -17,7 +17,8 @@ export const CustomHeader = ({ page }) => {
   const hideSettingsIcon =
     page === "settings" ||
     page === "logIn" ||
-    page === "register";
+    page === "register" ||
+    page === "add-item";
 
 
   return (
@@ -55,7 +56,7 @@ export const CustomHeader = ({ page }) => {
             </>
           )}
           {page === "closet" && (
-            <ThemedText  
+            <ThemedText
               style={{
                 fontSize: theme.sizes.h2,
                 fontFamily: theme.fonts.bold,
@@ -76,6 +77,26 @@ export const CustomHeader = ({ page }) => {
               RECOMMENDATIONS
             </ThemedText>
           )}
+          {page === "add-item" && (
+            <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                ADD ITEM
+              </ThemedText>
+            </View>
+          )}
           {page === "settings" && (
             <TouchableOpacity onPress={() => router.back()}>
               <Ionicons
@@ -86,41 +107,41 @@ export const CustomHeader = ({ page }) => {
             </TouchableOpacity>
           )}
           {page === "settings" && (
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h2,
-                  fontFamily: theme.fonts.bold,
-                  color: theme.colors.text,
-                }}
-              >
-                SETTINGS
-              </ThemedText>
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SETTINGS
+            </ThemedText>
           )}
           {page === "logIn" && (
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h2,
-                  fontFamily: theme.fonts.bold,
-                  color: theme.colors.text,
-                }}
-              >
-                LOG-IN
-              </ThemedText>
-            )}
-            {page === "register" && (
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h2,
-                  fontFamily: theme.fonts.bold,
-                  color: theme.colors.text,
-                }}
-              >
-                SIGN UP
-              </ThemedText>
-            )}
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              LOG-IN
+            </ThemedText>
+          )}
+          {page === "register" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SIGN UP
+            </ThemedText>
+          )}
         </View>
-        {/* <Ionicons name="settings-sharp" size={24} color={theme.colors.text} /> */}
-       {!hideSettingsIcon && (
+
+        {!hideSettingsIcon && (
           <TouchableOpacity onPress={() => router.push("/screens/settings")}>
             <Ionicons
               name="settings-sharp"

@@ -61,7 +61,7 @@ export default function HomeScreen() {
       >
         <ThemedText
           style={{
-            fontSize: theme.sizes.h2,
+            fontSize: theme.sizes.h3,
             textAlign: "left"
           }}
         >
@@ -100,7 +100,7 @@ export default function HomeScreen() {
       >
         <ThemedText
           style={{
-            fontSize: theme.sizes.h2,
+            fontSize: theme.sizes.h3,
           }}
         >
           Look at past outfits
@@ -126,7 +126,7 @@ export default function HomeScreen() {
       >
         <ThemedText
           style={{
-            fontSize: theme.sizes.h2,
+            fontSize: theme.sizes.h3,
           }}
         >
           Manage your closet
