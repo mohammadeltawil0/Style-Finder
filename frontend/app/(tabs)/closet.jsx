@@ -148,7 +148,7 @@ export default function ClosetScreen() {
                   onPress={() => router.push("/screens/outfitsHistory/itemProperty")}
                 >
                   <View style={styles.imagePlaceholder} />
-                  <ThemedText>{item.name}</ThemedText>
+                  <ThemedText style={styles.outfitName}>{item.name}</ThemedText>
                 </TouchableOpacity>
               )}
             />
@@ -160,11 +160,26 @@ export default function ClosetScreen() {
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.outfitCard}
+                  style={styles.tripCard}
                   onPress={() => router.push("/screens/outfitsHistory/tripOutfits")}
                 >
-                  <ThemedText style={{ fontWeight: "bold" }}>{item.name}</ThemedText>
-                  <ThemedText>{item.dates}</ThemedText>
+                  <View style={styles.tripHeader}>
+                    <View>
+                      <ThemedText style={{ fontWeight: "bold" }}>
+                        {item.name}
+                      </ThemedText>
+                      <ThemedText>{item.dates}</ThemedText>
+                      <ThemedText># Outfits</ThemedText>
+                    </View>
+
+                    <Ionicons name="ellipsis-horizontal" size={18} />
+                  </View>
+
+                  <View style={styles.previewRow}>
+                    <View style={styles.previewBox} />
+                    <View style={styles.previewBox} />
+                    <View style={styles.previewBox} />
+                  </View>
                 </TouchableOpacity>
               )}
             />
@@ -206,15 +221,42 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   outfitCard: {
-    width: "45%",
-    margin: 10,
-    alignItems: "center",
+  flex: 1,
+  margin: 8,
+  maxWidth: "48%",
   },
   imagePlaceholder: {
-    height: 120,
-    backgroundColor: "#d6c6b8",
-    borderRadius: 10,
-    marginBottom: 5,
     width: "100%",
+    aspectRatio: 1,
+    backgroundColor: "#d6c6b8",
+    borderRadius: 12,
+  },
+  outfitName: {
+    marginTop: 6,
+    fontSize: 14,
+  },
+  tripCard: {
+  backgroundColor: "#d6c6b8",
+  borderRadius: 14,
+  padding: 14,
+  marginHorizontal: 16,
+  marginBottom: 16,
+  },
+  tripHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+
+  previewRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+
+  previewBox: {
+    width: 70,
+    height: 70,
+    backgroundColor: "#eee",
+    borderRadius: 8,
   },
 });
