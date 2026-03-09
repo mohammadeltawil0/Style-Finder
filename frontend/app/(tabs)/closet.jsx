@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import Feather from '@expo/vector-icons/Feather';
 import { Pressable, View , StyleSheet, TouchableOpacity, mode, FlatList} from "react-native";
 import { ClosetToggle, Items, SearchBar, ThemedText, ThemedView} from "../../components";
 import { useTheme } from "@react-navigation/native";
@@ -18,6 +19,9 @@ export default function ClosetScreen() {
   // Dummy data for outfits and trips 
   // TODO: fetch data from database when we have actual data 
   const outfits = [
+    { id: "o1", name: "Outfit1" },
+    { id: "o2", name: "Outfit2" },
+    { id: "o3", name: "Outfit3" },
     { id: "o1", name: "Outfit1" },
     { id: "o2", name: "Outfit2" },
     { id: "o3", name: "Outfit3" },
@@ -139,39 +143,58 @@ export default function ClosetScreen() {
           */}
           {mode === "regular" && (
             <FlatList
-              data={outfits}
-              numColumns={2}
-              keyExtractor={(item) => item.id}
+              className="regularOutfit-list"
+              data={outfits} // An array of user regular outfit 
+              keyExtractor={(outfits) => outfits.id} // Unique ID for each item
+              numColumns="2"
+              style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+              columnWrapperStyle={{
+                  justifyContent: 'center',
+                  gap: 15 
+              }}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.outfitCard}
-                  onPress={() => router.push("/screens/outfitsHistory/itemProperty")}
-                >
-                  <View style={styles.imagePlaceholder} />
-                  <ThemedText style={styles.outfitName}>{item.name}</ThemedText>
-                </TouchableOpacity>
-              )}
+                <View className="regularOufit" style={{ 
+                    borderColor: theme.colors.border, 
+                    // borderWidth: 1,
+                    backgroundColor: theme.colors.lightBrown,
+                    borderRadius: 10, marginBottom: 20, width: "48%" }}>
+                    <TouchableOpacity 
+                    onPress={() =>
+                      router.push({
+                        pathname: "/closet/outfitsHistory/itemProperty",
+                        params: { id: item.id }
+                      })
+                    }>
+                      <View className="outfit-image" style={{ height: 175, marginBottom: 10 }} />
+                    </TouchableOpacity>
+                    {/* TO DO: add logic and possible placeholder for when user has no outfit image */}
+                    {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
+                    <View className="outfit-footer" style={{ backgroundColor: theme.colors.card, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderTopColor: theme.colors.border, flexDirection: "row", justifyContent: "space-between", padding: 10, alignItems: "center" }}>
+                        <ThemedText>
+                            {item.name}
+                        </ThemedText>
+                        <Pressable>
+                            <Feather name="more-horizontal" size={20} color={theme.colors.text} />
+                        </Pressable>
+                    </View>
+                </View>
+              )}     
             />
           )}
+          
           {mode === "trip" && (
             <FlatList
               data={trips}
-              numColumns={1}
+              numColumns={2}
               keyExtractor={(item) => item.id}
               renderItem={({ item }) => (
-                <TouchableOpacity
-                  style={styles.tripCard}
-                  onPress={() => router.push("/screens/outfitsHistory/tripOutfits")}
-                >
+                <TouchableOpacity style={styles.tripCard} onPress={() => router.push("/closet/outfitsHistory/tripOutfits")} >
                   <View style={styles.tripHeader}>
                     <View>
-                      <ThemedText style={{ fontWeight: "bold" }}>
-                        {item.name}
-                      </ThemedText>
+                      <ThemedText style={{ fontWeight: "bold" }}> {item.name} </ThemedText>
                       <ThemedText>{item.dates}</ThemedText>
-                      <ThemedText># Outfits</ThemedText>
+                      <ThemedText># Trip</ThemedText>
                     </View>
-
                     <Ionicons name="ellipsis-horizontal" size={18} />
                   </View>
 
@@ -191,19 +214,6 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
-  floatingBtn: {
-    backgroundColor: "#b49480",
-    borderRadius: 100,
-    bottom: 30,
-    padding: 5,
-    position: "absolute",
-    right: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
   outfitToggle: {
     flexDirection: "row",
     margin: 15,
@@ -220,39 +230,22 @@ const styles = StyleSheet.create({
     backgroundColor: "#b49480",
     borderRadius: 10,
   },
-  outfitCard: {
-  flex: 1,
-  margin: 8,
-  maxWidth: "48%",
-  },
-  imagePlaceholder: {
-    width: "100%",
-    aspectRatio: 1,
-    backgroundColor: "#d6c6b8",
-    borderRadius: 12,
-  },
-  outfitName: {
-    marginTop: 6,
-    fontSize: 14,
-  },
   tripCard: {
-  backgroundColor: "#d6c6b8",
-  borderRadius: 14,
-  padding: 14,
-  marginHorizontal: 16,
-  marginBottom: 16,
+    backgroundColor: "#d6c6b8",
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 16,
   },
   tripHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-
   previewRow: {
     flexDirection: "row",
     gap: 10,
   },
-
   previewBox: {
     width: 70,
     height: 70,
