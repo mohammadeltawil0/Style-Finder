@@ -9,16 +9,16 @@ export default function Login() {
   const router = useRouter();
   
 
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    if (!email || !password) {
-      alert("Please enter email and password");
+    if (!username || !password) {
+      alert("Please enter username and password");
       return;
     }
 
-    console.log("Logging in:", email, password);
+    console.log("Logging in:", username, password);
     // TODO: connect backend + navigate
   };
 
@@ -50,9 +50,9 @@ export default function Login() {
           </ThemedText>
 
           <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
+            placeholder="Username"
+            value={username}
+            onChangeText={setusername}
             style={styles.input}
           />
 
