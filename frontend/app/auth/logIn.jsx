@@ -13,13 +13,8 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-<<<<<<< Updated upstream
-    if (!email || !password) {
-      alert("Please enter email and password");
-=======
     if (!username || !password) {
       Alert.alert("Please enter username and password");
->>>>>>> Stashed changes
       return;
     }
 
