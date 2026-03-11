@@ -19,10 +19,10 @@ export default function tripOutfits() {
 
     // Duplicate Dummy Data
     const trips = [
-        { id: "t1", name: "NYC Trip", dates: "03/01/26 - 03/05/26", outfits: [{}, {}, {}, {}, {}, {}], },
-        { id: "t2", name: "Beach Trip", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}, {}, {}, {}], },
-        { id: "t3", name: "NYC Trip", dates: "03/01/26 - 03/05/26" , outfits: [{}, {}, {}, {}, {}, {}],},
-        { id: "t4", name: "Beach Trip", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}, {}, {}, {}], },
+        { id: "t1", trip_location: "NYC", dates: "03/01/26 - 03/05/26", outfits: [{}, {}, {}, {}, {}, {}], },
+        { id: "t2", trip_location: "Beach Trip", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}, {}, {}, {}], },
+        { id: "t3", trip_location: "NYC Trip", dates: "03/01/26 - 03/05/26" , outfits: [{}, {}, {}, {}, {}, {}],},
+        { id: "t4", trip_location: "Beach Trip", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}, {}, {}, {}], },
     ];
     const tripsDetails = trips.find(t => t.id === id);
     console.log("Clicked Outfit:", tripsDetails);
