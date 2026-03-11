@@ -173,7 +173,7 @@ export default function ClosetScreen() {
               data={trips}
               keyExtractor={(trip) => trip.id}
               // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
-              // style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+              style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
               renderItem={({ item }) => (
                 <View className="TripOufit" style={styles.tripCard} >
                   <TouchableOpacity onPress={() => router.push({pathname: "/closet/outfitsHistory/tripOutfits", params: { id: item.id } })}>
