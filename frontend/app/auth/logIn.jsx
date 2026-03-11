@@ -1,5 +1,5 @@
 import { useState } from "react";
-import {View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
+import {Alert, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
@@ -14,7 +14,7 @@ export default function Login() {
 
   const handleLogin = () => {
     if (!username || !password) {
-      alert("Please enter username and password");
+      Alert.alert("Please enter username and password");
       return;
     }
 
