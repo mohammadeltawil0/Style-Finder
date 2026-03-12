@@ -20,7 +20,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [username, setUsername] = useState("");
 
-  useEffect(() => { 
+  useEffect(() => {
     const loadUserData = async () => {
       try {
         const storedUsername = await AsyncStorage.getItem("username");
@@ -33,7 +33,7 @@ export default function HomeScreen() {
     };
 
     loadUserData();
-  }, []); 
+  }, []);
 
   const handleNavigate = (target) => {
     router.push({
@@ -87,7 +87,7 @@ export default function HomeScreen() {
         </ThemedText>
         <View style={{justifyContent: "center", flexDirection: 'row', gap: 10 }}>
           {unwornItems.map((item) => (
-            <Pressable key={item.id} 
+            <Pressable key={item.id}
             style={{
               backgroundColor: theme.colors.lightBrown,
               borderRadius: 10,
