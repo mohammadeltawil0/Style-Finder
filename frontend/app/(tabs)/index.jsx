@@ -43,20 +43,20 @@ export default function HomeScreen() {
   };
 
   return (
-    <ScrollView>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center" }}>
       <ThemedView
         gradient={false}
         style={{ flex: 1, gap: 50, justifyContent: "center", paddingHorizontal: 30 }}
       >
         <View className="header-text"
           style={{ flexDirection: "row", gap: 10, width: "100%" }}>
-          <View style={{ width: "60%" }}>
+          <View style={{ width: "70%" }}>
             <ThemedText
               style={{
                 fontSize: theme.sizes.h1,
                 fontFamily: theme.fonts.bold,
               }}
-            >Hello, {username}! Let's find your style!</ThemedText>
+            >Hello, {username}! </ThemedText>
           </View>
           <View style={{ width: "30%" }}>
             {/* TO DO: add logo here or some other thing? */}
