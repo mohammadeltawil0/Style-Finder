@@ -29,6 +29,13 @@ export default function Login() {
           },
           body: JSON.stringify({ username: username, password: password }),
         }
+        //  "http://{computerIPAddress}:8080/api/users/login", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({ username: username, password: password }),
+        // }
       );
 
 

@@ -107,6 +107,20 @@ export default function Register() {
             role: "USER"
           }),
         }
+        // "http://{computerIPAddress}:8080/api/users",
+        // {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({
+        //     firstName: firstName,
+        //     email: email,
+        //     username: username,
+        //     password: password,
+        //     role: "USER"
+        //   }),
+        // }
       );
 
       const data = await response.json();
