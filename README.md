@@ -1,4 +1,4 @@
-Welcome to Style Finder
+# Welcome to Style Finder
 
 # Front page of our product: https://stylefinder.tech
 
