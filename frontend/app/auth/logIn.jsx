@@ -52,7 +52,7 @@ export default function Login() {
         await AsyncStorage.setItem("userId", data.userId.toString());
 
 
-        router.replace("/(tabs)/index");
+        router.replace("/(tabs)");
       } else {
         alert("Login failed: " + data.message);
       }
