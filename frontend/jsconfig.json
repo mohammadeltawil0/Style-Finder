@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@env": ["env.d.ts"]
+    }
+  },
+  "include": ["src/**/*", "env.d.ts"]
+}
