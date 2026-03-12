@@ -6,6 +6,7 @@ import { Alert } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ScrollView } from "react-native";
 
+
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
   const [index, setIndex] = useState(0);
@@ -60,7 +61,7 @@ export default function Register() {
 
   const handleSignUp = () => {
     // check required fields
-    if (!firstName && !email && !username && !password && !confirmPassword) {
+    if (!firstName || !email || !username || !password || !confirmPassword) {
       Alert.alert("Error", "All fields are required. You are missing one or more field ");
       return;
     }
@@ -82,37 +83,61 @@ export default function Register() {
     console.log(username)
     console.log(password)
 
-    Alert.alert( "Confirm Sign Up",
-    `First Name: ${firstName}
-      Email: ${email}
-      Username: ${username}
-      Password: ${password}`,
-      [
+    processSignUp();
+    };
+
+
+    const processSignUp = async () => {
+      // TODO: Sign Up will be handle here (Backend + DB)
+      try {
+        console.log("Sending signup request...");
+
+        const response = await fetch(
+          "http://localhost:8080/api/users",
         {
-          text: "Cancel",
-          style: "cancel"
-        },
-        {
-          text: "Confirm",
-          onPress: () => { processSignUp();}
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName: firstName,
+            email: email,
+            username: username,
+            password: password,
+            role: "USER"
+          }),
         }
-      ]
-    );
+        // "http://{computerIPAddress}:8080/api/users",
+        // {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({
+        //     firstName: firstName,
+        //     email: email,
+        //     username: username,
+        //     password: password,
+        //     role: "USER"
+        //   }),
+        // }
+      );
+
+      const data = await response.json();
+      console.log("Response:", data);
+
+      if (response.ok) {
+        Alert.alert("Success", "Signed Up Successfully!"); 
+        router.replace("/auth/logIn");
+      }
+      else {
+        Alert.alert("Error", "Sign Up Failed: " + data.message);
+      }
+      } catch (error) {
+        console.error("Error during sign up:", error);
+        Alert.alert("Error", "An error occurred during sign up. Please try again.");
+      }
   };
-
-  const processSignUp = () => {
-
-    // TODO: Sign Up will be handle here (Backend + DB)
-    Alert.alert("Success", "Signed Up Successfully!"); 
-
-    
-    // clear fields 
-    setName("");
-    setEmail("");
-    setUserName("");
-    setPassword("");
-    setConfirmPassword("");
-  }
 
   return (
     <ThemedView gradient={true} style={{ flex: 1, alignItems: "center", justifyContent: "center" }} >

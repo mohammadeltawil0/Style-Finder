@@ -2,8 +2,10 @@ import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { Pressable, View } from "react-native";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import AntDesign from '@expo/vector-icons/AntDesign';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function HomeScreen() {
   // TO DO: fetch data for unworn items from backend; for now using mock data to test the UI
@@ -16,6 +18,22 @@ export default function HomeScreen() {
 
   const theme = useTheme();
   const router = useRouter();
+  const [username, setUsername] = useState("");
+
+  useEffect(() => { 
+    const loadUserData = async () => {
+      try {
+        const storedUsername = await AsyncStorage.getItem("username");
+        if (storedUsername) {
+          setUsername(storedUsername);
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    };
+
+    loadUserData();
+  }, []); 
 
   const handleNavigate = (target) => {
     router.push({
@@ -37,7 +55,7 @@ export default function HomeScreen() {
               fontSize: theme.sizes.h1,
               fontFamily: theme.fonts.bold,
             }}
-          >Let's find your style!</ThemedText>
+          >Hello, {username}! Let's find your style!</ThemedText>
         </View>
         <View style={{ width: "30%" }}>
           {/* TO DO: add logo here or some other thing? */}

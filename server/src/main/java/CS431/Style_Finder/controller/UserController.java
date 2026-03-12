@@ -1,0 +1,62 @@
+package CS431.Style_Finder.controller;
+
+import CS431.Style_Finder.dto.UserDto;
+import CS431.Style_Finder.dto.auth.LoginRequestDto;
+import CS431.Style_Finder.service.UserService;
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserService userService;
+
+    // POST /api/users
+    // Body: { "firstName":"Stella", "username":"stella123", "passwordHash":"abc", "role":"ROLE_USER" }
+    @PostMapping
+    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(dto));
+    }
+
+    // GET /api/users/{id}
+    @GetMapping("/{id}")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    // GET /api/users
+    @GetMapping
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers());
+    }
+
+
+
+    // PUT /api/users/{id}
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto dto) {
+        return ResponseEntity.ok(userService.updateUser(id, dto));
+    }
+
+    // DELETE /api/users/{id}
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long id) {
+        userService.deleteUser(id);
+        return ResponseEntity.ok("User deleted successfully.");
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequestDto request) {
+
+        UserDto user = userService.login(request.getUsername(), request.getPassword());
+
+        return ResponseEntity.ok(user);
+    }
+}
