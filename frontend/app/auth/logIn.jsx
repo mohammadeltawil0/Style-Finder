@@ -52,7 +52,7 @@ export default function Login() {
         await AsyncStorage.setItem("userId", data.userId.toString());
 
 
-        router.replace("/");
+        router.replace("/(tabs)");
       } else {
         alert("Login failed: " + data.message);
       }
@@ -114,14 +114,14 @@ export default function Login() {
             activeOpacity={0.7}
             style={[
               styles.button,
-              { backgroundColor: colors.primary }
+              { backgroundColor: colors.card }
             ]}
           >
             <ThemedText
               style={{
                 fontSize: 18,
                 fontWeight: "bold",
-                color: "#fff",
+                color: colors.text,
               }}
             >
               Sign In
