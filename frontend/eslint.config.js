@@ -7,4 +7,11 @@ module.exports = defineConfig([
   {
     ignores: ['dist/*'],
   },
+  {
+    // This tells ESLint that @env is a virtual module and to ignore it
+    settings: {
+      'import/core-modules': ['@env'],
+      'import/ignore': ['@env']
+    },
+  }
 ]);
