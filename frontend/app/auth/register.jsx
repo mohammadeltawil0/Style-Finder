@@ -3,6 +3,7 @@ import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform,
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
 import { Alert } from "react-native";
+import { useTheme } from "@react-navigation/native";
 import { ScrollView } from "react-native";
 
 function LiveTyping({ text }) {
@@ -44,20 +45,38 @@ function LiveTyping({ text }) {
 
 export default function Register() {
   const router = useRouter(); // TODO: once sign up done should take to home page !!
- 
+  const { colors } = useTheme();
   const [firstName, setName] = useState(""); 
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  // validate correct email format 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const handleSignUp = () => {
+    // check required fields
+    if (!firstName && !email && !username && !password && !confirmPassword) {
+      Alert.alert("Error", "All fields are required. You are missing one or more field ");
+      return;
+    }
+    // check email format
+    if (!isValidEmail(email)) {
+      Alert.alert("Error", "Please enter a valid email address");
+      return;
+    }
+
     if(password !== confirmPassword){
       Alert.alert("Error", "Passwords do not match"); 
       return; 
     }
 
     // for debugging - remove later
+    //TODO: Add backend logic 
     console.log(firstName)
     console.log(email)
     console.log(username)
@@ -96,32 +115,19 @@ export default function Register() {
   }
 
   return (
-    <ThemedView
-      gradient={true}
-      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
-    >
-    <KeyboardAvoidingView
-      style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-    >
+    <ThemedView gradient={true} style={{ flex: 1, alignItems: "center", justifyContent: "center" }} >
+    <KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} >
+    
     <ScrollView
-      contentContainerStyle={{
-      flexGrow: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      padding: 16,
-      }}
+      contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 16, }}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-
       <LiveTyping text="Let's get started!" />
       <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
-
-      <View style={styles.card} >
-        
+      
+      <View style={styles.card} > 
         <ThemedText style={{ fontSize: 28, marginBottom: 20}}> Create An Account </ThemedText>
-
         <TextInput
           placeholder="First Name"
           value={firstName}
@@ -150,8 +156,6 @@ export default function Register() {
           autoCorrect={false}
           textContentType="none"
         />
-
-        {/* TODO: ASK FIONA WHY secureTextEntry DOESNOT WORK */}
         <TextInput
           placeholder = "Confirm Password"
           value={confirmPassword}
@@ -159,12 +163,12 @@ export default function Register() {
           onChangeText={setConfirmPassword}
           style={styles.input}
         />
-
+        
         <TouchableOpacity
           onPress={handleSignUp}
           activeOpacity={0.7}
           style={{
-              backgroundColor: "#ffffff",
+              backgroundColor: colors.primary,
               borderRadius: 12,
               borderWidth: 2,
               borderColor: "#ccc",
@@ -177,6 +181,7 @@ export default function Register() {
           Sign Up
         </ThemedText>
         </TouchableOpacity>
+        
       </View>
 
     </ScrollView>

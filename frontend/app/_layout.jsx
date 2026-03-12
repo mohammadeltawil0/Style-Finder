@@ -68,6 +68,18 @@ export default function RootLayout() {
             header: () => <CustomHeader page="add-item" />,
           }}
         />
+        <Stack.Screen
+          name="closet/outfitsHistory/itemProperty"
+          options={{
+            header: () => <CustomHeader page="RegularOutfitDetail" />,
+          }}
+        />
+        <Stack.Screen
+          name="closet/outfitsHistory/tripOutfits"
+          options={{
+            header: () => <CustomHeader page="TripOutfitDetail" />,
+          }}
+        />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

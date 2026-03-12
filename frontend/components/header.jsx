@@ -139,6 +139,46 @@ export const CustomHeader = ({ page }) => {
               SIGN UP
             </ThemedText>
           )}
+          {page === "RegularOutfitDetail" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h2,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Regular Outfit Details
+                </ThemedText>
+            </>
+          )}
+          {page === "TripOutfitDetail" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h2,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Trip Outfit Details
+                </ThemedText>
+            </>
+          )}
         </View>
 
         {!hideSettingsIcon && (

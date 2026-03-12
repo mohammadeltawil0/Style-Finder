@@ -1,45 +1,79 @@
-import { View, StyleSheet, TouchableOpacity } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
-import { useRouter } from "expo-router";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useLocalSearchParams } from "expo-router"; // use to get id of outfit card click to get data from DB // need to rework there is mistake 
 
 export default function ItemProperty() {
   const router = useRouter();
 
+  // TODO: Fetch data of the outfit my the id/name whatever we decide
+  // TODO: API call here something like this: just the blue print not sure how backend look like now 
+  // const [outfit, setOutfit] = useState(null);
+  // useEffect(() => {
+  //   const fetchOutfit = async () => {
+  //     setOutfit(data);
+  //   };
+  //   fetchOutfit();
+  // }, [id]); 
+
+  // For now console 
   const { id } = useLocalSearchParams();
-  console.log("Clicked Outfit ID:", id);
-  // TODO: Fetch data of the outfit my the id/name whatever we decide 
+
+  // Duplicate Dummy Data
+  const outfits = [
+    { id: "o1", name: "Outfit1", items: [{}, {}] },
+    { id: "o2", name: "Outfit2", items: [{}] },
+    { id: "o3", name: "Outfit3", items: [{}, {}] },
+    { id: "o4", name: "Outfit4", items: [{}] },
+    { id: "o5", name: "Outfit5", items: [{}, {}] },
+    { id: "o6", name: "Outfit6", items: [{}] },
+  ];
+  const outfit = outfits.find(o => o.id === id);
+  console.log("Clicked Outfit:", outfit);
+
   return (
-    <ThemedView style={{ flex: 1 }}>
+    <ScrollView showsVerticalScrollIndicator={true}>
+      <ThemedView>
+        {/* Render images based on number of items */}
+        {outfit?.items.map((item, index) => (
+          <View key={index} style={styles.image} />
+        ))}
 
-      <View style={styles.image} />
 
-      <View style={styles.info}>
-        <ThemedText style={styles.title}>OUTFIT NAME</ThemedText>
+        <View style={styles.info}>
+          <ThemedText style={styles.title}>OUTFIT NAME</ThemedText>
+          <ThemedText style={styles.label}>Description:</ThemedText>
+          {/* TODO: have a function can be in frontend too, using the tags (color, style) of items 
+            and fillter by user create a descriptions */}
+          <ThemedText>lorem ipsum your figma</ThemedText>
 
-        <ThemedText style={styles.label}>Description:</ThemedText>
-        <ThemedText>lorem ipsum your figma</ThemedText>
+          {/* TODO: Ask group if we have description then we dont need togs and infact the when 
+            user clicks view item, that screen will have tags too */}
+          <ThemedText style={styles.label}>Tags:</ThemedText>
+          <View style={styles.tags}>
+            <View style={styles.tag}>
+              <ThemedText>tag</ThemedText>
+            </View>
+            <View style={styles.tag}>
+              <ThemedText>tag</ThemedText>
+            </View>
+            <View style={styles.tag}>
+              <ThemedText>tag</ThemedText>
+            </View>
+          </View>
 
-        <ThemedText style={styles.label}>Tags:</ThemedText>
+          <View style={styles.buttons}>
+            <TouchableOpacity style={styles.btn}>
+              <ThemedText>View Items</ThemedText>
+            </TouchableOpacity>
 
-        <View style={styles.tags}>
-          <View style={styles.tag}><ThemedText>tag</ThemedText></View>
-          <View style={styles.tag}><ThemedText>tag</ThemedText></View>
-          <View style={styles.tag}><ThemedText>tag</ThemedText></View>
+            {/* TODO: ASK Group do we even need this, like what insights will we give to user ...  */}
+            <TouchableOpacity style={styles.btn}>
+              <ThemedText>Insights</ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
-
-        <View style={styles.buttons}>
-          <TouchableOpacity style={styles.btn}>
-            <ThemedText>View Items</ThemedText>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btn}>
-            <ThemedText>Insights</ThemedText>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </ThemedView>
+      </ThemedView>
+    </ScrollView>
   );
 }
 
