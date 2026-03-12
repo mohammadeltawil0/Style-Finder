@@ -3,6 +3,7 @@ import {Alert, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
@@ -12,15 +13,52 @@ export default function Login() {
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
+   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert("Please enter username and password");
+      alert("Please enter username and password");
       return;
     }
 
-    console.log("Logging in:", username, password);
-    // TODO: connect backend + navigate
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username: username, password: password }),
+        }
+      );
+
+
+      const data = await response.json();
+      console.log("Login response:", data);
+
+      if (response.ok) {
+        alert("Login worked");
+        console.log("Login successful:", data);
+
+
+        // Save user data
+        await AsyncStorage.setItem("username", data.username);
+        await AsyncStorage.setItem("userId", data.userId.toString());
+
+
+        router.replace("/");
+      } else {
+        alert("Login failed: " + data.message);
+      }
+
+
+    } catch (error) {
+      console.error("Error during login:", error);
+      alert("An error occurred during login. Please try again.");
+
+
+    }
   };
+
 
   return (
     <ThemedView gradient style={{ flex: 1 }}>
