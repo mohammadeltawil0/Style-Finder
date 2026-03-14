@@ -30,7 +30,7 @@ jobs:
       # Step 3: Build the .jar file!
       - name: Build with Maven
         run: |
-          cd backend
+          cd server
           chmod +x mvnw
           ./mvnw clean package -DskipTests
 
@@ -53,6 +53,6 @@ jobs:
           username: ${{ secrets.EC2_USERN }}
           key: ${{ secrets.EC2_KEY }}
           script: |
-            mv /home/ubuntu/stylefinder/stylefinder.jar /home/ubuntu/stylefinder/stylefinder-backend.jar
+            mv /home/ubuntu/stylefinder/stylefinder.jar /home/ubuntu/stylefinder/stylefinder.jar
             # Restart the app!
             sudo systemctl restart stylefinder
