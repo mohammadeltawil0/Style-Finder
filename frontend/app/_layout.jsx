@@ -14,6 +14,7 @@ import { CustomHeader } from "../components";
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
+  initialRouteName: "auth/logIn",
   anchor: "(tabs)",
 };
 
@@ -38,14 +39,7 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={theme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="screens/settings"
-          options={{
-            header: () => <CustomHeader page="settings" />,
-          }}
-        />
+      <Stack initialRouteName="auth/logIn">
         <Stack.Screen
           name="auth/logIn"
           options={{
@@ -58,10 +52,17 @@ export default function RootLayout() {
             header: () => <CustomHeader page="register" />,
           }}
         />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
+          name="screens/settings"
+          options={{
+            header: () => <CustomHeader page="settings" />,
+          }}
+        />
+        {/* <Stack.Screen
           name="modal"
           options={{ presentation: "modal", title: "Modal" }}
-        />
+        /> */}
         <Stack.Screen
           name="closet/add-item"
           options={{
