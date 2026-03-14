@@ -95,14 +95,14 @@ export default function Login() {
             activeOpacity={0.7}
             style={[
               styles.button,
-              { backgroundColor: colors.primary }
+              { backgroundColor: colors.card }
             ]}
           >
             <ThemedText
               style={{
                 fontSize: 18,
                 fontWeight: "bold",
-                color: "#fff",
+                color: colors.text,
               }}
             >
               Sign In

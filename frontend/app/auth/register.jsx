@@ -130,7 +130,10 @@ export default function Register() {
       <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
       
       <View style={styles.card} > 
-        <ThemedText style={{ fontSize: 28, marginBottom: 20}}> Create An Account </ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
+          <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
+        </View>
         <TextInput
           placeholder="First Name"
           value={firstName}
@@ -171,7 +174,7 @@ export default function Register() {
           onPress={handleSignUp}
           activeOpacity={0.7}
           style={{
-              backgroundColor: colors.primary,
+              backgroundColor: colors.card,
               borderRadius: 12,
               borderWidth: 2,
               borderColor: "#ccc",
@@ -203,7 +206,8 @@ const styles = StyleSheet.create({
           shadowOffset: { width: 0, height: 5 },
           shadowOpacity: 0.3,
           shadowRadius: 6,
-          elevation: 8,},
+          elevation: 8
+        },
   input: {
     backgroundColor: "#ffffff",
     marginBottom: 15,
