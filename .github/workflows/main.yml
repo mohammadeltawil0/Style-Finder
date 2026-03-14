@@ -34,7 +34,7 @@ jobs:
           chmod +x mvnw
           ./mvnw clean package -DskipTests
 
-      # Step 4: Send the .jar file to EC2
+      # Step 4: Send the .jar file to EC2 | test
       - name: Send jar to EC2 via SCP
         uses: appleboy/scp-action@v1
         with:
