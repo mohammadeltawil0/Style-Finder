@@ -55,7 +55,7 @@ export default function HomeScreen() {
               fontSize: theme.sizes.h1,
               fontFamily: theme.fonts.bold,
             }}
-          >Hello, {username}! Let's find your style!</ThemedText>
+          >Hello, {username}! Let&apos;s find your style!</ThemedText>
         </View>
         <View style={{ width: "30%" }}>
           {/* TO DO: add logo here or some other thing? */}
@@ -83,7 +83,7 @@ export default function HomeScreen() {
             textAlign: "left"
           }}
         >
-          You haven't worn these in a while
+          You haven&#39;t worn these in a while
         </ThemedText>
         <View style={{justifyContent: "center", flexDirection: 'row', gap: 10 }}>
           {unwornItems.map((item) => (
