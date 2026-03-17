@@ -1,15 +1,17 @@
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import { useTheme } from "@react-navigation/native";
+import { useState } from "react";
+import { Keyboard, Modal, Pressable, TextInput, View } from "react-native";
+import Octicons from "react-native-vector-icons/Octicons";
 import {
   Camera,
   ThemedText,
   ThemedView,
   TogglePreview,
 } from "../../components";
-import { Keyboard, Pressable, TextInput, View } from "react-native";
-import { useState } from "react";
-import { useTheme } from "@react-navigation/native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 
+//TO DO: maybe put individual pages to separate files
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
   const [uri, setUri] = useState(null);
@@ -40,9 +42,9 @@ export default function AddItemScreen() {
     "Work/Smart",
     "Party/Night Out",
     "Formal",
-    "Active/Sport"
+    "Active/Sport",
     //TO DO: add icons, and maybe add a seasonal or something else
-  ]
+  ];
 
   console.log("uri: ", uri);
   console.log("category: ", category);
@@ -52,28 +54,52 @@ export default function AddItemScreen() {
 
   const OtherModal = () => {
     return (
-      <View style={styles.otherModalOverlay}>
-        <ThemedView
-          style={[
-            styles.otherModalCard,
-            { backgroundColor: theme.colors.card },
-          ]}
-        >
-          <ThemedText style={styles.otherModalTitle}>
-            Enter a Custom Shade:
-          </ThemedText>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={openOtherModal}
+        onRequestClose={() => setOpenOtherModal(false)}
+      >
+        <View style={styles.otherModalOverlay}>
+          <ThemedView
+            style={[
+              styles.otherModalCard,
+              { backgroundColor: theme.colors.card },
+            ]}
+          >
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <ThemedText style={styles.otherModalTitle}>
+                Enter a Custom Shade:
+              </ThemedText>
+              <Pressable
+                onPress={() => {
+                  setOpenOtherModal(false);
+                  setColors((prev) => prev.filter((c) => c !== "Other"));
+                }}
+              >
+                <Octicons name="x" color="#000" size={24} />
+              </Pressable>
+            </View>
+            <TextInput
+              placeholder="e.g. Burgundy"
+              placeholderTextColor="#888"
+              style={styles.otherModalInput}
+            />
 
-          <TextInput
-            placeholder="e.g. Burgundy"
-            placeholderTextColor="#888"
-            style={styles.otherModalInput}
-          />
-
-          <Pressable style={styles.otherModalSubmit}>
-            <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
-          </Pressable>
-        </ThemedView>
-      </View>
+            <Pressable
+              style={styles.otherModalSubmit}
+              onPress={() => {
+                Keyboard.dismiss();
+                setOpenOtherModal(false);
+              }}
+            >
+              <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
+            </Pressable>
+          </ThemedView>
+        </View>
+      </Modal>
     );
   };
 
@@ -116,6 +142,10 @@ export default function AddItemScreen() {
           <View
             className="question"
             style={{
+              marginTop: !uri ? -50 : 0,
+              paddingHorizontal: 30,
+              paddingBottom: 30,
+              zIndex: 1,
               marginTop: !uri ? -50 : 0,
               paddingHorizontal: 30,
               paddingBottom: 30,
@@ -330,9 +360,6 @@ export default function AddItemScreen() {
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
-
-          <View className="otherModal">{openOtherModal && <OtherModal />}</View>
-
           <View
             className="question"
             style={{
@@ -365,7 +392,7 @@ export default function AddItemScreen() {
 
           <View
             className="colorOptionsView"
-            style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+            style={{ alignItems: "center", justifyContent: "center" }}
           >
             <View style={styles.colorOptionsGrid}>
               {colorOptions.map((color) => {
@@ -374,17 +401,25 @@ export default function AddItemScreen() {
                 return (
                   <Pressable
                     onPress={() => {
+                      if (color.name === "Other") {
+                        if (isSelected) {
+                          setColors((prev) =>
+                            prev.filter((c) => c !== color.name),
+                          );
+                          setOpenOtherModal(false);
+                        } else {
+                          setColors((prev) => [...prev, color.name]);
+                          setOpenOtherModal(true);
+                        }
+                        return;
+                      }
+
                       if (isSelected) {
                         setColors((prev) =>
                           prev.filter((c) => c !== color.name),
                         );
                       } else {
                         setColors((prev) => [...prev, color.name]);
-                      }
-                      //TO DO: fix this; doesn't work because of async state update, but we want the modal to open immediately when "Other" is selected
-                      // and find out how to store the "other colors" that users input for recommendations later on, and the limit
-                      if (colors.includes("Other") && color.name == "Other") {
-                        setOpenOtherModal(!openOtherModal);
                       }
                     }}
                     key={color.name}
@@ -478,7 +513,10 @@ export default function AddItemScreen() {
               is this item for?
             </ThemedText>
           </View>
-          <View className="eventOptionsView" style={{ alignItems: "center", justifyContent: "center", flex: 1 }}>
+          <View
+            className="eventOptionsView"
+            style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+          >
             {/* TO DO: try out flex direction column and/or add description */}
             <View style={styles.colorOptionsGrid}>
               {eventOptions.map((event) => {
@@ -488,9 +526,7 @@ export default function AddItemScreen() {
                   <Pressable
                     onPress={() => {
                       if (isSelected) {
-                        setEvents((prev) =>
-                          prev.filter((e) => e !== event),
-                        );
+                        setEvents((prev) => prev.filter((e) => e !== event));
                       } else {
                         setEvents((prev) => [...prev, event]);
                       }
@@ -544,6 +580,7 @@ export default function AddItemScreen() {
           </View>
         </ThemedView>
       )}
+      <OtherModal />
     </>
   );
 }
@@ -574,11 +611,7 @@ const styles = {
     width: "100%",
   },
   otherModalOverlay: {
-    position: "absolute",
-    top: 100,
-    right: 0,
-    bottom: 0,
-    left: 0,
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     zIndex: 50,
