@@ -48,7 +48,6 @@ export default function HomeScreen() {
         style={{
           backgroundColor: "#ffffff",
           borderRadius: 10,
-          height: 150,
           justifyContent: "space-between",
           paddingHorizontal: 20,
           paddingVertical: 20,
