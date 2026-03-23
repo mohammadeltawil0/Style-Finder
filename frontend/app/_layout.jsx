@@ -8,11 +8,13 @@ import { theme } from "../constants";
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
-
+import { CustomHeader } from "../components";
+import { SurveyProvider } from "../context/SurveyContext";
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
 export const unstable_settings = {
+  initialRouteName: "auth/logIn",
   anchor: "(tabs)",
 };
 
@@ -37,14 +39,64 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={theme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="modal"
-          options={{ presentation: "modal", title: "Modal" }}
-        />
-      </Stack>
-      <StatusBar style="auto" />
+      <SurveyProvider>
+        <Stack initialRouteName="auth/logIn">
+          <Stack.Screen
+            name="auth/logIn"
+            options={{
+              header: () => <CustomHeader page="logIn" />,
+            }}
+          />
+          <Stack.Screen
+            name="auth/register"
+            options={{
+              header: () => <CustomHeader page="register" />,
+            }}
+          />
+          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen
+            name="screens/settings"
+            options={{
+              header: () => <CustomHeader page="settings" />,
+            }}
+          />
+          <Stack.Screen
+            name="screens/survey/preferences1"
+            options={{
+              header: () => <CustomHeader page="survey" />,
+            }}
+          />
+          <Stack.Screen
+            name="screens/survey/preferences2"
+            options={{
+              header: () => <CustomHeader page="survey" />,
+            }}
+          />
+          {/* <Stack.Screen
+            name="modal"
+            options={{ presentation: "modal", title: "Modal" }}
+          /> */}
+          <Stack.Screen
+            name="closet/add-item"
+            options={{
+              header: () => <CustomHeader page="add-item" />,
+            }}
+          />
+          <Stack.Screen
+            name="closet/outfitsHistory/itemProperty"
+            options={{
+              header: () => <CustomHeader page="RegularOutfitDetail" />,
+            }}
+          />
+          <Stack.Screen
+            name="closet/outfitsHistory/tripOutfits"
+            options={{
+              header: () => <CustomHeader page="TripOutfitDetail" />,
+            }}
+          />
+        </Stack>
+        <StatusBar style="auto" />
+      </SurveyProvider>
     </ThemeProvider>
   );
 }

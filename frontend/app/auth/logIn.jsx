@@ -1,23 +1,71 @@
 import { useState } from "react";
-import {View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
+import {Alert, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
+  const router = useRouter();
+  
 
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      alert("Please enter email and password");
+   const handleLogin = async () => {
+    if (!username || !password) {
+      alert("Please enter username and password");
       return;
     }
 
-    console.log("Logging in:", email, password);
-    // TODO: connect backend + navigate
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/api/users/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ username: username, password: password }),
+        }
+        //  "http://{computerIPAddress}:8080/api/users/login", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json",
+        //   },
+        //   body: JSON.stringify({ username: username, password: password }),
+        // }
+      );
+
+
+      const data = await response.json();
+      console.log("Login response:", data);
+
+      if (response.ok) {
+        alert("Login worked");
+        console.log("Login successful:", data);
+
+
+        // Save user data
+        await AsyncStorage.setItem("username", data.username);
+        await AsyncStorage.setItem("userId", data.userId.toString());
+
+
+        router.replace("/(tabs)");
+      } else {
+        alert("Login failed: " + data.message);
+      }
+
+
+    } catch (error) {
+      console.error("Error during login:", error);
+      alert("An error occurred during login. Please try again.");
+
+
+    }
   };
+
 
   return (
     <ThemedView gradient style={{ flex: 1 }}>
@@ -47,9 +95,9 @@ export default function Login() {
           </ThemedText>
 
           <TextInput
-            placeholder="Email"
-            value={email}
-            onChangeText={setEmail}
+            placeholder="Username"
+            value={username}
+            onChangeText={setusername}
             style={styles.input}
           />
 
@@ -66,14 +114,14 @@ export default function Login() {
             activeOpacity={0.7}
             style={[
               styles.button,
-              { backgroundColor: colors.primary }
+              { backgroundColor: colors.card }
             ]}
           >
             <ThemedText
               style={{
                 fontSize: 18,
                 fontWeight: "bold",
-                color: "#fff",
+                color: colors.text,
               }}
             >
               Sign In
@@ -87,15 +135,18 @@ export default function Login() {
               fontFamily: fonts.light,
             }}
           >
-            Don’t have an account?{" "}
+            Don’t have an account?{"  "}
+            <TouchableOpacity onPress={() => router.replace("/auth/register")}>
             <ThemedText
               style={{
+                fontSize:13,
                 fontFamily: fonts.semiBold,
                 textDecorationLine: "underline",
               }}
             >
               SIGN UP
             </ThemedText>
+          </TouchableOpacity>
           </ThemedText>
         </View>
       </KeyboardAvoidingView>

@@ -4,7 +4,7 @@ export * from "./gradient-background.jsx";
 export * from "./haptic-tab.jsx";
 export * from "./header.jsx";
 export * from "./hello-wave.jsx";
-export * from "./inventory-toggle.jsx";
+export * from "./closet-toggle.jsx";
 export * from "./items.jsx";
 export * from "./parallax-scroll-view.jsx";
 export * from "./search-bar.jsx";
