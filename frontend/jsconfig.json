@@ -1,14 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "paths": {
+      "@env": ["env.d.ts"]
+    }
   },
-  "include": [
-    "**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    ".expo",
-    "dist",
-    "build"
-  ]
+  "include": ["src/**/*", "env.d.ts"]
 }
