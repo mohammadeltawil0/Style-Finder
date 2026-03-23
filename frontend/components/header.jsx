@@ -179,6 +179,26 @@ export const CustomHeader = ({ page }) => {
                 </ThemedText>
             </>
           )}
+          {page === "survey" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h2,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Preference Survey
+                </ThemedText>
+            </>
+          )}
         </View>
 
         {!hideSettingsIcon && (

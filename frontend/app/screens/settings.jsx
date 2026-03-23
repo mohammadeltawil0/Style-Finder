@@ -20,7 +20,7 @@ export default function Settings(){
      
             <TouchableOpacity
                 // TODO: once we have survey page then just link 
-                // onPress={() => router.push("/survey")}
+                onPress={() => router.replace("/screens/survey/preferences1")}
                 activeOpacity={0.7}
                 style={{
                 backgroundColor: "#B49480",
