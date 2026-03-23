@@ -5,15 +5,15 @@ const SurveyContext = createContext();
 export const SurveyProvider = ({ children }) => {
   const [answers, setAnswers] = useState({
     comfort: "",
-    fit: "",
-    occasion: [],
+    occasion: [],      
     weather: "",
-    style: "",
-    items: [],
-    colorsWear: [],
-    colorsAvoid: [],
-    tripPriority: "",
-    avoidItems: [],
+    style: [],         
+    preferFit: "",     
+    items: [],         
+    avoid_items: [],  
+    colors_wear: [],  
+    colors_avoid: [],  
+    trip_priority: "",
   });
 
   return (
