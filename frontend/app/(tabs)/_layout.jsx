@@ -1,4 +1,5 @@
 import { Tabs } from "expo-router";
+
 import { CustomHeader, HapticTab } from "../../components";
 import { IconSymbol } from "../../components/ui";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";

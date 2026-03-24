@@ -5,6 +5,7 @@ import { useTheme } from "@react-navigation/native";
 import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
   KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
 import {apiClient} from "../../scripts/apiClient";
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
 

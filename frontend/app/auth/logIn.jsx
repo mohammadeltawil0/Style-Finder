@@ -33,7 +33,7 @@ export default function Login() {
            alert("Login worked");
            await AsyncStorage.setItem("username", data.username);
            await AsyncStorage.setItem("userId", data.userId.toString());
-           router.replace("/");
+           router.replace("/(tabs)");
 
        } catch (error) {
            console.error("Error during login:", error);
