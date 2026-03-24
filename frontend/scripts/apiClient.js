@@ -1,0 +1,16 @@
+// import {API_URL} from '@env';
+import axios from 'axios';
+
+// 1. Verify the URL loaded correctly (Debugging)
+const API_URL = "https://api.stylefinder.tech";
+
+console.log("Connecting to Backend at:", API_URL);
+
+// 2. Create a global Axios instance
+export const apiClient = axios.create({
+    baseURL: API_URL || 'http://10.0.2.2:8080',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    timeout: 10000 // Stop trying if the backend takes longer than 10 seconds
+});
