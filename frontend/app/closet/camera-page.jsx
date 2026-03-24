@@ -8,7 +8,7 @@ export default function CameraPage({ setUri, setPage, uri }) {
       gradient={true}
       style={{ backgroundColor: theme.colors.background, flex: 1 }}
     >
-      <View style={{ paddingHorizontal: 30, paddingTop: 30, zIndex: 1 }}>
+      <View style={{ paddingHorizontal: 30, paddingTop: 20, paddingBottom: 8, zIndex: 1 }}>
         <ThemedText
           style={{
             fontSize: theme.sizes.h2,

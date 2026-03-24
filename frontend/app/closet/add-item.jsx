@@ -3,13 +3,15 @@ import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";
 import ColorPage from "./color-page.jsx";
 import EventPage from "./event-page.jsx";
+import ReviewPage from "./review-page.jsx";
 
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
   const [uri, setUri] = useState(null);
   const [category, setCategory] = useState("");
   const [color, setColor] = useState("");
-  const [events, setEvents] = useState([]); //TO DO: do we want one option or multi select
+  const [pattern, setPattern] = useState("");
+  const [event, setEvent] = useState(""); //TO DO: do we want one option or multi select
 
   return (
     <>
@@ -28,12 +30,17 @@ export default function AddItemScreen() {
       )}
 
       {page === 3 && (
-        <ColorPage setPage={setPage} color={color} setColor={setColor} uri={uri} />
+        <ColorPage setPage={setPage} color={color} setColor={setColor} pattern={pattern} setPattern={setPattern} uri={uri} />
       )}
 
       {/* TO DO: fix the page 4; not rendering  */}
       {page === 4 && (
-        <EventPage setPage={setPage} events={events} setEvents={setEvents} uri={uri} />
+        <EventPage setPage={setPage} event={event} setEvent={setEvent} uri={uri} />
+      )}
+
+      {/* TO DO: add more things here! */}
+      {page === 5 && (
+        <ReviewPage setPage={setPage} uri={uri} event={event} pattern={pattern} color={color} category={category} />
       )}
     </>
   );

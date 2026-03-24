@@ -1,18 +1,57 @@
-import { Pressable, View } from "react-native";
+import {
+  Platform,
+  Pressable,
+  useWindowDimensions,
+  ScrollView,
+  View
+} from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, events, setEvents, uri }) {
+export default function EventPage({ setPage, event, setEvent, uri }) {
   const theme = useTheme();
   const eventOptions = [
-    "Versatile",
-    "Casual",
-    "Work/Smart",
-    "Party/Night Out",
-    "Formal",
-    "Active/Sport",
-    //TO DO: add icons, and maybe add a seasonal or something else
+    {
+      id: "versatile",
+      label: "Versatile",
+      emoji: "✨",
+      subheader: "Works for many occasions",
+    },
+    {
+      id: "casual",
+      label: "Casual",
+      emoji: "🧢",
+      subheader: "Everyday and relaxed outfits",
+    },
+    {
+      id: "work-smart",
+      label: "Work/Smart",
+      emoji: "💼",
+      subheader: "Office and polished looks",
+    },
+    {
+      id: "party-night",
+      label: "Party/Night Out",
+      emoji: "🌙",
+      subheader: "Evening and social events",
+    },
+    {
+      id: "formal",
+      label: "Formal",
+      emoji: "🎩",
+      subheader: "Dressy and special occasions",
+    },
+    {
+      id: "active-sport",
+      label: "Active/Sport",
+      emoji: "🏃",
+      subheader: "Movement-friendly outfits",
+    },
   ];
+  const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
+  const isWide = width >= 768;
+  const buttonWidth = isWide ? 220 : "30%";
 
   return (
     <ThemedView
@@ -21,82 +60,114 @@ export default function EventPage({ setPage, events, setEvents, uri }) {
         flex: 1,
       }}
     >
-      <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-        <TogglePreview setPage={setPage} uri={uri} />
-      </View>
-
-      <View
-        className="mainContent"
-        style={{ flex: 1, justifyContent: "center", marginBottom: 246 }}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          isWide && styles.scrollContentWide,
+        ]}
+        keyboardShouldPersistTaps="handled"
       >
         <View
-          className="question"
-          style={{
-            marginTop: !uri ? -50 : 0,
-            paddingHorizontal: 30,
-            paddingBottom: 30,
-            zIndex: 1,
-          }}
+          style={[
+            styles.contentContainer,
+            uri && styles.contentContainerWithPreview,
+          ]}
         >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h1,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-            }}
-          >
-            What kind of event
-          </ThemedText>
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h1,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-              paddingBottom: 20,
-            }}
-          >
-            is this item for?
-          </ThemedText>
-        </View>
-        <View
-          className="eventOptionsView"
-          style={{ alignItems: "center", justifyContent: "center" }}
-        >
-          {/* TO DO: try out flex direction column and/or add description */}
-          <View style={styles.colorOptionsGrid}>
-            {eventOptions.map((event) => {
-              const isSelected = events.includes(event);
+          <View style={styles.togglePreviewContainer}
+            pointerEvents="box-none">
+            <TogglePreview setPage={setPage} uri={uri} />
+          </View>
 
-              return (
-                <Pressable
-                  onPress={() => {
-                    if (isSelected) {
-                      setEvents((prev) => prev.filter((e) => e !== event));
-                    } else {
-                      setEvents((prev) => [...prev, event]);
-                    }
-                  }}
-                  key={event}
-                  style={[
-                    styles.colorOptionButton,
-                    isSelected && styles.selectedColorOptionButton,
-                    { backgroundColor: theme.colors.lightBrown },
-                  ]}
-                >
-                  <ThemedText
-                    style={{
-                      textAlign: "center",
-                      color: theme.colors.text,
-                    }}
-                  >
-                    {event}
-                  </ThemedText>
-                </Pressable>
-              );
-            })}
+          <View
+            className="mainContent"
+            style={styles.mainContent}
+          >
+            <View
+              className="question"
+              style={[
+                styles.textBlock,
+                !uri && styles.textBlockNoImage,
+                isWide && styles.textBlockWide,
+              ]}
+            >
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h1,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                What kind of event
+              </ThemedText>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h1,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                  paddingBottom: 20,
+                }}
+              >
+                is this item for?
+              </ThemedText>
+            </View>
+            <View
+              className="eventOptionsView"
+              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 20, width: "100%" }}
+            >
+              <View style={styles.eventOptionsGrid}>
+                {eventOptions.map((option) => {
+                  const isSelected = event === option.id;
+
+                  return (
+                    <Pressable
+                      onPress={() => {
+                        if (isSelected) {
+                          setEvent("");
+                        } else {
+                          setEvent(option.id);
+                        }
+                      }}
+                      key={option.id}
+                      style={[
+                        isSelected && styles.selectedEventOptionButton,
+                        {
+                          backgroundColor: isSelected
+                            ? theme.colors.tabIconSelected
+                            : theme.colors.lightBrown,
+                          borderRadius: 10,
+                          paddingHorizontal: 24,
+                          paddingVertical: 12,
+                          width: "100%",
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          color: theme.colors.text,
+                          fontSize: theme.sizes.h3,
+                          color: theme.colors.text,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        {option.emoji} {option.label}
+                      </ThemedText>
+                      <ThemedText
+                        style={[
+                          styles.optionSubheader,
+                        ]}
+                      >
+                        {option.subheader}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
           </View>
         </View>
-      </View>
+      </ScrollView>
+
 
       <View style={styles.navigationButtons}>
         <Pressable
@@ -111,7 +182,7 @@ export default function EventPage({ setPage, events, setEvents, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {events && (
+        {event && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -130,39 +201,45 @@ export default function EventPage({ setPage, events, setEvents, uri }) {
 }
 
 const styles = {
-  colorOptionsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  eventOptionsGrid: {
     gap: 12,
     justifyContent: "center",
-    paddingHorizontal: 20,
+    width: "100%",
   },
-  colorOptionButton: {
+  optionSubheader: {
+    fontSize: 16,
+    opacity: 0.8,
+    textAlign: "flex-start",
+    marginTop: 4,
+  },
+  selectedEventOptionButton: {
     borderRadius: 10,
-    minWidth: "42%",
-    paddingHorizontal: 14,
+    paddingHorizontal: 24,
     paddingVertical: 12,
-  },
-  selectedColorOptionButton: {
-    borderWidth: 2,
-    borderColor: "#00000033",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3.5,
+    elevation: 5,
+    width: "100%",
   },
   navigationButtons: {
     alignItems: "center",
     flexDirection: "row",
     gap: 40,
     justifyContent: "center",
-    padding: 20,
-    position: "absolute",
-    bottom: 10,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 30,
     width: "100%",
+    flexWrap: "wrap",
   },
-  Overlay: {
-    flex: 1,
+  navigationButtonsWeb: {
+    paddingBottom: 28,
+    marginLeft: 10
+  },
+  navigationButtonsSingle: {
     justifyContent: "center",
-    alignItems: "center",
-    zIndex: 50,
-    backgroundColor: "rgba(0,0,0,0.25)",
   },
   togglePreviewContainer: {
     position: "absolute",
@@ -171,5 +248,43 @@ const styles = {
     right: 0,
     bottom: 0,
     zIndex: 10,
+  },
+  scrollView: {
+    flex: 1,
+    width: "100%",
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+  },
+  scrollContentWide: {
+    alignItems: "center",
+  },
+  contentContainer: {
+    width: "100%",
+    maxWidth: 700,
+    alignSelf: "center",
+    justifyContent: "center",
+    gap: 8,
+    position: "relative",
+  },
+  contentContainerWithPreview: {
+    paddingTop: 90,
+  },
+  mainContent: {
+    justifyContent: "center",
+    paddingBottom: 16,
+  },
+  textBlock: {
+    paddingBottom: 20,
+    zIndex: 1,
+  },
+  textBlockNoImage: {
+    marginTop: 8,
+  },
+  textBlockWide: {
+    paddingHorizontal: 0,
   },
 };

@@ -1,6 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
-import { Alert, Button, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { Image } from "expo-image";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
@@ -12,7 +12,12 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
+  
+  const { width } = useWindowDimensions();
 
+  const isWeb = Platform.OS === "web";
+  const isWide = width >= 768;
+  const buttonWidth = isWide ? 220 : "30%";
   const theme = useTheme();
 
   if (!permission) return null;
@@ -75,20 +80,20 @@ export const Camera = ({ setUri, setPage, uri }) => {
 
   if (uri) {
     return (
-      <View style={styles.previewContainer}>
+      <View style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}>
         <Image
           source={{ uri }}
           contentFit="contain"
-          style={styles.previewImage}
+          style={[styles.previewImage, isWeb && styles.previewImageWeb]}
         />
-        <View style={styles.navigationButtons}>
+        <View style={[styles.navigationButtons, isWeb && styles.navigationButtonsWeb]}>
           <Pressable
             onPress={() => setUri(null)}
             style={{
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: 150,
             }}
           >
             <ThemedText style={{ textAlign: "center" }}>
@@ -100,7 +105,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: buttonWidth,
             }}
             onPress={() => setPage(2)}
           >
@@ -112,37 +117,39 @@ export const Camera = ({ setUri, setPage, uri }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isWeb && styles.containerWeb]}>
       <CameraView
-        style={styles.camera}
+        style={[styles.camera, isWeb && styles.cameraWeb]}
         ref={ref}
         facing={facing}
         pointerEvents="none"
         animateShutter={false}
       />
-      <View style={styles.shutterContainer}>
+      <View style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}>
         <Pressable onPress={toggleFacing} style={styles.iconBtn}>
           <FontAwesome6 name="rotate-left" size={32} color="white" />
         </Pressable>
         <Pressable onPress={takePicture}>
-          {({ pressed }) => (
-            <View style={[styles.shutterBtn, { opacity: pressed ? 0.5 : 1 }]}>
+            <View
+              style={[
+                styles.shutterBtn,
+              ]}
+            >
               <View style={styles.shutterBtnInner} />
             </View>
-          )}
         </Pressable>
         <Pressable onPress={pickImage} style={styles.iconBtn}>
           <FontAwesome name="photo" size={32} color="white" />
         </Pressable>
       </View>
-      <View style={styles.nextButton}>
+      <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
         <Pressable
           style={{
-            alignSelf: "flex-end",
+            alignSelf: "center",
             backgroundColor: theme.colors.card,
             borderRadius: 10,
-            padding: 10,
-            width: "35%",
+            paddingVertical: 10,
+            width: buttonWidth,
           }}
           onPress={() => setPage(2)}
         >
@@ -155,17 +162,33 @@ export const Camera = ({ setUri, setPage, uri }) => {
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+    width: "100%",
     alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "flex-start",
+    position: "relative",
+  },
+  containerWeb: {
+    maxWidth: 680,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 24,
+    paddingTop: 6,
   },
   //TO DO: how much height do we want to give user????
   camera: {
-    height: "80%",
     width: "90%",
+    aspectRatio: 3 / 4,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  cameraWeb: {
+    width: "100%",
+    maxWidth: 560,
   },
   shutterContainer: {
     alignItems: "center",
-    bottom: 44,
+    bottom: 70,
     flexDirection: "row",
     justifyContent: "space-between",
     paddingBottom: 30,
@@ -173,19 +196,28 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: "90%",
   },
+  shutterContainerWeb: {
+    position: "relative",
+    bottom: 0,
+    width: "100%",
+    maxWidth: 560,
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingBottom: 0,
+  },
   shutterBtn: {
     backgroundColor: "transparent",
     borderWidth: 5,
     borderColor: "white",
-    width: 85,
-    height: 85,
+    width: 60,
+    height: 60,
     borderRadius: 45,
     alignItems: "center",
     justifyContent: "center",
   },
   shutterBtnInner: {
-    width: 70,
-    height: 70,
+    width: 45,
+    height: 45,
     borderRadius: 35,
     backgroundColor: "white",
   },
@@ -195,9 +227,22 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     flex: 1,
+    width: "100%",
+  },
+  previewContainerWeb: {
+    maxWidth: 680,
+    alignSelf: "center",
+    paddingHorizontal: 24,
+    paddingTop: 6,
+    paddingBottom: 24,
   },
   previewImage: {
     flex: 1,
+    marginTop: -80,
+    minHeight: 270,
+  },
+  previewImageWeb: {
+    borderRadius: 16,
   },
   navigationButtons: {
     alignItems: "center",
@@ -209,11 +254,27 @@ const styles = StyleSheet.create({
     bottom: 10,
     width: "100%",
   },
+  navigationButtonsWeb: {
+    position: "relative",
+    bottom: 0,
+    marginTop: 16,
+    gap: 16,
+    padding: 0,
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
   nextButton: {
-    alignSelf: "flex-end",
-    paddingRight: 20,
     position: "absolute",
-    bottom: 10,
+    bottom: 25,
     width: "100%",
+  },
+  nextButtonWeb: {
+    position: "relative",
+    bottom: 0,
+    width: "100%",
+    maxWidth: 560,
+    paddingRight: 0,
+    marginTop: 16,
+    alignSelf: "center",
   },
 });
