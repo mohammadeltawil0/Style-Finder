@@ -1,18 +1,27 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useRef, useState } from "react";
-import { Alert, Platform, Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
+import DeviceInfo from "react-native-device-info";
 
 export const Camera = ({ setUri, setPage, uri }) => {
   const [permission, requestPermission] = useCameraPermissions();
+  const [hasCamera, sethasCamera] = useState(false);
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
-  
+
   const { width } = useWindowDimensions();
 
   const isWeb = Platform.OS === "web";
@@ -20,9 +29,34 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const buttonWidth = isWide ? 220 : "30%";
   const theme = useTheme();
 
+  useEffect(() => {
+    const checkCamera = async () => {
+      const isPresent = DeviceInfo.hasCamera();
+      console.log("Camera present:", isPresent);
+      sethasCamera(isPresent);
+    };
+    checkCamera();
+  }, []);
+
+  if (!hasCamera){
+    return(
+        <View>
+            <ThemedText style={{textAlign: "center", fontSize: theme.sizes.text, marginBottom: 12}}>
+                {/* TO DO: Add a button to upload an image from the library */}
+                No camera detected on this device. Please upload an image from your library instead.
+            </ThemedText>
+            <Pressable onPress={() => setPage(2)}>
+                <ThemedText>
+                    Skip Image
+                </ThemedText>
+            </Pressable>
+        </View>
+    )
+  }
+
   if (!permission) return null;
 
-  if (!permission.granted) {
+  if (!permission.granted && hasCamera) {
     return (
       <View
         style={{
@@ -31,11 +65,26 @@ export const Camera = ({ setUri, setPage, uri }) => {
           justifyContent: "center",
         }}
       >
-        <ThemedText style={{ textAlign: "center", fontSize: theme.sizes.text, marginBottom: 12 }}>
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: theme.sizes.text,
+            marginBottom: 12,
+          }}
+        >
           We need your permission to use the camera
         </ThemedText>
         <Pressable onPress={requestPermission}>
-          <ThemedText style={{ backgroundColor: theme.colors.tabIconSelected, color: theme.colors.text, fontFamily: "semiBold", fontSize: theme.sizes.h3, padding: 10, borderRadius: 5 }}>
+          <ThemedText
+            style={{
+              backgroundColor: theme.colors.tabIconSelected,
+              color: theme.colors.text,
+              fontFamily: "semiBold",
+              fontSize: theme.sizes.h3,
+              padding: 10,
+              borderRadius: 5,
+            }}
+          >
             GRANT PERMISSION
           </ThemedText>
         </Pressable>
@@ -80,13 +129,20 @@ export const Camera = ({ setUri, setPage, uri }) => {
 
   if (uri) {
     return (
-      <View style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}>
+      <View
+        style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}
+      >
         <Image
           source={{ uri }}
           contentFit="contain"
           style={[styles.previewImage, isWeb && styles.previewImageWeb]}
         />
-        <View style={[styles.navigationButtons, isWeb && styles.navigationButtonsWeb]}>
+        <View
+          style={[
+            styles.navigationButtons,
+            isWeb && styles.navigationButtonsWeb,
+          ]}
+        >
           <Pressable
             onPress={() => setUri(null)}
             style={{
@@ -125,18 +181,16 @@ export const Camera = ({ setUri, setPage, uri }) => {
         pointerEvents="none"
         animateShutter={false}
       />
-      <View style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}>
+      <View
+        style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}
+      >
         <Pressable onPress={toggleFacing} style={styles.iconBtn}>
           <FontAwesome6 name="rotate-left" size={32} color="white" />
         </Pressable>
         <Pressable onPress={takePicture}>
-            <View
-              style={[
-                styles.shutterBtn,
-              ]}
-            >
-              <View style={styles.shutterBtnInner} />
-            </View>
+          <View style={[styles.shutterBtn]}>
+            <View style={styles.shutterBtnInner} />
+          </View>
         </Pressable>
         <Pressable onPress={pickImage} style={styles.iconBtn}>
           <FontAwesome name="photo" size={32} color="white" />
