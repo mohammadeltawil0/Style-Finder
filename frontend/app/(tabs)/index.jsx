@@ -43,39 +43,10 @@ export default function HomeScreen() {
   };
 
   return (
-    <ThemedView
-      gradient={false}
-      style={{ flex: 1, gap: 50, justifyContent: "center", paddingHorizontal: 30 }}
-    >
-      <View className="header-text"
-        style={{ flexDirection: "row", gap: 10, width: "100%" }}>
-        <View style={{ width: "60%" }}>
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h1,
-              fontFamily: theme.fonts.bold,
-            }}
-          >Hello, {username}! Let&apos;s find your style!</ThemedText>
-        </View>
-        <View style={{ width: "30%" }}>
-          {/* TO DO: add logo here or some other thing? */}
-        </View>
-      </View>
-      <View
-        className="not-worn-items"
-        style={{
-          backgroundColor: "#ffffff",
-          borderRadius: 10,
-          height: 150,
-          justifyContent: "space-between",
-          paddingHorizontal: 20,
-          paddingVertical: 20,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.3,
-          shadowRadius: 3.5,
-          elevation: 5
-        }}
+    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center" }}>
+      <ThemedView
+        gradient={false}
+        style={{ flex: 1, gap: 50, justifyContent: "center", paddingHorizontal: 30 }}
       >
         <View className="header-text"
           style={{ flexDirection: "row", gap: 10, width: "100%" }}>
@@ -107,11 +78,7 @@ export default function HomeScreen() {
             elevation: 5
           }}
         >
-          You haven&#39;t worn these in a while
-        </ThemedText>
-        <View style={{justifyContent: "center", flexDirection: 'row', gap: 10 }}>
-          {unwornItems.map((item) => (
-            <Pressable key={item.id} 
+          <ThemedText
             style={{
               fontSize: theme.sizes.h3,
               textAlign: "left"
