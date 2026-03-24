@@ -50,7 +50,7 @@ jobs:
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USERN }}
+          username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_KEY }}
           script: |
             mv /home/ubuntu/stylefinder/stylefinder.jar /home/ubuntu/stylefinder/stylefinder.jar
