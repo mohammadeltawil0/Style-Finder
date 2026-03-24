@@ -1,5 +1,5 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Alert,
   Platform,
@@ -14,11 +14,9 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
-import DeviceInfo from "react-native-device-info";
 
 export const Camera = ({ setUri, setPage, uri }) => {
   const [permission, requestPermission] = useCameraPermissions();
-  const [hasCamera, sethasCamera] = useState(false);
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
 
@@ -29,34 +27,27 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const buttonWidth = isWide ? 220 : "30%";
   const theme = useTheme();
 
-  useEffect(() => {
-    const checkCamera = async () => {
-      const isPresent = DeviceInfo.hasCamera();
-      console.log("Camera present:", isPresent);
-      sethasCamera(isPresent);
-    };
-    checkCamera();
-  }, []);
+  // This is specifically for web, in case testers want to run it on web
+  const checkIfCameraAvailable = async () => {
+    if (Platform.OS === "web") {
+      const isAvailable = await Camera.isAvailableAsync();
+      if (!isAvailable) {
+        // Alert the user or disable camera functionality in UI
+        alert("This device does not have a camera.");
+        return false;
+      }
+    }
+    return true;
+  };
 
-  if (!hasCamera){
-    return(
-        <View>
-            <ThemedText style={{textAlign: "center", fontSize: theme.sizes.text, marginBottom: 12}}>
-                {/* TO DO: Add a button to upload an image from the library */}
-                No camera detected on this device. Please upload an image from your library instead.
-            </ThemedText>
-            <Pressable onPress={() => setPage(2)}>
-                <ThemedText>
-                    Skip Image
-                </ThemedText>
-            </Pressable>
-        </View>
-    )
+  console.log("Camera available status:", checkIfCameraAvailable);
+
+  if (!checkIfCameraAvailable()) {
+    return <View></View>;
   }
-
   if (!permission) return null;
 
-  if (!permission.granted && hasCamera) {
+  if (!permission.granted) {
     return (
       <View
         style={{
