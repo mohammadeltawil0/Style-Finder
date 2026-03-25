@@ -3,7 +3,6 @@ package CS431.Style_Finder.controller;
 import CS431.Style_Finder.dto.PreferenceDto;
 import CS431.Style_Finder.service.PreferenceService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,24 +12,18 @@ public class PreferenceController {
 
     private final PreferenceService preferenceService;
 
-    // POST /api/preferences
-    // Creates a new preference or updates the existing one for that user.
-    // Body: { "userId":1, "colorOftenWear":"black", "preferFit":"slim", "gender":"female", ... }
     @PostMapping
-    public ResponseEntity<PreferenceDto> createOrUpdate(@RequestBody PreferenceDto dto) {
-        return ResponseEntity.ok(preferenceService.createOrUpdatePreference(dto));
+    public PreferenceDto createOrUpdatePreference(@RequestBody PreferenceDto dto) {
+        return preferenceService.createOrUpdatePreference(dto);
     }
 
-    // GET /api/preferences/user/{userId}
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<PreferenceDto> getByUser(@PathVariable Long userId) {
-        return ResponseEntity.ok(preferenceService.getPreferenceByUserId(userId));
+    @GetMapping("/{userId}")
+    public PreferenceDto getPreference(@PathVariable Long userId) {
+        return preferenceService.getPreferenceByUserId(userId);
     }
 
-    // DELETE /api/preferences/{id}
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> delete(@PathVariable Long id) {
-        preferenceService.deletePreference(id);
-        return ResponseEntity.ok("Preference deleted successfully.");
+    @DeleteMapping("/{preferenceId}")
+    public void deletePreference(@PathVariable Long preferenceId) {
+        preferenceService.deletePreference(preferenceId);
     }
 }
