@@ -3,7 +3,6 @@ package CS431.Style_Finder.model;
 import jakarta.persistence.*;
 import lombok.*;
 
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,25 +17,32 @@ public class Preference {
     @Column(name = "preference_id")
     private Long preferenceId;
 
-    // One-to-One: each user has exactly one preference record
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+    private String comfort;
 
-    @Column(name = "color_often_wear")
-    private String colorOftenWear;
+    private String occasion;   
+    private String weather;
 
+    private String style;      
+    
     @Column(name = "prefer_fit")
     private String preferFit;
 
-    @Column(name = "fabric_prefer")
-    private String fabricPrefer;
+    private String items;      
+    
+    @Column(name = "avoid_items")
+    private String avoidItems;
 
-    @Column(name = "outfit_need_most")
-    private String outfitNeedMost;
+    @Column(name = "colors_wear")
+    private String colorsWear;
 
-    @Column(name = "gender")
-    private String gender;
+    @Column(name = "colors_avoid")
+    private String colorsAvoid;
+
+    @Column(name = "trip_priority")
+    private String tripPriority;
 }
 
 
