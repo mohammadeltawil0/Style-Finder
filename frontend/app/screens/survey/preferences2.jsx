@@ -2,6 +2,9 @@ import { View, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { useSurvey } from "../../../context/SurveyContext";
 import { theme } from "../../../constants";
+import { Alert } from "react-native";
+import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 const OPTIONS = {
@@ -39,10 +42,42 @@ export default function Preferences2() {
       );
     });
 
-  const handleSave = () => {
-    console.log("FINAL SURVEY:", answers);
-    // TODO: API call here
-  };
+  const router = useRouter();
+  const handleSave = async () => {
+  try {
+    const storedUserId = await AsyncStorage.getItem("userId");
+
+    const payload = {
+      userId: Number(storedUserId),
+      comfort: answers.comfort,
+      occasion: answers.occasion,
+      weather: answers.weather,
+      style: answers.style,
+      preferFit: answers.fit,
+      items: answers.items,
+      avoidItems: answers.avoidItems,
+      colorsWear: answers.colorsWear,
+      colorsAvoid: answers.colorsAvoid,
+      tripPriority: answers.tripPriority,
+    };
+
+    const response = await fetch("http://api.stylefinder.tech/api/preferences", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) throw new Error("Failed");
+
+    Alert.alert("Preferences saved!");
+    setTimeout(() => {
+      router.replace("/screens/survey/settings");
+    }, 300);
+
+  } catch (error) {
+    Alert.alert("Error", "Failed to save preferences");
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

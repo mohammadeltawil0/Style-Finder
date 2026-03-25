@@ -8,12 +8,12 @@ export const SurveyProvider = ({ children }) => {
     occasion: [],      
     weather: "",
     style: [],         
-    preferFit: "",     
+    fit: "",     
     items: [],         
-    avoid_items: [],  
-    colors_wear: [],  
-    colors_avoid: [],  
-    trip_priority: "",
+    avoidItems: [],  
+    colorsWear: [],  
+    colorsAvoid: [],  
+    tripPriority: "",
   });
 
   return (
