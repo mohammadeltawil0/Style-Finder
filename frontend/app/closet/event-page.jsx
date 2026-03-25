@@ -70,8 +70,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
       >
         <View
           style={[
-            styles.contentContainer,
-            uri && styles.contentContainerWithPreview,
+            styles.contentContainer
           ]}
         >
           <View style={styles.togglePreviewContainer}
@@ -242,7 +241,7 @@ const styles = {
     justifyContent: "center",
   },
   togglePreviewContainer: {
-    position: "absolute",
+    position: "relative",
     top: 0,
     left: 0,
     right: 0,
@@ -269,9 +268,6 @@ const styles = {
     justifyContent: "center",
     gap: 8,
     position: "relative",
-  },
-  contentContainerWithPreview: {
-    paddingTop: 90,
   },
   mainContent: {
     justifyContent: "center",

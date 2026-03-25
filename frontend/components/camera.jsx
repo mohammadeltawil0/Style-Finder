@@ -19,6 +19,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
+  const [isCameraAvailable, setIsCameraAvailable] = useState(true);
 
   const { width } = useWindowDimensions();
 
@@ -27,23 +28,69 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const buttonWidth = isWide ? 220 : "30%";
   const theme = useTheme();
 
-  // This is specifically for web, in case testers want to run it on web
-  const checkIfCameraAvailable = async () => {
-    if (Platform.OS === "web") {
-      const isAvailable = await Camera.isAvailableAsync();
-      if (!isAvailable) {
-        // Alert the user or disable camera functionality in UI
-        alert("This device does not have a camera.");
-        return false;
+  // this is specifically for web users or devices without cameras
+  // TO DO: test this on a device w/o cam
+  // TO DO : add an upload feature!
+  useEffect(() => {
+    const checkCameraAvailability = async () => {
+      if (Platform.OS !== "web") {
+        setIsCameraAvailable(true);
+        return;
       }
-    }
-    return true;
-  };
 
-  console.log("Camera available status:", checkIfCameraAvailable);
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setIsCameraAvailable(false);
+        return;
+      }
 
-  if (!checkIfCameraAvailable()) {
-    return <View></View>;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        stream.getTracks().forEach((track) => track.stop());
+        setIsCameraAvailable(true);
+      } catch {
+        setIsCameraAvailable(false);
+      }
+    };
+
+    checkCameraAvailability();
+  }, []);
+
+  if (!isCameraAvailable) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 40,
+        }}
+      >
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: theme.sizes.text,
+            marginBottom: 12,
+          }}
+        >
+          No camera detected on this device. Please upload an image from your
+          library instead.
+        </ThemedText>
+        <Pressable
+          style={{
+            alignSelf: "center",
+            backgroundColor: theme.colors.card,
+            borderRadius: 10,
+            paddingVertical: 10,
+            width: buttonWidth,
+          }}
+          onPress={() => setPage(2)}
+        >
+          <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+        </Pressable>
+      </View>
+    );
   }
   if (!permission) return null;
 
@@ -99,7 +146,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ["images"], // Limit to images
       allowsEditing: true, // Allows cropping/rotating
-      aspect: [4, 3], // Fixed aspect ratio for cropping
+      aspect: [1, 1], // Fixed aspect ratio for cropping
       quality: 1, // Highest quality
     });
 
@@ -120,14 +167,16 @@ export const Camera = ({ setUri, setPage, uri }) => {
 
   if (uri) {
     return (
-      <View
-        style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}
-      >
-        <Image
-          source={{ uri }}
-          contentFit="contain"
-          style={[styles.previewImage, isWeb && styles.previewImageWeb]}
-        />
+      <>
+        <View
+          style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}
+        >
+          <Image
+            source={{ uri }}
+            contentFit="cover"
+            style={[styles.previewImage, isWeb && styles.previewImageWeb]}
+          />
+        </View>
         <View
           style={[
             styles.navigationButtons,
@@ -159,7 +208,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
         </View>
-      </View>
+      </>
     );
   }
 
@@ -271,20 +320,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   previewContainer: {
+    alignItems: "center",
     flex: 1,
+    paddingHorizontal: 30,
+    justifyContent: "center",
     width: "100%",
   },
   previewContainerWeb: {
-    maxWidth: 680,
     alignSelf: "center",
-    paddingHorizontal: 24,
     paddingTop: 6,
     paddingBottom: 24,
   },
   previewImage: {
-    flex: 1,
-    marginTop: -80,
-    minHeight: 270,
+    width: "100%",
+    aspectRatio: 1,
   },
   previewImageWeb: {
     borderRadius: 16,

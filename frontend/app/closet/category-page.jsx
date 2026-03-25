@@ -9,7 +9,7 @@ import {
 import { Ionicons, FontAwesome6 } from "@expo/vector-icons";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import { theme } from "../../constants";
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 export default function CategoryPage({ setPage, category, setCategory, uri }) {
   const { width } = useWindowDimensions();
@@ -18,7 +18,9 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
   const buttonWidth = isWide ? 220 : "30%";
 
   const getOptionStyle = (selected) => ({
-    backgroundColor: selected ? theme.colors.tabIconSelected : theme.colors.lightBrown,
+    backgroundColor: selected
+      ? theme.colors.tabIconSelected
+      : theme.colors.lightBrown,
   });
 
   return (
@@ -31,14 +33,9 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={[
-            styles.contentContainer,
-            uri && styles.contentContainerWithPreview,
-          ]}
-        >
+        <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} />
           </View>
 
           <View
@@ -127,7 +124,10 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
 
             <Pressable
               onPress={() => setCategory("Full Body")}
-              style={[styles.optionCard, getOptionStyle(category === "Full Body")]}
+              style={[
+                styles.optionCard,
+                getOptionStyle(category === "Full Body"),
+              ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <FontAwesome6 name="person-dress" size={24} color="black" />
@@ -154,7 +154,10 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
 
             <Pressable
               onPress={() => setCategory("Outerwear")}
-              style={[styles.optionCard, getOptionStyle(category === "Outerwear")]}
+              style={[
+                styles.optionCard,
+                getOptionStyle(category === "Outerwear"),
+              ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <MaterialIcons name="checkroom" size={30} color="black" />
@@ -241,9 +244,6 @@ const styles = StyleSheet.create({
     gap: 8,
     position: "relative",
   },
-  contentContainerWithPreview: {
-    paddingTop: 90,
-  },
   textBlock: {
     paddingBottom: 20,
     zIndex: 1,
@@ -289,16 +289,16 @@ const styles = StyleSheet.create({
   },
   navigationButtonsWeb: {
     paddingBottom: 28,
-    marginLeft: 10
+    marginLeft: 10,
   },
   navigationButtonsSingle: {
     justifyContent: "center",
   },
   togglePreviewContainer: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 20,
+    // position: "relative",
+    // top: 0,
+    // left: 0,
+    // right: 0,
+    // zIndex: 20,
   },
 });

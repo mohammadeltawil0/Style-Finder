@@ -1,7 +1,6 @@
 import {
   ActivityIndicator,
   InteractionManager,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,17 +23,12 @@ const getContrastColor = (hex) => {
   return brightness > 125 ? '#000000' : '#FFFFFF';
 };
 
-export default function ColorPage({ setPage, color, setColor, pattern, setPattern, uri }) {
+export default function ColorPage({ setPage, color, setColor, pattern, setPattern, uri, isSolid, setIsSolid }) {
   const [tempColor, setTempColor] = useState(color || '#74512D');
   const [isReady, setIsReady] = useState(false);
-  const [isSolid, setIsSolid] = useState(false); //true if pressed next after "solid" button
 
-  console.log("is solid: ", isSolid, " pattern: ", pattern, " color: ", color);
-
-  // TO DO: do we want pattern to equal color if it is solid, or do we want pattern and color?
   const theme = useTheme();
   const { width } = useWindowDimensions();
-  const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
 
@@ -101,14 +95,14 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     <ThemedView gradient={true} style={styles.page}>
       <ScrollView
         style={styles.scrollView}
-        scrollEnabled={!isSolid}
+        // scrollEnabled={!isSolid}
         contentContainerStyle={[
           styles.scrollContent,
           isWide && styles.scrollContentWide,
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View style={[styles.contentContainer, uri && styles.contentContainerWithPreview]}>
+        <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
@@ -133,7 +127,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                       setIsSolid(false);
                     }}
                   >
-                    <ThemedText style={{ backgroundColor: theme.colors.lightBrown, textAlign: "center", fontSize: theme.sizes.h3, marginTop: 20, color: theme.colors.text, padding: 10, borderRadius: 10, paddingHorizontal: 20, }}>
+                    <ThemedText style={{ backgroundColor: theme.colors.card, textAlign: "center", fontSize: theme.sizes.h3, marginTop: 20, color: theme.colors.text, padding: 10, borderRadius: 10, paddingHorizontal: 20, }}>
                       Change Pattern
                     </ThemedText>
                   </Pressable>
@@ -184,7 +178,6 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                 <View style={styles.patternOptionsGrid}>
                   {patternOptions.map((option) => {
                     const isSelected = pattern === option.id;
-
                     return (
                       <Pressable
                         onPress={() => {
@@ -352,7 +345,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   togglePreviewContainer: {
-    position: 'absolute',
+    position: 'relative',
     top: 10,
     left: 0,
     right: 0,
@@ -404,8 +397,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     position: "relative",
-  },
-  contentContainerWithPreview: {
-    paddingTop: 90,
   },
 });

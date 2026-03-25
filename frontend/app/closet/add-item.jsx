@@ -12,6 +12,7 @@ export default function AddItemScreen() {
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
   const [event, setEvent] = useState(""); //TO DO: do we want one option or multi select
+  const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
 
   return (
     <>
@@ -30,7 +31,7 @@ export default function AddItemScreen() {
       )}
 
       {page === 3 && (
-        <ColorPage setPage={setPage} color={color} setColor={setColor} pattern={pattern} setPattern={setPattern} uri={uri} />
+        <ColorPage setPage={setPage} color={color} setColor={setColor} pattern={pattern} setPattern={setPattern} uri={uri} isSolid={isSolid} setIsSolid={setIsSolid} />
       )}
 
       {/* TO DO: fix the page 4; not rendering  */}
