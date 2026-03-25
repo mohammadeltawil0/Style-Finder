@@ -71,9 +71,10 @@ export default function Preferences2() {
 
     Alert.alert("Preferences saved!");
     setTimeout(() => {
-      router.replace("/screens/survey/settings");
+      console.log("Successfully saved");
+      router.replace("/screens/settings"); //TODO: change navigation
     }, 300);
-
+    
   } catch (error) {
     Alert.alert("Error", "Failed to save preferences");
   }

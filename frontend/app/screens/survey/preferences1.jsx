@@ -3,6 +3,8 @@ import { ThemedText, ThemedView } from "../../../components";
 import { useRouter } from "expo-router";
 import { theme } from "../../../constants";
 import { useSurvey } from "../../../context/SurveyContext";
+import { useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const OPTIONS = {
   comfort: [ "Comfort is my top priority", "Balanced – style + comfort", "Style over comfort", ],
@@ -14,6 +16,65 @@ const OPTIONS = {
 export default function Preferences1() {
   const router = useRouter();
   const { answers, setAnswers } = useSurvey();
+  //saves preferences from previous sessions
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) return;
+
+        const response = await fetch(
+          `http://api.stylefinder.tech/api/preferences/${userId}`
+        );
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+
+        console.log("LOADED PREFS:", data);
+
+        setAnswers((prev) => ({
+          ...prev,
+          comfort: data.comfort || "",
+
+          occasion: Array.isArray(data.occasion)
+            ? data.occasion
+            : data.occasion?.split(",") || [],
+
+          weather: data.weather || "",
+
+          style: Array.isArray(data.style)
+            ? data.style
+            : data.style?.split(",") || [],
+
+          fit: data.preferFit || "",
+
+          items: Array.isArray(data.items)
+            ? data.items
+            : data.items?.split(",") || [],
+
+          avoidItems: Array.isArray(data.avoidItems)
+            ? data.avoidItems
+            : data.avoidItems?.split(",") || [],
+
+          colorsWear: Array.isArray(data.colorsWear)
+            ? data.colorsWear
+            : data.colorsWear?.split(",") || [],
+
+          colorsAvoid: Array.isArray(data.colorsAvoid)
+            ? data.colorsAvoid
+            : data.colorsAvoid?.split(",") || [],
+
+          tripPriority: data.tripPriority || "",
+        }));
+
+      } catch (error) {
+        console.error("Error loading preferences:", error);
+      }
+    };
+
+    loadPreferences();
+  }, []);
 
   const selectOne = (key, value) => { setAnswers((prev) => ({ ...prev, [key]: value })); };
 
