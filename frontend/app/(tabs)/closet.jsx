@@ -169,7 +169,7 @@ export default function ClosetScreen() {
 
           {mode === "trip" && (
             <FlatList
-              className = "trip_Oufit_Detials"
+              className = "trip_Oufit_Details"
               data={trips}
               keyExtractor={(trip) => trip.id}
               // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
