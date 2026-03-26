@@ -66,6 +66,12 @@ export default function RootLayout() {
               header: () => <CustomHeader page="survey" />,
             }}
           />
+          <Stack.Screen 
+            name="AdditionalConstraints" 
+            options={{
+              header: () => <CustomHeader page="AdditionalConstraints" />,
+            }}
+          />
           <Stack.Screen
             name="screens/survey/preferences2"
             options={{
