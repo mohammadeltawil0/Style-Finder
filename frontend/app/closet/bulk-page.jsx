@@ -63,28 +63,25 @@ export default function BulkPage({
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                How bulk is this item?
+                How bulky is this item?
               </ThemedText>
               <ThemedText style={{ fontSize: theme.sizes.h3 }}>
                 Is this item thick, thin, or something in between?
               </ThemedText>
             </View>
             <View
-              className="seasonOptionsView"
+              className="bulkOptionsView"
               style={{
                 alignItems: "center",
                 justifyContent: "center",
-                gap: 12,
-                paddingBottom: 20,
                 width: "100%",
               }}
             >
-              <View style={styles.seasonOptions}>
+              <View style={styles.bulkOptions}>
                 <View
                   className="sliderLabelsView"
                   style={styles.sliderLabelsView}
                 >
-                  {/* TO DO: remove the gap between slider and labels */}
                   <View
                     className="bulkLabels"
                     style={{
@@ -153,7 +150,7 @@ export default function BulkPage({
 }
 
 const styles = {
-  seasonOptions: {
+  bulkOptions: {
     gap: 12,
     justifyContent: "center",
     width: "100%",
@@ -207,7 +204,6 @@ const styles = {
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
     paddingHorizontal: 20,
     paddingVertical: 24,
   },
@@ -236,4 +232,8 @@ const styles = {
   textBlockWide: {
     paddingHorizontal: 0,
   },
+  sliderLabelsView: {
+    height: 300,
+    justifyContent: "center",
+  }
 };
