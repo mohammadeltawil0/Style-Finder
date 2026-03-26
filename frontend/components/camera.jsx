@@ -30,7 +30,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
 
   // this is specifically for web users or devices without cameras
   // TO DO: test this on a device w/o cam
-  // TO DO : add an upload feature!
+  // TO DO: make a loading state for when we're checking for camera availability since that can take a sec
   useEffect(() => {
     const checkCameraAvailability = async () => {
       if (Platform.OS !== "web") {
@@ -272,7 +272,7 @@ const styles = StyleSheet.create({
   //TO DO: how much height do we want to give user????
   camera: {
     width: "90%",
-    aspectRatio: 3 / 4,
+    aspectRatio: 1,
     borderRadius: 16,
     overflow: "hidden",
   },

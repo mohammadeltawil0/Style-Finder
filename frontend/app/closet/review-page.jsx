@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import { theme } from "../../constants";
-import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function ReviewPage({
@@ -19,21 +18,27 @@ export default function ReviewPage({
   pattern,
   color,
   category,
+  material,
+  fit,
+  length,
+  bulk,
+  handleSubmit,
 }) {
+  // TO DO: right now, setting states to use "-" i.e. geometric-abstract, but we should convert that!
+  // and make things capitalize, but do this in add-items!
   const { isWide } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const buttonWidth = isWide ? 220 : "30%";
-  const router = useRouter();
 
-  const handleSubmit = () => {
-    // TO DO: submit to backend, and navigate to inventory page!
-    router.push({
-      pathname: "/closet",
-      params: { tab: "inventory" },
-    });
-  };
+  // TO DO: when we edit, user needs to go through entire process again, so idk
 
-  //TO DO: think about editing responses, but this might gt too complicated
+  // Convert enum/int fit states to actual categories for review page display
+  const convertedFit =
+    fit === 0 ? "Skinny" : fit === 1 ? "Regular" : "Oversized";
+
+  const convertedBulk =
+    bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
+
   return (
     <ThemedView gradient={true} style={{ flex: 1 }}>
       <ScrollView
@@ -76,17 +81,44 @@ export default function ReviewPage({
             </View>
             <View className="responseContent" style={{ flexGrow: 1, gap: 20 }}>
               {uri && (
-                <Image
-                  source={{ uri }}
-                  contentFit="cover"
+                <View
                   style={{
-                    width: "100%",
-                    aspectRatio: 1,
+                    backgroundColor: theme.colors.card,
                     borderRadius: 10,
-                    paddingBottom: 20,
+                    paddingTop: 10,
+                    paddingBottom: 10,
+                    paddingHorizontal: 10,
+                    flexDirection: "column",
                   }}
-                  onError={() => setImageFailed(true)}
-                />
+                >
+                  <View
+                    className="editContainer"
+                    style={{
+                      flexGrow: 1,
+                      zIndex: 10,
+                      alignItems: "flex-end",
+                      marginBottom: 10,
+                    }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(1)}
+                    />
+                  </View>
+                  <Image
+                    source={{ uri }}
+                    contentFit="cover"
+                    style={{
+                      width: "100%",
+                      aspectRatio: 1,
+                      borderRadius: 10,
+                      paddingBottom: 20,
+                    }}
+                    onError={() => setImageFailed(true)}
+                  />
+                </View>
               )}
               {!uri && (
                 <View
@@ -355,6 +387,297 @@ export default function ReviewPage({
                   />
                 </View>
               </View>
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
+                <View
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
+                >
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
+                        fontSize: theme.sizes.h3,
+                      },
+                    ]}
+                  >
+                    Material:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
+                        fontFamily: theme.fonts.regular,
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
+                  >
+                    {material}
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => setPage(2)}
+                  />
+                </View>
+              </View>
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
+                <View
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
+                >
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
+                        fontSize: theme.sizes.h3,
+                      },
+                    ]}
+                  >
+                    Fit:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
+                        fontFamily: theme.fonts.regular,
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
+                  >
+                    {convertedFit}
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => setPage(6)}
+                  />
+                </View>
+              </View>
+              {/* OPTIONAL PARAMETERS */}
+              {length ? (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      backgroundColor: theme.colors.card,
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.titleText,
+                        {
+                          fontFamily: theme.fonts.bold,
+                          fontSize: theme.sizes.h3,
+                        },
+                      ]}
+                    >
+                      Length:
+                    </ThemedText>
+                    <ThemedText
+                      style={[
+                        styles.answerText,
+                        {
+                          fontFamily: theme.fonts.regular,
+                          fontSize: theme.sizes.text,
+                        },
+                      ]}
+                    >
+                      {length}
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(2)}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      alignItems: "center",
+                      backgroundColor: theme.colors.card,
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: theme.sizes.h3,
+                        color: theme.colors.text,
+                        fontFamily: theme.fonts.regular,
+                      }}
+                    >
+                      Length not specified
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(8)}
+                    />
+                  </View>
+                </View>
+              )}
+              {bulk ? (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      backgroundColor: theme.colors.card,
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.titleText,
+                        {
+                          fontFamily: theme.fonts.bold,
+                          fontSize: theme.sizes.h3,
+                        },
+                      ]}
+                    >
+                      Bulk:
+                    </ThemedText>
+                    <ThemedText
+                      style={[
+                        styles.answerText,
+                        {
+                          fontFamily: theme.fonts.regular,
+                          fontSize: theme.sizes.text,
+                        },
+                      ]}
+                    >
+                      {convertedBulk}
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(2)}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      alignItems: "center",
+                      backgroundColor: theme.colors.card,
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: theme.sizes.h3,
+                        color: theme.colors.text,
+                        fontFamily: theme.fonts.regular,
+                      }}
+                    >
+                      Bulk not specified
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(9)}
+                    />
+                  </View>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -362,7 +685,7 @@ export default function ReviewPage({
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(4)}
+          onPress={() => setPage(9)}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,

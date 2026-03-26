@@ -8,46 +8,41 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, event, setEvent, uri }) {
+export default function SeasonPage({ category, season, setSeason, setPage, uri}) {
   const theme = useTheme();
-  const eventOptions = [
+  const seasonOptions = [
     {
-      id: "versatile",
-      label: "Versatile",
-      emoji: "✨",
-      subheader: "Works for many occasions",
+      id: "all-seasons",
+      label: "All Seasons",
+      emoji: "🌦️",
+      subheader: "Versatile for year-round wear",
     },
     {
-      id: "casual",
-      label: "Casual",
-      emoji: "🧢",
-      subheader: "Everyday and relaxed outfits",
+      id: "winter",
+      label: "Winter",
+      emoji: "❄️",
+      subheader: "Warm and layered outfits",
     },
     {
-      id: "work-smart",
-      label: "Work/Smart",
-      emoji: "💼",
-      subheader: "Office and polished looks",
+      id: "spring",
+      label: "Spring",
+      emoji: "🌷",
+      subheader: "Light and breezy outfits",
     },
     {
-      id: "party-night",
-      label: "Party/Night Out",
-      emoji: "🌙",
-      subheader: "Evening and social events",
+      id: "summer",
+      label: "Summer",
+      emoji: "☀️",
+      subheader: "Light and breezy outfits",
     },
     {
-      id: "formal",
-      label: "Formal",
-      emoji: "🎩",
-      subheader: "Dressy and special occasions",
-    },
-    {
-      id: "active-sport",
-      label: "Active/Sport",
-      emoji: "🏃",
-      subheader: "Movement-friendly outfits",
-    },
+      id: "fall",
+      label: "Fall",
+      emoji: "🍂",
+      subheader: "Cozy and layered outfits",
+    }
   ];
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
@@ -97,27 +92,24 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                What is the formality level of this piece?
-              </ThemedText>
-              <ThemedText style={{fontSize: theme.sizes.h3 }}>
-                Is this item business casual, formal, or something you can wear to a party?
+                What kind of season is this item for?
               </ThemedText>
             </View>
             <View
-              className="eventOptionsView"
-              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 30, width: "100%" }}
+              className="seasonOptionsView"
+              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 20, width: "100%" }}
             >
-              <View style={styles.eventOptionsGrid}>
-                {eventOptions.map((option) => {
-                  const isSelected = event === option.id;
+              <View style={styles.seasonOptions}>
+                {seasonOptions.map((option) => {
+                  const isSelected = season === option.id;
 
                   return (
                     <Pressable
                       onPress={() => {
                         if (isSelected) {
-                          setEvent("");
+                          setSeason("");
                         } else {
-                          setEvent(option.id);
+                          setSeason(option.id);
                         }
                       }}
                       key={option.id}
@@ -163,7 +155,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(3)}
+          onPress={() => setPage(6)}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
@@ -174,7 +166,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
+        {season && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -182,7 +174,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
               padding: 10,
               width: "35%",
             }}
-            onPress={() => setPage(5)}
+            onPress={() => setPage(8)}
           >
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
@@ -193,7 +185,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
 }
 
 const styles = {
-  eventOptionsGrid: {
+  seasonOptions: {
     gap: 12,
     justifyContent: "center",
     width: "100%",

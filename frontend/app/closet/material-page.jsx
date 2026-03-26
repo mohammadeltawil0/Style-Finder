@@ -3,51 +3,53 @@ import {
   Pressable,
   useWindowDimensions,
   ScrollView,
-  View
+  View,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, event, setEvent, uri }) {
+export default function MaterialPage({ setPage, material, setMaterial, uri }) {
   const theme = useTheme();
-  const eventOptions = [
+  const materialOptions = [
     {
-      id: "versatile",
-      label: "Versatile",
-      emoji: "✨",
-      subheader: "Works for many occasions",
+      id: "cotton",
+      label: "Cotton",
+      subheader: "Soft, breathable, and great for everyday wear",
     },
     {
-      id: "casual",
-      label: "Casual",
-      emoji: "🧢",
-      subheader: "Everyday and relaxed outfits",
+      id: "linen-hemp",
+      label: "Linen/Hemp",
+      subheader: "Lightweight and breathable for hot weather",
     },
     {
-      id: "work-smart",
-      label: "Work/Smart",
-      emoji: "💼",
-      subheader: "Office and polished looks",
+      id: "wool-fleece",
+      label: "Wool/Fleece",
+      subheader: "Warm and insulating for sweaters and coats",
     },
     {
-      id: "party-night",
-      label: "Party/Night Out",
-      emoji: "🌙",
-      subheader: "Evening and social events",
+      id: "silk-satin",
+      label: "Silk/Satin",
+      subheader: "Smooth, lightweight, and luxurious",
     },
     {
-      id: "formal",
-      label: "Formal",
-      emoji: "🎩",
-      subheader: "Dressy and special occasions",
+      id: "leather-faux-leather",
+      label: "Leather/Faux Leather",
+      subheader: "Durable hide or leather alternative",
     },
     {
-      id: "active-sport",
-      label: "Active/Sport",
-      emoji: "🏃",
-      subheader: "Movement-friendly outfits",
+      id: "synthetics",
+      label: "Synthetics",
+      subheader:
+        "Strong, flexible, and common in activewear like Polyster, Nylon, and Spandex",
+    },
+    {
+      // TO DO: figure out how to handle other?
+      id: "other",
+      label: "Other",
+      subheader: "Materials not listed above",
     },
   ];
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
@@ -68,20 +70,12 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={[
-            styles.contentContainer
-          ]}
-        >
-          <View style={styles.togglePreviewContainer}
-            pointerEvents="box-none">
+        <View style={[styles.contentContainer]}>
+          <View style={styles.togglePreviewContainer} pointerEvents="box-none">
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
 
-          <View
-            className="mainContent"
-            style={styles.mainContent}
-          >
+          <View className="mainContent" style={styles.mainContent}>
             <View
               className="question"
               style={[
@@ -97,32 +91,45 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                What is the formality level of this piece?
+                What material is this
               </ThemedText>
-              <ThemedText style={{fontSize: theme.sizes.h3 }}>
-                Is this item business casual, formal, or something you can wear to a party?
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h1,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                  paddingBottom: 20,
+                }}
+              >
+                item made of?
               </ThemedText>
             </View>
             <View
-              className="eventOptionsView"
-              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 30, width: "100%" }}
+              className="materialOptionsView"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 12,
+                paddingBottom: 20,
+                width: "100%",
+              }}
             >
-              <View style={styles.eventOptionsGrid}>
-                {eventOptions.map((option) => {
-                  const isSelected = event === option.id;
+              <View style={styles.materialOptionsGrid}>
+                {materialOptions.map((option) => {
+                  const isSelected = material === option.id;
 
                   return (
                     <Pressable
                       onPress={() => {
                         if (isSelected) {
-                          setEvent("");
+                          setMaterial("");
                         } else {
-                          setEvent(option.id);
+                          setMaterial(option.id);
                         }
                       }}
                       key={option.id}
                       style={[
-                        isSelected && styles.selectedEventOptionButton,
+                        isSelected && styles.selectedMaterialOptions,
                         {
                           backgroundColor: isSelected
                             ? theme.colors.tabIconSelected
@@ -142,13 +149,9 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                           fontFamily: theme.fonts.bold,
                         }}
                       >
-                        {option.emoji} {option.label}
+                        {option.label}
                       </ThemedText>
-                      <ThemedText
-                        style={[
-                          styles.optionSubheader,
-                        ]}
-                      >
+                      <ThemedText style={[styles.optionSubheader]}>
                         {option.subheader}
                       </ThemedText>
                     </Pressable>
@@ -159,7 +162,6 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
           </View>
         </View>
       </ScrollView>
-
 
       <View style={styles.navigationButtons}>
         <Pressable
@@ -174,7 +176,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
+        {material && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -182,7 +184,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
               padding: 10,
               width: "35%",
             }}
-            onPress={() => setPage(5)}
+            onPress={() => setPage(6)}
           >
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
@@ -193,7 +195,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
 }
 
 const styles = {
-  eventOptionsGrid: {
+  materialOptionsGrid: {
     gap: 12,
     justifyContent: "center",
     width: "100%",
@@ -204,7 +206,7 @@ const styles = {
     textAlign: "flex-start",
     marginTop: 4,
   },
-  selectedEventOptionButton: {
+  selectedMaterialOptions: {
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 12,
@@ -228,7 +230,7 @@ const styles = {
   },
   navigationButtonsWeb: {
     paddingBottom: 28,
-    marginLeft: 10
+    marginLeft: 10,
   },
   navigationButtonsSingle: {
     justifyContent: "center",

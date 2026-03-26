@@ -118,7 +118,7 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
                   paddingTop: 10,
                 }}
               >
-                Low rise, mid rise, high rise to flared, skinny, and wide!
+                Low rise, mid rise, high rise to flared, skinny, and wide. This includes skirts too!
               </ThemedText>
             </Pressable>
 

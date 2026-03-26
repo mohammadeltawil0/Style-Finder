@@ -3,55 +3,87 @@ import {
   Pressable,
   useWindowDimensions,
   ScrollView,
-  View
+  View,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
-
-export default function EventPage({ setPage, event, setEvent, uri }) {
+export default function LengthPage({
+  category,
+  length,
+  setLength,
+  setPage,
+  uri,
+}) {
   const theme = useTheme();
-  const eventOptions = [
+
+  console.log("Platform: ", Platform.OS);
+
+  // specifically for where it ends on the waist
+  const topOptions = [
     {
-      id: "versatile",
-      label: "Versatile",
-      emoji: "✨",
-      subheader: "Works for many occasions",
+      id: "sleeveless",
+      label: "Sleeveless",
+      subheader: "No sleeves; exposes the shoulders and arms",
     },
     {
-      id: "casual",
-      label: "Casual",
-      emoji: "🧢",
-      subheader: "Everyday and relaxed outfits",
+      id: "cap",
+      label: "Cap",
+      subheader: "Very short sleeve that sits over the shoulder cap",
     },
     {
-      id: "work-smart",
-      label: "Work/Smart",
-      emoji: "💼",
-      subheader: "Office and polished looks",
+      id: "short-sleeve",
+      label: "Short Sleeve",
+      subheader: "Sleeve ends around the upper arm",
     },
     {
-      id: "party-night",
-      label: "Party/Night Out",
-      emoji: "🌙",
-      subheader: "Evening and social events",
+      id: "three-quarter",
+      label: "Three Quarter",
+      subheader: "Sleeve ends between the elbow and wrist",
     },
     {
-      id: "formal",
-      label: "Formal",
-      emoji: "🎩",
-      subheader: "Dressy and special occasions",
-    },
-    {
-      id: "active-sport",
-      label: "Active/Sport",
-      emoji: "🏃",
-      subheader: "Movement-friendly outfits",
+      id: "long-sleeve",
+      label: "Long Sleeve",
+      subheader: "Sleeve extends to the wrist",
     },
   ];
+
+  const bottomOptions = [
+    {
+      id: "above-knee",
+      label: "Above Knee",
+      subheader: "Includes micro and mini lengths above the knee",
+    },
+    {
+      id: "knee-length-bermuda",
+      label: "Knee Length / Bermuda",
+      subheader: "Hem falls at or just around the knee",
+    },
+    {
+      id: "midi-capri",
+      label: "Midi / Capri",
+      subheader: "Falls below the knee to mid-calf",
+    },
+    {
+      id: "maxi-full-length",
+      label: "Maxi / Full Length",
+      subheader: "Extends to the ankle or full leg length",
+    },
+  ];
+
+  const lengthOptions =
+    category === "Tops" || category === "Outerwear"
+      ? topOptions
+      : bottomOptions;
+  console.log("category: ", category, " length options: ", lengthOptions);
+
+  // Length, bulk, material, fit
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+
+  // for the animation
 
   return (
     <ThemedView
@@ -68,20 +100,12 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={[
-            styles.contentContainer
-          ]}
-        >
-          <View style={styles.togglePreviewContainer}
-            pointerEvents="box-none">
+        <View style={[styles.contentContainer]}>
+          <View style={styles.togglePreviewContainer} pointerEvents="box-none">
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
 
-          <View
-            className="mainContent"
-            style={styles.mainContent}
-          >
+          <View className="mainContent" style={styles.mainContent}>
             <View
               className="question"
               style={[
@@ -97,27 +121,40 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                What is the formality level of this piece?
+                What is the length of this item?
               </ThemedText>
-              <ThemedText style={{fontSize: theme.sizes.h3 }}>
-                Is this item business casual, formal, or something you can wear to a party?
-              </ThemedText>
+              {category === "Tops" || category === "Full Body" ? (
+                <ThemedText style={{ fontSize: theme.sizes.h3 }}>
+                  Where does the sleeve end on this item?
+                </ThemedText>
+              ) : (
+                <ThemedText style={{ fontSize: theme.sizes.h3 }}>
+                  Does this item end above the knee, at the knee, or below the
+                  knee?
+                </ThemedText>
+              )}
             </View>
             <View
-              className="eventOptionsView"
-              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 30, width: "100%" }}
+              className="lengthOptionsView"
+              style={{
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 10,
+                paddingBottom: 20,
+                width: "100%",
+              }}
             >
-              <View style={styles.eventOptionsGrid}>
-                {eventOptions.map((option) => {
-                  const isSelected = event === option.id;
+              <View style={{ gap: 12, width: "100%", justifyContent: "center" }}>
+                {lengthOptions.map((option) => {
+                  const isSelected = length === option.id;
 
                   return (
-                    <Pressable
+                    <Pressable  
                       onPress={() => {
                         if (isSelected) {
-                          setEvent("");
+                          setLength("");
                         } else {
-                          setEvent(option.id);
+                          setLength(option.id);
                         }
                       }}
                       key={option.id}
@@ -144,11 +181,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                       >
                         {option.emoji} {option.label}
                       </ThemedText>
-                      <ThemedText
-                        style={[
-                          styles.optionSubheader,
-                        ]}
-                      >
+                      <ThemedText style={[styles.optionSubheader]}>
                         {option.subheader}
                       </ThemedText>
                     </Pressable>
@@ -160,10 +193,9 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         </View>
       </ScrollView>
 
-
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(3)}
+          onPress={() => setPage(7)}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
@@ -174,26 +206,24 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
-          <Pressable
-            style={{
-              backgroundColor: theme.colors.card,
-              borderRadius: 10,
-              padding: 10,
-              width: "35%",
-            }}
-            onPress={() => setPage(5)}
-          >
-            <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
-          </Pressable>
-        )}
+        <Pressable
+          style={{
+            backgroundColor: theme.colors.card,
+            borderRadius: 10,
+            padding: 10,
+            width: "35%",
+          }}
+          onPress={() => setPage(9)}
+        >
+          <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
+        </Pressable>
       </View>
     </ThemedView>
   );
 }
 
 const styles = {
-  eventOptionsGrid: {
+  seasonOptions: {
     gap: 12,
     justifyContent: "center",
     width: "100%",
@@ -228,7 +258,7 @@ const styles = {
   },
   navigationButtonsWeb: {
     paddingBottom: 28,
-    marginLeft: 10
+    marginLeft: 10,
   },
   navigationButtonsSingle: {
     justifyContent: "center",
@@ -275,5 +305,11 @@ const styles = {
   },
   textBlockWide: {
     paddingHorizontal: 0,
+  },
+  mainContainer: {
+    // alignItems: "center",
+    // justifyContent: "center",
+    width: "100%",
+    // minHeight: 240,
   },
 };

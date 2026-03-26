@@ -3,55 +3,29 @@ import {
   Pressable,
   useWindowDimensions,
   ScrollView,
-  View
+  View,
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
+import Slider from "@react-native-community/slider";
 
-export default function EventPage({ setPage, event, setEvent, uri }) {
+export default function FitPage({ setPage, category, fit, setFit, uri }) {
   const theme = useTheme();
-  const eventOptions = [
-    {
-      id: "versatile",
-      label: "Versatile",
-      emoji: "✨",
-      subheader: "Works for many occasions",
-    },
-    {
-      id: "casual",
-      label: "Casual",
-      emoji: "🧢",
-      subheader: "Everyday and relaxed outfits",
-    },
-    {
-      id: "work-smart",
-      label: "Work/Smart",
-      emoji: "💼",
-      subheader: "Office and polished looks",
-    },
-    {
-      id: "party-night",
-      label: "Party/Night Out",
-      emoji: "🌙",
-      subheader: "Evening and social events",
-    },
-    {
-      id: "formal",
-      label: "Formal",
-      emoji: "🎩",
-      subheader: "Dressy and special occasions",
-    },
-    {
-      id: "active-sport",
-      label: "Active/Sport",
-      emoji: "🏃",
-      subheader: "Movement-friendly outfits",
-    },
-  ];
+
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+
+  const upperOptions = ["Skinny", "Regular", "Loose"];
+
+  const lowerOptions = [
+    "Skinny/Bodycon",
+    // "Slim fit",
+    "Straight",
+    // "Relaxed",
+    "Baggy/wide leg", // equivalent to loose
+  ];
 
   return (
     <ThemedView
@@ -68,20 +42,11 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         ]}
         keyboardShouldPersistTaps="handled"
       >
-        <View
-          style={[
-            styles.contentContainer
-          ]}
-        >
-          <View style={styles.togglePreviewContainer}
-            pointerEvents="box-none">
+        <View style={[styles.contentContainer]}>
+          <View style={styles.togglePreviewContainer} pointerEvents="box-none">
             <TogglePreview setPage={setPage} uri={uri} />
           </View>
-
-          <View
-            className="mainContent"
-            style={styles.mainContent}
-          >
+          <View className="mainContent" style={styles.mainContent}>
             <View
               className="question"
               style={[
@@ -97,73 +62,78 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                What is the formality level of this piece?
+                What is the fit of
               </ThemedText>
-              <ThemedText style={{fontSize: theme.sizes.h3 }}>
-                Is this item business casual, formal, or something you can wear to a party?
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h1,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                the item?
+              </ThemedText>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                }}
+              >
+                On a scale from 0 to 1, describe the fit of this item
               </ThemedText>
             </View>
-            <View
-              className="eventOptionsView"
-              style={{ alignItems: "center", justifyContent: "center", gap: 12, paddingBottom: 30, width: "100%" }}
-            >
-              <View style={styles.eventOptionsGrid}>
-                {eventOptions.map((option) => {
-                  const isSelected = event === option.id;
-
-                  return (
-                    <Pressable
-                      onPress={() => {
-                        if (isSelected) {
-                          setEvent("");
-                        } else {
-                          setEvent(option.id);
-                        }
-                      }}
-                      key={option.id}
-                      style={[
-                        isSelected && styles.selectedEventOptionButton,
-                        {
-                          backgroundColor: isSelected
-                            ? theme.colors.tabIconSelected
-                            : theme.colors.lightBrown,
-                          borderRadius: 10,
-                          paddingHorizontal: 24,
-                          paddingVertical: 12,
-                          width: "100%",
-                        },
-                      ]}
-                    >
-                      <ThemedText
-                        style={{
-                          color: theme.colors.text,
-                          fontSize: theme.sizes.h3,
-                          color: theme.colors.text,
-                          fontFamily: theme.fonts.bold,
-                        }}
-                      >
-                        {option.emoji} {option.label}
+            <View className="sliderLabelsView" style={styles.sliderLabelsView}>
+              {/* TO DO: remove the gap between slider and labels */}
+              <View
+                className="fitLabels"
+                style={{
+                  flexDirection: "column",
+                  justifyContent: "space-between",
+                  height: 220,
+                  paddingHorizontal: 4,
+                  alignItems: "flex-end",
+                }}
+              >
+                {category === "Top" ||
+                category === "Full Body" ||
+                category === "Full Body"
+                  ? upperOptions.map((option, index) => (
+                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                        {option}
                       </ThemedText>
-                      <ThemedText
-                        style={[
-                          styles.optionSubheader,
-                        ]}
-                      >
-                        {option.subheader}
+                    ))
+                  : lowerOptions.map((option, index) => (
+                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                        {option}
                       </ThemedText>
-                    </Pressable>
-                  );
-                })}
+                    ))}
+              </View>
+              <View className="sliderView" style={styles.sliderView}>
+                <Slider
+                  style={{ width: 220, height: 40 }}
+                  minimumTrackTintColor={theme.colors.tabIconSelected}
+                  maximumTrackTintColor={theme.colors.lightBrown}
+                  thumbTintColor={theme.colors.tabIconSelected}
+                  minimumValue={0}
+                  maximumValue={2}
+                  step={0.1}
+                  value={fit}
+                  onValueChange={(value) => {
+                    setFit(value);
+                    console.log("fit", value);
+                    s;
+                  }}
+                />
               </View>
             </View>
           </View>
         </View>
       </ScrollView>
 
-
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(3)}
+          onPress={() => setPage(5)}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
@@ -174,7 +144,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
+        {fit !== null && fit !== undefined && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -182,7 +152,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
               padding: 10,
               width: "35%",
             }}
-            onPress={() => setPage(5)}
+            onPress={() => setPage(7)}
           >
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
@@ -193,7 +163,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
 }
 
 const styles = {
-  eventOptionsGrid: {
+  optionsGrid: {
     gap: 12,
     justifyContent: "center",
     width: "100%",
@@ -204,7 +174,7 @@ const styles = {
     textAlign: "flex-start",
     marginTop: 4,
   },
-  selectedEventOptionButton: {
+  selectedOption: {
     borderRadius: 10,
     paddingHorizontal: 24,
     paddingVertical: 12,
@@ -228,7 +198,7 @@ const styles = {
   },
   navigationButtonsWeb: {
     paddingBottom: 28,
-    marginLeft: 10
+    marginLeft: 10,
   },
   navigationButtonsSingle: {
     justifyContent: "center",
@@ -247,7 +217,7 @@ const styles = {
   },
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
+    // minHeight: "100%",
     paddingHorizontal: 20,
     paddingVertical: 24,
   },
@@ -255,6 +225,7 @@ const styles = {
     alignItems: "center",
   },
   contentContainer: {
+    flex: 1,
     width: "100%",
     maxWidth: 700,
     alignSelf: "center",
@@ -263,17 +234,33 @@ const styles = {
     position: "relative",
   },
   mainContent: {
-    justifyContent: "center",
-    paddingBottom: 16,
+    flex: 1,
+    justifyContent: "flex-start",
   },
   textBlock: {
-    paddingBottom: 20,
+    alignSelf: "flex-start",
+    // paddingBottom: 20,
     zIndex: 1,
+    flexShrink: 0,
   },
   textBlockNoImage: {
     marginTop: 8,
   },
   textBlockWide: {
     paddingHorizontal: 0,
+  },
+  sliderLabelsView: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
+    width: "100%",
+  },
+  sliderView: {
+    justifyContent: "center",
+    alignItems: "center",
+    transform: [{ rotate: "90deg" }],
+    width: "fit-content",
   },
 };

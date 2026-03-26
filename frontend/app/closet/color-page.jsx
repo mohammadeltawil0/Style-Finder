@@ -80,12 +80,12 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     return () => { isMounted = false; };
   }, []);
 
-  if (!isReady) {
+  if (!isReady && pattern === "solid") {
     return (
       <ThemedView style={styles.page}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
           <ActivityIndicator size="large" color={theme.colors.text} />
-          <ThemedText style={{ marginTop: 10 }}>Loading Picker...</ThemedText>
+          <ThemedText style={{ marginTop: 10 }}>Loading Color Picker...</ThemedText>
         </View>
       </ThemedView>
     );
