@@ -43,16 +43,6 @@ export default function Recommendations() {
     `${locate.city}, ${locate.state}, ${locate.country}`.toLowerCase().includes(location.toLowerCase())
   );
 
-  useEffect(() => {
-    if (route.params?.updatedConstraints) {
-      const { fit, fullBody, outerwear } = route.params.updatedConstraints;
-      setFit(fit);
-      setFullBody(fullBody);
-      setOuterwear(outerwear);
-    }
-  }, [route.params?.updatedConstraints]);
-
-
   const handleToggleOutfit = async (value) => {
     setIsRegularOutfit(value);
     await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
@@ -97,10 +87,9 @@ export default function Recommendations() {
         </View>
 
         {/* location Input */}
-        <View className="Location-text"
-          style={{ flexDirection: "row"}}>
+        <View className="Location-text" style={{ flexDirection: "row",  marginTop: 40, width: "80%", marginLeft: 10 }}>
           <View >
-            <ThemedText style={{ fontSize: theme.sizes.h3, marginTop:20}}>Location: </ThemedText>
+            <ThemedText style={{ fontSize: theme.sizes.h3, marginTop:25,  fontFamily: theme.fonts.bold}}>Location: </ThemedText>
           </View>
           <View style={{ flexDirection: "column", width: "55%", marginTop: 20 }}>
            <TextInput placeholder="City, State, Country" value={location}
@@ -126,8 +115,10 @@ export default function Recommendations() {
             )}
           </View>
         </View>
+
+        { /* Formality Input */}
         <View style={{ marginTop: 40, width: "90%" }}>
-          <ThemedText style={{ fontSize: theme.sizes.h3, marginLeft: 25, marginBottom: 20 }}>Formality:</ThemedText>
+          <ThemedText style={{ fontSize: theme.sizes.h3, marginLeft: 25, marginBottom: 20,  fontFamily: theme.fonts.bold }}>Formality:</ThemedText>
           <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
             {formalityOptions.map(option => (
               <ThemedText key={option}
@@ -154,7 +145,7 @@ export default function Recommendations() {
         {formality === "Formal" && (
           <View style={{ flexDirection: "row", marginTop: 10, marginLeft: 30, width: "90%" }}>
             <View>
-              <ThemedText style={{ fontSize: theme.sizes.h3, marginTop: 20 }}>Event Type: </ThemedText>
+              <ThemedText style={{ fontSize: theme.sizes.h3, marginTop: 25,  fontFamily: theme.fonts.bold}}>Event Type: </ThemedText>
             </View>
             <View style={{ flexDirection: "column", width: "55%", marginTop: 20 }}>
               <TextInput
@@ -170,15 +161,12 @@ export default function Recommendations() {
 
       {/* additional contraints */}
        <View style={{ marginTop: 40, width: "90%" }}>
-        <TouchableOpacity
-              onPress={handleAdditonalConstraints}
-              activeOpacity={0.7}
-              style={styles.additionalConstraints}
-        >
+        <TouchableOpacity onPress={handleAdditonalConstraints} activeOpacity={0.7} style={styles.additionalConstraints} >
           <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}> Additional Constraints</ThemedText>
         </TouchableOpacity>
        </View>
 
+      {/* Consider Weather  */}
       <View style={{ flexDirection: "row", width: "80%", marginTop: 30, alignItems: "center", justifyContent: "space-between", marginLeft: 25 }}>
         <ThemedText style={{ fontSize: theme.sizes.h3 }}>
           Consider Weather:
@@ -186,6 +174,7 @@ export default function Recommendations() {
         <Switch value={weatherEnabled} onValueChange={(value) => setWeatherEnabled(value)} trackColor={{ false: "#ccc", true: "#d39f44" }} thumbColor={weatherEnabled ? "#fff" : "#f4f3f4"} />
       </View>
        
+       {/* Generate Outfit */}
        <View style={{ marginTop: 40, width: "90%" }}>
         <TouchableOpacity onPress={handleGenerateOutfit} activeOpacity={0.7} style={styles.additionalContraints} >
           <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}> Generate Outfit </ThemedText>
