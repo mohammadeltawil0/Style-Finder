@@ -139,6 +139,19 @@ export const CustomHeader = ({ page }) => {
               SIGN UP
             </ThemedText>
           )}
+          {page === "AdditionalConstraints" && (
+            <>
+              <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h2,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Additional Constraints
+                </ThemedText>
+            </>
+          )}
           {page === "RegularOutfitDetail" && (
             <>
               <TouchableOpacity onPress={() => router.back()}>
@@ -199,6 +212,7 @@ export const CustomHeader = ({ page }) => {
                 </ThemedText>
             </>
           )}
+
         </View>
 
         {!hideSettingsIcon && (
