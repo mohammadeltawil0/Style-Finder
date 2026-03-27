@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { View, Switch, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, StyleSheet,Image } from "react-native";
+import { View, Switch, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, StyleSheet,Image, Alert } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { OutfitToggle } from "../../components/outfit-toggle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useEffect } from "react";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 export default function Recommendations() {
   const theme = useTheme();
@@ -19,20 +19,64 @@ export default function Recommendations() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [eventType, setEventType] = useState(""); 
 
-  // more constraints 
-  const { constraints } = useLocalSearchParams(); 
+  // more constraints for additional constraints 
+  const [topFit, setTopFit] = useState([]);
+  const [topLength, setTopLength] = useState([]);
+  const [bottomFit, setBottomFit] = useState([]);
+  const [bottomLength, setBottomLength] = useState([]);
+  const [fullBody, setFullBody] = useState(false);
+  const [fullBodyLength, setFullBodyLength] = useState([]);
+  const [outerwear, setOuterwear] = useState(false);
+  const [outerFit, setOuterFit] = useState([]);
+  const [patterns, setPatterns] = useState(false);
+  const [color, setColor] = useState("");
   const [extraConstraints, setConstraints] = useState(null);
 
-  useEffect(() => {
-    if (constraints) {
-      const parsed = JSON.parse(constraints);
-      setConstraints(parsed);
-      console.log("Received:", parsed);
-    }
-  }, [constraints]);
+  // Gets data for additional contranits 
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadSavedConstraints = async () => {
+        const saved = await AsyncStorage.getItem("recommendationConstraints");
+        if (saved) {
+          const parsed = JSON.parse(saved);
 
+          // Back to Previous State 
+          setLocation(parsed.location || "");
+          setFormality(parsed.formality || "");
+          setEventType(parsed.eventType || "");
+          setWeatherEnabled(parsed.weatherEnabled === true || parsed.weatherEnabled === "true");
+          setConstraints(parsed);
+
+          // Update additonal contriants 
+          setTopFit(parsed.topFit || []);
+          setTopLength(parsed.topLength || []);
+          setBottomFit(parsed.bottomFit || []);
+          setBottomLength(parsed.bottomLength || []);
+          setFullBody(parsed.fullBody || false);
+          setFullBodyLength(parsed.fullBodyLength || []);
+          setOuterwear(parsed.outerwear || false);
+          setOuterFit(parsed.outerFit || []);
+          setPatterns(parsed.patterns || false);
+          setColor(parsed.color || "");
+        }
+      };
+      loadSavedConstraints();
+    }, [])
+  );
+
+  // Define 3 formailiy thats it. Avoid spelling
   const formalityOptions = ["Casual", "Business Casual", "Formal"];
+  
+  // Pre-Define Location 
+  /*
+    TODO: Note will/and have to change based off how we will utlites weather API. 
+    If we want city, state, country may we free API to fetch, 
+      but i am affriad we may miss few and with DB and Stuff would be nightware 
 
+    else we just asssume our user knows how to spell 
+
+    ASK GROUP, but for beta we can just have this 
+  */
   const predefinedLocations = [
     { city: "New York", state: "NY", country: "USA" },
     { city: "New Brunswick", state: "NJ", country: "USA" },
@@ -43,34 +87,66 @@ export default function Recommendations() {
     { city: "Houston", state: "TX", country: "USA" },
     { city: "Miami", state: "FL", country: "USA" },
   ];
-
+  // Helper to filter list ;}
   const filteredLocations = predefinedLocations.filter(locate =>
     `${locate.city}, ${locate.state}, ${locate.country}`.toLowerCase().includes(location.toLowerCase())
   );
 
+  // Outfit toogle : Regular or Trip 
   const handleToggleOutfit = async (value) => {
     setIsRegularOutfit(value);
     await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
   };
 
+  // Call when additional constriants is click send current state of data 
   const handleAdditionalConstraints = () => {
     router.push({
       pathname: "/screens/AdditionalConstraints", 
       params: {
-        constraints: JSON.stringify(extraConstraints || {})
+        constraints: JSON.stringify(extraConstraints || {}),
+        location,
+        formality,
+        eventType,
+        weatherEnabled
       }
     });
   };
 
+  /*
+    TODO: API call here: Note const data have all the data regular outfit ask for 
+    Also: location have city, state, country - agian whatever weather API use will have to change or using 
+      text sepreation by comma can we use before sending json backend. 
+    
+      formality , eventType, color  -  text
+      topFit, topLength, bottomFit, bottomLength, fullBodyLength , outerFit - array of text []
+      weatherEnabled, outerwear, patterns
+  */
   const handleGenerateOutfit = () =>{
-    console.log("Generate handle here")
+    if(!location || !formality){
+       Alert.alert("Location and Formality are required input");
+    }
+    Alert.alert("We recommend to fill out additional constraints. Thank You :) ")
+    console.log("Generate handle here") 
     const data = {
-      location,
-      formality,
-      eventType,
-      weatherEnabled
+      location, formality,
+      eventType, weatherEnabled, 
+      topFit, topLength, bottomFit, 
+      bottomLength, fullBody,fullBodyLength,outerwear, outerFit, patterns,color
     };
     console.log("Generate outfit with:", data);
+
+    resetAllConstraints();
+  };
+
+  // Reset everything helper once generate click
+  const resetAllConstraints = async () => {
+    await AsyncStorage.removeItem("recommendationConstraints");
+
+    setLocation("");
+    setFormality("");
+    setEventType("");
+    setWeatherEnabled(true);
+    setIsRegularOutfit(true);
   };
 
   return (
@@ -104,7 +180,7 @@ export default function Recommendations() {
                   <View>
                     <ThemedText style={{ fontSize: theme.sizes.h3, marginTop:25, fontFamily: theme.fonts.bold }}>Location: </ThemedText>
                   </View>
-                  <View style={{ flexDirection: "column", width: "55%", marginTop: 20 }}>
+                  <View style={styles.InputView}>
                     <TextInput placeholder="City, State, Country" value={location}
                       onChangeText={text => {
                         setLocation(text); 
@@ -113,13 +189,10 @@ export default function Recommendations() {
                       style={[styles.input, {width: "150%"}]}
                     />
                     {showDropdown && filteredLocations.length > 0 && (
-                      <ScrollView style={{ maxHeight: 120, borderWidth: 1, borderColor: "#ccc", borderRadius: 5 }}>
+                      <ScrollView style={styles.fillterList}>
                         {filteredLocations.map((locate, index) => (
                           <ThemedText key={index} style={{ padding: 8, borderBottomWidth: 1, borderColor: "#eee" }}
-                            onPress={() => {
-                              setLocation(`${locate.city}, ${locate.state}, ${locate.country}`);
-                              setShowDropdown(false);
-                            }}
+                            onPress={() => {  setLocation(`${locate.city}, ${locate.state}, ${locate.country}`); setShowDropdown(false); }}
                           >
                             {locate.city}, {locate.state}, {locate.country}
                           </ThemedText>
@@ -158,7 +231,7 @@ export default function Recommendations() {
                       <View>
                         <ThemedText style={{ fontSize: theme.sizes.h3, marginTop: 25, fontFamily: theme.fonts.bold }}>Event Type: </ThemedText>
                       </View>
-                      <View style={{ flexDirection: "column", width: "55%", marginTop: 20 }}>
+                      <View style={styles.InputView}>
                         <TextInput
                           placeholder="Type event"
                           value={eventType}
@@ -218,4 +291,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     paddingVertical: 10, 
   },
+  fillterList: {
+    maxHeight: 120, 
+    borderWidth: 1, 
+    borderColor: "#ccc",
+    borderRadius: 5, 
+    width: "150%" 
+  }, 
+  InputView: { flexDirection: "column", width: "55%", marginTop: 20 }
 });

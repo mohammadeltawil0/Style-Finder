@@ -67,7 +67,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen 
-            name="AdditionalConstraints" 
+            name="screens/AdditionalConstraints" 
             options={{
               header: () => <CustomHeader page="AdditionalConstraints" />,
             }}

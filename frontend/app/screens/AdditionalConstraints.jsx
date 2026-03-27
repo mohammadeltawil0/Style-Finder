@@ -1,15 +1,18 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { View, Switch, TextInput, ScrollView, TouchableOpacity, StyleSheet , Platform, KeyboardAvoidingView, Image} from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter, useLocalSearchParams } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+
 
 export default function AdditionalConstraints() {
   const theme = useTheme();
   const router = useRouter();
 
-  const { constraints } = useLocalSearchParams();
-  
+  // Gets and parse the data from main recommendation UI 
+  const { constraints, location, formality, eventType, weatherEnabled } = useLocalSearchParams();
   let parsedConstraints = {};
     try {
       parsedConstraints =
@@ -19,7 +22,20 @@ export default function AdditionalConstraints() {
     } catch (e) {
       parsedConstraints = {};
     }
-    
+  const constraintsFromParams = {
+    location,
+    formality,
+    eventType,
+    weatherEnabled
+  };
+
+  const [locationState, setLocationState] = useState(location || "");
+  const [formalityState, setFormalityState] = useState(formality || "");
+  const [eventTypeState, setEventTypeState] = useState(eventType || "");
+  const [weatherEnabledState, setWeatherEnabledState] = useState( weatherEnabled === "false" ? false : true );
+  
+  // console.log(locationState,formalityState, weatherEnabledState, eventTypeState )
+
   const [topFit, setTopFit] = useState(parsedConstraints.topFit || []);
   const [topLength, settopLength] = useState(parsedConstraints.topLength || []);
 
@@ -35,33 +51,71 @@ export default function AdditionalConstraints() {
   const [patterns, setPatterns] = useState(parsedConstraints.patterns || false);
   const [color, setColor] = useState(parsedConstraints.color || "");
 
+  // PREDEFINE : using item words 
   const topAndOuterwearFitOptions = ["Skinny", "Slim", "Regular", "Relaxed", "Oversized"];
   const bottomFitOptions = ["Skinny / Bodycon", "Slim", "Straight", "Relaxed", "Baggy/Wide-Leg", "Flared / Bootcut"];
-
   const fullBodyLengthDefine = ["Above knee", "Knee", "Maxi/Full Length"]; 
   const topLengthDefine = ["Cap/Sleeveless", "Short Sleeve", "Elbow Sleeve", "Long Sleeve"]; 
   const bottomLengthDefine = ["Shorts", "Midi/Capri", "Bermuda", "Full-length"]; 
 
-  const handleSave = () => {
+  // Clear and show the selection by checking in saved or not  
+   useFocusEffect(
+    useCallback(() => {
+      const loadConstraints = async () => {
+        const saved = await AsyncStorage.getItem("recommendationConstraints");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setTopFit(parsed.topFit || []);
+          settopLength(parsed.topLength || []);
+          setBottomFit(parsed.bottomFit || []);
+          setbottomLength(parsed.bottomLength || []);
+          setFullBody(parsed.fullBody || false);
+          setfullBodyLength(parsed.fullBodyLength || []);
+          setOuterwear(parsed.outerwear || false);
+          setouterFit(parsed.outerFit || []);
+          setPatterns(parsed.patterns || false);
+          setColor(parsed.color || "");
+        } else {
+          // No saved data → reset all
+          setTopFit([]);
+          settopLength([]);
+          setBottomFit([]);
+          setbottomLength([]);
+          setFullBody(false);
+          setfullBodyLength([]);
+          setOuterwear(false);
+          setouterFit([]);
+          setPatterns(false);
+          setColor("");
+        }
+      };
+      loadConstraints();
+    }, [])
+  );
+
+  // Button save & return, get states and updates
+  const handleSave = async () => {
     const constraints = {
       topFit, topLength,
       bottomFit, bottomLength,
       fullBody, fullBodyLength,
       outerwear, outerFit,
-      patterns, color
+      patterns, color,
+      location: constraintsFromParams?.location || "", 
+      formality: constraintsFromParams?.formality || "",
+      eventType: constraintsFromParams?.eventType || "",
+      weatherEnabled: constraintsFromParams?.weatherEnabled ?? true,
     };
 
-    router.push({
-      pathname: "/(tabs)/recommendations",
-      params: { constraints: JSON.stringify(constraints) }
-    });
+    await AsyncStorage.setItem("recommendationConstraints", JSON.stringify(constraints));
+    router.push({ pathname: "/(tabs)/recommendations" });
   };
 
   const toggleSelection = (value, state, setState) => {
     if (state.includes(value)) {
-      setState(state.filter(item => item !== value)); // remove
+      setState(state.filter(item => item !== value)); 
     } else {
-      setState([...state, value]); // add
+      setState([...state, value]); 
     }
   };
 
@@ -71,7 +125,7 @@ export default function AdditionalConstraints() {
         <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: "center", paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
         {/* Header */}
-        <View style={{ flexDirection: "row", width: "100%", marginTop: 10, marginLeft: 10, marginRight: 20 }}>
+        <View style={styles.header}>
           <View style={{ width: "70%" }}>
             <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, margin: 30 }}>Continue Adding Filters!  </ThemedText>
           </View>
@@ -84,12 +138,11 @@ export default function AdditionalConstraints() {
         </View>
 
         <View style={{ width:"90%" }}>
-
-        {/* Have Full-Body */}
-        <View style={styles.row}>
-          <ThemedText style={styles.label}>Full Body Outfit:</ThemedText>
-          <Switch value={fullBody} onValueChange={setFullBody} trackColor={{ true: "#d39f44", false: "#ccc" }} thumbColor={fullBody ? "#fff" : "#f4f3f4"} />
-        </View>
+          {/* Have Full-Body */}
+          <View style={styles.row}>
+            <ThemedText style={styles.label}>Full Body Outfit:</ThemedText>
+            <Switch value={fullBody} onValueChange={setFullBody} trackColor={{ true: "#d39f44", false: "#ccc" }} thumbColor={fullBody ? "#fff" : "#f4f3f4"} />
+          </View>
 
           {/* if not want full body then ask for bottom and top fit (only if fullBody = false) */}
           {!fullBody && (
@@ -230,6 +283,7 @@ export default function AdditionalConstraints() {
 }
 
 const styles = StyleSheet.create({
+  header:{ flexDirection: "row", width: "100%", marginTop: 10, marginLeft: 10, marginRight: 20}, 
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -263,11 +317,11 @@ const styles = StyleSheet.create({
     textAlign: "center"
   },
   saveButton: {
-    marginTop: 40,
-    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#ccc",
-    alignItems: "center"
+    alignItems: "center",
+    marginTop: 30,
+    paddingVertical: 10, 
   }
 });
