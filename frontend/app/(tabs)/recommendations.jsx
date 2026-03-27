@@ -3,14 +3,13 @@ import { View, Switch, TextInput,TouchableOpacity, KeyboardAvoidingView, Platfor
 import { ThemedText, ThemedView } from "../../components";
 import { OutfitToggle } from "../../components/outfit-toggle";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useTheme, useNavigation } from "@react-navigation/native";
+import { useTheme } from "@react-navigation/native";
 import { useEffect } from "react";
-import { useRoute , useFocusEffect} from "@react-navigation/native";
+import { useRouter, useLocalSearchParams } from "expo-router";
 
 export default function Recommendations() {
   const theme = useTheme();
-  const route = useRoute();
-
+  const router = useRouter();
 
   // Constraints for this screen 
   const [isRegularOutfit, setIsRegularOutfit] = useState(true);
@@ -20,16 +19,17 @@ export default function Recommendations() {
   const [showDropdown, setShowDropdown] = useState(false);
   const [eventType, setEventType] = useState(""); 
 
-  // constraints for additional 
-  const [topFit, settopFit] = useState("Regular");
-  const [fullBody, setFullBody] = useState(false);
-  const [outerwear, setOuterwear] = useState(false);
+  // more constraints 
+  const { constraints } = useLocalSearchParams(); 
+  const [extraConstraints, setConstraints] = useState(null);
 
-  const [bottomFit, setBottomFit] = useState("");
-  
-  const [length, setLength] = useState("");
-  const [color, setColor] = useState("");
-  const [patterns, setPatterns] = useState(false);
+  useEffect(() => {
+    if (constraints) {
+      const parsed = JSON.parse(constraints);
+      setConstraints(parsed);
+      console.log("Received:", parsed);
+    }
+  }, [constraints]);
 
   const formalityOptions = ["Casual", "Business Casual", "Formal"];
 
@@ -53,9 +53,13 @@ export default function Recommendations() {
     await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
   };
 
-  const handleAdditionalConstraints = () =>{
-    console.log("To the next page"); 
-    
+  const handleAdditionalConstraints = () => {
+    router.push({
+      pathname: "/screens/AdditionalConstraints", 
+      params: {
+        constraints: JSON.stringify(extraConstraints || {})
+      }
+    });
   };
 
   const handleGenerateOutfit = () =>{
@@ -64,30 +68,10 @@ export default function Recommendations() {
       location,
       formality,
       eventType,
-      topFit,
-      bottomFit,
-      fullBody,
-      outerwear,
-      weatherEnabled,
-      length,
-      patterns,
-      color: patterns ? "" : color
+      weatherEnabled
     };
     console.log("Generate outfit with:", data);
   };
-
-  useEffect(() => {
-    if (route.params?.additionalConstraints) {
-      const ac = route.params.additionalConstraints;
-      setFullBody(ac.fullBody ?? fullBody);
-      setOuterwear(ac.outerwear ?? outerwear);
-      setFit(ac.topFit ?? fit);
-      setBottomFit(ac.bottomFit ?? bottomFit); // you need to create this state
-      setLength(ac.length ?? length);
-      setColor(ac.color ?? color);
-      setPatterns(ac.patterns ?? patterns);
-    }
-  }, [route.params?.additionalConstraints]);
 
   return (
     <ThemedView gradient={false} style={{ flex: 1 }}>
@@ -156,10 +140,8 @@ export default function Recommendations() {
                           if (option !== "Formal") setEventType("");
                         }}
                         style={{
-                          paddingVertical: 8,
-                          paddingHorizontal: 12,
-                          borderRadius: 8,
-                          borderWidth: 1,
+                          paddingVertical: 8, paddingHorizontal: 15,
+                          borderRadius: 8, borderWidth: 1,
                           borderColor: formality === option ? "#000" : "#ccc",
                           backgroundColor: formality === option ? "#e5d3b3" : "#f0f0f0",
                           textAlign: "center",
