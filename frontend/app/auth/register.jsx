@@ -7,6 +7,11 @@ import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
 import {apiClient} from "../../scripts/apiClient";
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
+  KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
+import {apiClient} from "../../scripts/apiClient";
+import Ionicons from "@expo/vector-icons/Ionicons";
+
 
 
 function LiveTyping({ text }) {
