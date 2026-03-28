@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet, } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
-import { Alert } from "react-native";
 import { useTheme } from "@react-navigation/native";
-import { ScrollView } from "react-native";
+import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
+  KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
+import {apiClient} from "../../scripts/apiClient";
+import Ionicons from 'react-native-vector-icons/Ionicons';
+
 
 
 function LiveTyping({ text }) {
@@ -87,42 +89,33 @@ export default function Register() {
     };
 
 
-    const processSignUp = async () => {
-      // TODO: Sign Up will be handle here (Backend + DB)
-      try {
-        console.log("Sending signup request...");
+  const processSignUp = async () => {
+    try {
+      console.log("Sending signup request...");
+      const response = await apiClient.post("/api/users/register", {
+        firstName: firstName,
+        email: email,
+        username: username,
+        password: password,
+        role: "USER",
+        createdAt: new Date().toISOString(),
+      });
+      console.log("Line after that...");
+      console.log("Response:", response.data);
 
-        const response = await fetch(
-          "http://localhost:8080/api/users",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            firstName: firstName,
-            email: email,
-            username: username,
-            password: password,
-            role: "USER"
-          }),
-        }
-      );
+      // If we reach this line, the backend has accepted the signup request
+      Alert.alert("Success", "Account Created Successfully!");
+      router.replace("/auth/logIn");
 
-      const data = await response.json();
-      console.log("Response:", data);
+    } catch (error) {
+      console.error("Error during sign up:", error);
 
-      if (response.ok) {
-        Alert.alert("Success", "Signed Up Successfully!"); 
-        router.replace("/auth/logIn");
-      }
-      else {
-        Alert.alert("Error", "Sign Up Failed: " + data.message);
-      }
-      } catch (error) {
-        console.error("Error during sign up:", error);
-        Alert.alert("Error", "An error occurred during sign up. Please try again.");
-      }
+      const errorMessage = error.response?.data?.message
+          || error.response?.data
+          || "An error occurred during sign up. Please try again.";
+
+      Alert.alert("Error", "Sign Up Failed: " + errorMessage);
+    }
   };
 
   return (
@@ -138,7 +131,10 @@ export default function Register() {
       <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
       
       <View style={styles.card} > 
-        <ThemedText style={{ fontSize: 28, marginBottom: 20}}> Create An Account </ThemedText>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+          <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
+          <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
+        </View>
         <TextInput
           placeholder="First Name"
           value={firstName}
@@ -179,7 +175,7 @@ export default function Register() {
           onPress={handleSignUp}
           activeOpacity={0.7}
           style={{
-              backgroundColor: colors.primary,
+              backgroundColor: colors.card,
               borderRadius: 12,
               borderWidth: 2,
               borderColor: "#ccc",
@@ -211,7 +207,8 @@ const styles = StyleSheet.create({
           shadowOffset: { width: 0, height: 5 },
           shadowOpacity: 0.3,
           shadowRadius: 6,
-          elevation: 8,},
+          elevation: 8
+        },
   input: {
     backgroundColor: "#ffffff",
     marginBottom: 15,

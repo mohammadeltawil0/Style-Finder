@@ -1,9 +1,11 @@
 import { useState } from "react";
-import {Alert, View, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet,} from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {View, TextInput,TouchableOpacity,
+    KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
+import {apiClient} from "../../scripts/apiClient";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
@@ -19,44 +21,30 @@ export default function Login() {
       return;
     }
 
+       try {
+           console.log("Sending login request...");
+           const response = await apiClient.post("/api/users/login", {
+               username: username,
+               password: password,
+           });
 
-    try {
-      const response = await fetch(
-        "http://localhost:8080/api/users/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ username: username, password: password }),
-        }
-      );
+           const data = response.data;
+           console.log("Login successful:", data);
+           alert("Login worked");
+           await AsyncStorage.setItem("username", data.username);
+           await AsyncStorage.setItem("userId", data.userId.toString());
+           router.replace("/(tabs)");
 
+       } catch (error) {
+           console.error("Error during login:", error);
 
-      const data = await response.json();
-      console.log("Login response:", data);
+           // Axios safely extracts the backend's error message (e.g., "User not found!")
+           const errorMessage = error.response?.data?.message
+               || error.response?.data
+               || "An error occurred during login. Please try again.";
 
-      if (response.ok) {
-        alert("Login worked");
-        console.log("Login successful:", data);
-
-
-        // Save user data
-        await AsyncStorage.setItem("username", data.username);
-        await AsyncStorage.setItem("userId", data.userId.toString());
-
-
-        router.replace("/");
-      } else {
-        alert("Login failed: " + data.message);
-      }
-
-
-    } catch (error) {
-      console.error("Error during login:", error);
-      alert("An error occurred during login. Please try again.");
-
-
-    }
+           alert("Login failed: " + errorMessage);
+       }
   };
 
 
@@ -107,14 +95,14 @@ export default function Login() {
             activeOpacity={0.7}
             style={[
               styles.button,
-              { backgroundColor: colors.primary }
+              { backgroundColor: colors.card }
             ]}
           >
             <ThemedText
               style={{
                 fontSize: 18,
                 fontWeight: "bold",
-                color: "#fff",
+                color: colors.text,
               }}
             >
               Sign In

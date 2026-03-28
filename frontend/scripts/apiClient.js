@@ -1,7 +1,9 @@
-import {API_URL} from '@env';
+// import {API_URL} from '@env';
 import axios from 'axios';
 
 // 1. Verify the URL loaded correctly (Debugging)
+const API_URL = "https://api.stylefinder.tech";
+
 console.log("Connecting to Backend at:", API_URL);
 
 // 2. Create a global Axios instance

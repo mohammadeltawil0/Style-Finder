@@ -1,6 +1,7 @@
 package CS431.Style_Finder.dto;
 
 import lombok.*;
+import java.util.List;
 
 @Getter
 @Setter
@@ -8,11 +9,21 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class PreferenceDto {
+
     private Long preferenceId;
     private Long userId;
-    private String colorOftenWear;
+
+    private String comfort;
+    private List<String> occasion;
+    private String weather;
+    private List<String> style;
     private String preferFit;
-    private String fabricPrefer;
-    private String outfitNeedMost;
-    private String gender;
+
+    private List<String> items;
+    private List<String> avoidItems;
+
+    private List<String> colorsWear;
+    private List<String> colorsAvoid;
+
+    private String tripPriority;
 }
