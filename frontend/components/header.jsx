@@ -74,7 +74,7 @@ export const CustomHeader = ({ page }) => {
                 color: theme.colors.text,
               }}
             >
-              RECOMMENDATIONS
+              GENERATE OUTFITS
             </ThemedText>
           )}
           {page === "add-item" && (
@@ -148,7 +148,20 @@ export const CustomHeader = ({ page }) => {
                     color: theme.colors.text,
                   }}
                 >
-                  Additional Constraints
+                  GENERATE OUTFITS
+                </ThemedText>
+            </>
+          )}
+          {page === "OutfitswaitingScreen" && (
+            <>
+              <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h2,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Generating Outfits...
                 </ThemedText>
             </>
           )}

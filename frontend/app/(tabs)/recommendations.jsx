@@ -113,19 +113,19 @@ export default function Recommendations() {
   };
 
   /*
-    TODO: API call here: Note const data have all the data regular outfit ask for 
     Also: location have city, state, country - agian whatever weather API use will have to change or using 
       text sepreation by comma can we use before sending json backend. 
     
       formality , eventType, color  -  text
       topFit, topLength, bottomFit, bottomLength, fullBodyLength , outerFit - array of text []
       weatherEnabled, outerwear, patterns
+
+      I had to change the API call to different screen which is in OutfitswaitingScreen, to maintain the flow input -> wait -> result 
   */
-  const handleGenerateOutfit = () =>{
+  const handleGenerateOutfit = async () =>{
     if(!location || !formality){
        Alert.alert("Location and Formality are required input");
     }
-    Alert.alert("We recommend to fill out additional constraints. Thank You :) ")
     console.log("Generate handle here") 
     const data = {
       location, formality,
@@ -134,8 +134,11 @@ export default function Recommendations() {
       bottomLength, fullBody,fullBodyLength,outerwear, outerFit, patterns,color
     };
     console.log("Generate outfit with:", data);
-
     resetAllConstraints();
+
+    await AsyncStorage.setItem("pendingOutfitRequest", JSON.stringify(data));
+    router.push("/screens/GeneratingScreen");
+
   };
 
   // Reset everything helper once generate click
@@ -148,12 +151,10 @@ export default function Recommendations() {
     setWeatherEnabled(true);
     setIsRegularOutfit(true);
   };
-
   return (
     <ThemedView gradient={false} style={{ flex: 1 }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
         <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: "center", paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        
           {/* Button toggle for Regular Outfit + Trip Outfit */}
           <OutfitToggle isRegularOutfit={isRegularOutfit} toggleOutfit={handleToggleOutfit} />
           
