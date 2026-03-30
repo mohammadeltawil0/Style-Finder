@@ -5,33 +5,29 @@ import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Feather from "@expo/vector-icons/Feather";
 import { ThemedText, ThemedView } from "../../components";
+import { useFocusEffect } from "@react-navigation/native";
+import React from "react";
 
 export default function OutfitResult() {
 
   const router = useRouter();
-
   const [outfits, setOutfits] = useState([]);
+  // access the currently displayed outfit. 
+  const currentOutfit = outfits[currentIndex];
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-
-    const loadOutfits = async () => {
-      const saved = await AsyncStorage.getItem("latestOutfitResult");
-
-      if (saved) {
-        const parsed = JSON.parse(saved);
-
-        // assume backend returns array
-        setOutfits(parsed.outfits || parsed || []);
-      } else {
-        // default 3 placeholders or array len
-        setOutfits([{}, {}, {}]);
-      }
-    };
-
-    loadOutfits();
-
-  }, []);
+  useFocusEffect(
+    React.useCallback(() => {
+      const loadOutfits = async () => {
+        const saved = await AsyncStorage.getItem("latestOutfitResult");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setOutfits(parsed.outfits || parsed || []);
+        }
+      };
+      loadOutfits();
+    }, [])
+  );
 
   const nextOutfit = () => {
     if (currentIndex < outfits.length - 1) {
@@ -45,6 +41,34 @@ export default function OutfitResult() {
     }
   };
 
+    // TODO: API call to save outfit 
+    const saveSingleOutfit = async (outfit) => {
+      try {
+        console.log("Saving outfit:", outfit);
+        // API call, input paramenter may change based on backend sent to fronted in for display 
+        /*
+        await .post("/outfits/save", {
+        
+        });
+        */
+        alert("Outfit saved!");
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    const removeOutfit = async (index) => {
+      const updated = outfits.filter((_, i) => i !== index);
+      setOutfits(updated);
+      await AsyncStorage.setItem(
+        "latestOutfitResult",
+        JSON.stringify({ outfits: updated })
+      );
+      if (currentIndex > 0) {
+        setCurrentIndex(currentIndex - 1);
+      }
+    };
+
   return (
     <ThemedView gradient={true} style={{ flex: 1 }}>
         <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
@@ -57,31 +81,70 @@ export default function OutfitResult() {
                 <View style={styles.viewerContainer}>
                     {/* Left Arrow */}
                     <TouchableOpacity onPress={prevOutfit}>
-                    <AntDesign name="left" size={24} />
+                      <AntDesign name="left" size={24} />
                     </TouchableOpacity>
 
                     {/* Outfit Card */}
                     <View style={styles.outfitCard}>
+                      {/* Close Button */}
+                      <TouchableOpacity style={styles.closeBtn} onPress={() => removeOutfit(currentIndex)} >
+                          <AntDesign name="close" size={18} />
+                      </TouchableOpacity>
 
-                    {/* Close Button */}
-                    <TouchableOpacity style={styles.closeBtn}>
-                        <AntDesign name="close" size={18} />
-                    </TouchableOpacity>
+                      {/* Edit */}
+                      <TouchableOpacity
+                          style={styles.editBtn}
+                          onPress={() =>
+                            router.push({
+                              pathname: "/screens/EditOutfit",
+                              params: { index: currentIndex }
+                            })
+                          }
+                      >
+                          <Feather name="edit-2" size={18} />
+                      </TouchableOpacity>
 
-                    {/* Edit Button */}
-                    <TouchableOpacity
-                        style={styles.editBtn}
-                        onPress={() => router.push("/screens/EditOutfit")}
-                    >
-                        <Feather name="edit-2" size={18} />
-                    </TouchableOpacity>
+                      {/* Placeholder Image */}
+                      <Image
+                          source={require("../../assets/images/placeholder.png")}
+                          style={styles.image}
+                      />
+                      {/* THIS IS JUST THE UI, TODO: CHANGE BASED ON HOW BACKEND SENDS DATA
+                          JUST TO SHOW BLOCK FOR EACH ITEM
+                      */}
+                      <View style={styles.piecesContainer}>
+                        {outfits[currentIndex]?.outerwear && (
+                          <View style={styles.pieceBox}>
+                            <Text style={styles.pieceText}>
+                              {outfits[currentIndex].outerwear}
+                            </Text>
+                          </View>
+                        )}
 
-                    {/* Placeholder Image */}
-                    <Image
-                        source={require("../../assets/images/placeholder.png")}
-                        style={styles.image}
-                    />
+                        {outfits[currentIndex]?.top && (
+                          <View style={styles.pieceBox}>
+                            <Text style={styles.pieceText}>
+                              {outfits[currentIndex].top}
+                            </Text>
+                          </View>
+                        )}
 
+                        {outfits[currentIndex]?.bottom && (
+                          <View style={styles.pieceBox}>
+                            <Text style={styles.pieceText}>
+                              {outfits[currentIndex].bottom}
+                            </Text>
+                          </View>
+                        )}
+
+                        {outfits[currentIndex]?.fullBody && (
+                          <View style={styles.pieceBox}>
+                            <Text style={styles.pieceText}>
+                              {outfits[currentIndex].fullBody}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
                     </View>
 
                     {/* Right Arrow */}
@@ -106,8 +169,11 @@ export default function OutfitResult() {
                 </View>
 
                 {/* Save Button */}
-                <TouchableOpacity style={styles.saveBtn}>
-                    <Text style={styles.saveText}>Save All Outfits</Text>
+                <TouchableOpacity
+                    style={styles.saveBtn}
+                    onPress={() => saveSingleOutfit(currentOutfit)}
+                >
+                    <Text style={styles.saveText}>Save Outfit</Text>
                 </TouchableOpacity>
 
                 </View>
@@ -194,6 +260,25 @@ const styles = StyleSheet.create({
 
   saveText: {
     fontWeight: "bold"
-  }
+  },
+  piecesContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginTop: 10,
+    gap: 6
+  },
+
+  pieceBox: {
+    backgroundColor: "#d02323",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6
+  },
+
+  pieceText: {
+    fontSize: 12,
+    fontWeight: "500"
+  },
 
 });
