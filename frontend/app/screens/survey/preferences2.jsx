@@ -72,7 +72,7 @@ export default function Preferences2() {
     Alert.alert("Preferences saved!");
     setTimeout(() => {
       console.log("Successfully saved");
-      router.replace("/screens/settings"); //TODO: change navigation
+      router.replace("/(tabs)"); //TODO: change navigation
     }, 300);
     
   } catch (error) {
