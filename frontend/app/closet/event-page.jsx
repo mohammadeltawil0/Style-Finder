@@ -8,41 +8,41 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, event, setEvent, uri }) {
+export default function EventPage({ setPage, formality, setFormality, uri}) {
   const theme = useTheme();
   const eventOptions = [
     {
-      id: "versatile",
+      id: "Versatile",
       label: "Versatile",
       emoji: "✨",
       subheader: "Works for many occasions",
     },
     {
-      id: "casual",
+      id: "Casual",
       label: "Casual",
       emoji: "🧢",
       subheader: "Everyday and relaxed outfits",
     },
     {
-      id: "work-smart",
+      id: "Work-Smart",
       label: "Work/Smart",
       emoji: "💼",
       subheader: "Office and polished looks",
     },
     {
-      id: "party-night",
+      id: "Party-Night",
       label: "Party/Night Out",
       emoji: "🌙",
       subheader: "Evening and social events",
     },
     {
-      id: "formal",
+      id: "Formal",
       label: "Formal",
       emoji: "🎩",
       subheader: "Dressy and special occasions",
     },
     {
-      id: "active-sport",
+      id: "Active-Sport",
       label: "Active/Sport",
       emoji: "🏃",
       subheader: "Movement-friendly outfits",
@@ -109,15 +109,15 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
             >
               <View style={styles.eventOptionsGrid}>
                 {eventOptions.map((option) => {
-                  const isSelected = event === option.id;
+                  const isSelected = formality === option.id;
 
                   return (
                     <Pressable
                       onPress={() => {
                         if (isSelected) {
-                          setEvent("");
+                          setFormality("");
                         } else {
-                          setEvent(option.id);
+                          setFormality(option.id);
                         }
                       }}
                       key={option.id}
@@ -174,7 +174,7 @@ export default function EventPage({ setPage, event, setEvent, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
+        {formality && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,

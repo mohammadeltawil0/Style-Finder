@@ -11,33 +11,98 @@ import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import { theme } from "../../constants";
 import { Ionicons } from "@expo/vector-icons";
 
+const sanitize = (type, str) => {
+  if (typeof str !== "string") return "";
+
+  //pattern
+  if (type === "pattern") {
+    return str.replace(/-/g, "/");
+  }
+
+  //formality
+  if (type === "formality") {
+    if (str === "Party-Night") {
+      return "Party/Night Out";
+    } else {
+      //active/sport and work/smart
+      return str.replace(/-/g, "/");
+    }
+  }
+
+  //material
+  if (type === "material") {
+    if (str === "Leather-Faux-Leather") {
+      return "Leather/Faux Leather";
+    } else {
+      return str.replace(/-/g, "/");
+    }
+  }
+
+  if (type === "length") {
+    if (str === "Knee-Length-Bermuda") {
+      return "Knee Length/Bermuda";
+    } else if (str === "Full-Length-Maxi") {
+      return "Maxi/Full Length";
+    } else {
+      return str.replace(/-/g, "/");
+    }
+  }
+
+  // works for
+  return str.replace(/-/g, " ");
+};
+
 export default function ReviewPage({
   setPage,
   uri,
-  event,
+  formality,
   pattern,
   color,
-  category,
+  itemType,
   material,
   fit,
+  season,
   length,
   bulk,
   handleSubmit,
 }) {
-  // TO DO: right now, setting states to use "-" i.e. geometric-abstract, but we should convert that!
-  // and make things capitalize, but do this in add-items!
   const { isWide } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const buttonWidth = isWide ? 220 : "30%";
 
-  // TO DO: when we edit, user needs to go through entire process again, so idk
+  // Temporary Debugging
+  console.log("Review Page Props:", {
+    uri,
+    formality,
+    pattern,
+    color,
+    itemType,
+    material,
+    fit,
+    season,
+    length,
+    bulk,
+  });
+
+  //Converting for UX: pattern, formality, material, season, length
+  const convertedPattern = pattern ? sanitize("pattern", pattern) : null;
+  const convertedFormality = formality
+    ? sanitize("formality", formality)
+    : null;
+  const convertedMaterial = material ? sanitize("material", material) : null;
+  const convertedSeason = season ? sanitize("season", season) : null;
+  const convertedLength = length ? sanitize("length", length) : null;
 
   // Convert enum/int fit states to actual categories for review page display
   const convertedFit =
     fit === 0 ? "Skinny" : fit === 1 ? "Regular" : "Oversized";
 
-  const convertedBulk =
-    bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
+  const convertedBulk = bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
+
+  // Temporary Debugging for Converted Variables
+  console.log(`Converted Fit: ${convertedFit}, Converted Bulk: ${convertedBulk}, 
+    Converted Pattern: ${convertedPattern}, Converted Formality: ${convertedFormality}, Converted Material: ${convertedMaterial}, 
+    Converted Season: ${convertedSeason}, Converted Length: ${convertedLength}`);
 
   return (
     <ThemedView gradient={true} style={{ flex: 1 }}>
@@ -187,7 +252,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    Category:
+                    Item Type:
                   </ThemedText>
                   <ThemedText
                     style={[
@@ -198,7 +263,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    {category}
+                    {itemType}
                   </ThemedText>
                 </View>
                 <View
@@ -249,7 +314,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    {pattern}
+                    {convertedPattern}
                   </ThemedText>
                 </View>
                 {!color && (
@@ -331,7 +396,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(3)}
+                      onPress={() => setPage(2)}
                     />
                   </View>
                 </View>
@@ -361,7 +426,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    Event:
+                    Formality:
                   </ThemedText>
                   <ThemedText
                     style={[
@@ -372,7 +437,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    {event}
+                    {convertedFormality}
                   </ThemedText>
                 </View>
                 <View
@@ -423,7 +488,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    {material}
+                    {convertedMaterial}
                   </ThemedText>
                 </View>
                 <View
@@ -434,7 +499,7 @@ export default function ReviewPage({
                     name="create"
                     size={20}
                     color={theme.colors.text}
-                    onPress={() => setPage(2)}
+                    onPress={() => setPage(5)}
                   />
                 </View>
               </View>
@@ -490,6 +555,100 @@ export default function ReviewPage({
                 </View>
               </View>
               {/* OPTIONAL PARAMETERS */}
+              {season ? (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      backgroundColor: theme.colors.card,
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={[
+                        styles.titleText,
+                        {
+                          fontFamily: theme.fonts.bold,
+                          fontSize: theme.sizes.h3,
+                        },
+                      ]}
+                    >
+                      Season:
+                    </ThemedText>
+                    <ThemedText
+                      style={[
+                        styles.answerText,
+                        {
+                          fontFamily: theme.fonts.regular,
+                          fontSize: theme.sizes.text,
+                        },
+                      ]}
+                    >
+                      {convertedSeason}
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(7)}
+                    />
+                  </View>
+                </View>
+              ) : (
+                <View
+                  style={[
+                    styles.responseContainer,
+                    {
+                      alignItems: "center",
+                      backgroundColor: theme.colors.card,
+                      justifyContent: "center",
+                    },
+                  ]}
+                >
+                  <View
+                    className="response"
+                    style={{
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
+                    }}
+                  >
+                    <ThemedText
+                      style={{
+                        fontSize: theme.sizes.h3,
+                        color: theme.colors.text,
+                        fontFamily: theme.fonts.regular,
+                      }}
+                    >
+                      Season not specified
+                    </ThemedText>
+                  </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => setPage(7)}
+                    />
+                  </View>
+                </View>
+              )}
               {length ? (
                 <View
                   style={[
@@ -527,7 +686,7 @@ export default function ReviewPage({
                         },
                       ]}
                     >
-                      {length}
+                      {convertedLength}
                     </ThemedText>
                   </View>
                   <View
@@ -538,7 +697,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(2)}
+                      onPress={() => setPage(8)}
                     />
                   </View>
                 </View>
@@ -696,19 +855,17 @@ export default function ReviewPage({
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {event && (
-          <Pressable
-            style={{
-              backgroundColor: theme.colors.card,
-              borderRadius: 10,
-              padding: 10,
-              width: "35%",
-            }}
-            onPress={() => handleSubmit()}
-          >
-            <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
-          </Pressable>
-        )}
+        <Pressable
+          style={{
+            backgroundColor: theme.colors.card,
+            borderRadius: 10,
+            padding: 10,
+            width: "35%",
+          }}
+          onPress={() => handleSubmit()}
+        >
+          <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
+        </Pressable>
       </View>
     </ThemedView>
   );

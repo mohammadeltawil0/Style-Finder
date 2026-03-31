@@ -9,7 +9,7 @@ import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import Slider from "@react-native-community/slider";
 
-export default function FitPage({ setPage, category, fit, setFit, uri }) {
+export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
   const theme = useTheme();
 
   const { width } = useWindowDimensions();
@@ -24,7 +24,7 @@ export default function FitPage({ setPage, category, fit, setFit, uri }) {
     // "Slim fit",
     "Straight",
     // "Relaxed",
-    "Baggy/wide leg", // equivalent to loose
+    "Baggy/Wide leg", // equivalent to loose
   ];
 
   return (
@@ -95,9 +95,8 @@ export default function FitPage({ setPage, category, fit, setFit, uri }) {
                   alignItems: "flex-end",
                 }}
               >
-                {category === "Top" ||
-                category === "Full Body" ||
-                category === "Full Body"
+                {itemType === "Top" ||
+                itemType === "Full Body"
                   ? upperOptions.map((option, index) => (
                       <ThemedText key={index} style={{ textAlign: "flex-end" }}>
                         {option}
@@ -122,7 +121,6 @@ export default function FitPage({ setPage, category, fit, setFit, uri }) {
                   onValueChange={(value) => {
                     setFit(value);
                     console.log("fit", value);
-                    s;
                   }}
                 />
               </View>

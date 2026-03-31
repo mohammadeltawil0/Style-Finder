@@ -11,7 +11,8 @@ import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import { theme } from "../../constants";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
-export default function CategoryPage({ setPage, category, setCategory, uri }) {
+// Item Types: Top, Bottom, Full Body, Outerwear
+export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
@@ -53,7 +54,7 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
                 fontFamily: theme.fonts.bold,
               }}
             >
-              What category is
+              What type of item is
             </ThemedText>
             <ThemedText
               style={{
@@ -63,14 +64,14 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
                 paddingBottom: 20,
               }}
             >
-              this item for?
+              this?
             </ThemedText>
           </View>
 
           <View className="categoryOptions" style={styles.categoryOptions}>
             <Pressable
-              onPress={() => setCategory("Top")}
-              style={[styles.optionCard, getOptionStyle(category === "Top")]}
+              onPress={() => setItemType("Top")}
+              style={[styles.optionCard, getOptionStyle(itemType === "Top")]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <Ionicons name="shirt" size={24} color="black" />
@@ -96,8 +97,8 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setCategory("Bottom")}
-              style={[styles.optionCard, getOptionStyle(category === "Bottom")]}
+              onPress={() => setItemType("Bottom")}
+              style={[styles.optionCard, getOptionStyle(itemType === "Bottom")]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <Ionicons name="shirt" size={24} color="black" />
@@ -123,10 +124,10 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setCategory("Full Body")}
+              onPress={() => setItemType("Full Body")}
               style={[
                 styles.optionCard,
-                getOptionStyle(category === "Full Body"),
+                getOptionStyle(itemType === "Full Body"),
               ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
@@ -153,10 +154,10 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setCategory("Outerwear")}
+              onPress={() => setItemType("Outerwear")}
               style={[
                 styles.optionCard,
-                getOptionStyle(category === "Outerwear"),
+                getOptionStyle(itemType === "Outerwear"),
               ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
@@ -190,7 +191,7 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
         style={[
           styles.navigationButtons,
           isWeb && styles.navigationButtonsWeb,
-          !category && styles.navigationButtonsSingle,
+          !itemType && styles.navigationButtonsSingle,
         ]}
       >
         <Pressable
@@ -204,7 +205,7 @@ export default function CategoryPage({ setPage, category, setCategory, uri }) {
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {category && (
+        {itemType && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,

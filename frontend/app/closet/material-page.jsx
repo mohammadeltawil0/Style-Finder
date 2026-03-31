@@ -12,39 +12,39 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
   const theme = useTheme();
   const materialOptions = [
     {
-      id: "cotton",
+      id: "Cotton",
       label: "Cotton",
       subheader: "Soft, breathable, and great for everyday wear",
     },
     {
-      id: "linen-hemp",
+      id: "Linen-Hemp",
       label: "Linen/Hemp",
       subheader: "Lightweight and breathable for hot weather",
     },
     {
-      id: "wool-fleece",
+      id: "Wool-Fleece",
       label: "Wool/Fleece",
       subheader: "Warm and insulating for sweaters and coats",
     },
     {
-      id: "silk-satin",
+      id: "Silk-Satin",
       label: "Silk/Satin",
       subheader: "Smooth, lightweight, and luxurious",
     },
     {
-      id: "leather-faux-leather",
+      id: "Leather-Faux-Leather",
       label: "Leather/Faux Leather",
       subheader: "Durable hide or leather alternative",
     },
     {
-      id: "synthetics",
+      id: "Synthetics",
       label: "Synthetics",
       subheader:
         "Strong, flexible, and common in activewear like Polyster, Nylon, and Spandex",
     },
     {
       // TO DO: figure out how to handle other?
-      id: "other",
+      id: "Other",
       label: "Other",
       subheader: "Materials not listed above",
     },
@@ -165,7 +165,7 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(3)}
+          onPress={() => setPage(4)}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,

@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 export default function LengthPage({
-  category,
+  itemType,
   length,
   setLength,
   setPage,
@@ -16,32 +16,30 @@ export default function LengthPage({
 }) {
   const theme = useTheme();
 
-  console.log("Platform: ", Platform.OS);
-
   // specifically for where it ends on the waist
   const topOptions = [
     {
-      id: "sleeveless",
+      id: "Sleeveless",
       label: "Sleeveless",
       subheader: "No sleeves; exposes the shoulders and arms",
     },
     {
-      id: "cap",
+      id: "Cap",
       label: "Cap",
       subheader: "Very short sleeve that sits over the shoulder cap",
     },
     {
-      id: "short-sleeve",
+      id: "Short-Sleeve",
       label: "Short Sleeve",
       subheader: "Sleeve ends around the upper arm",
     },
     {
-      id: "three-quarter",
+      id: "Three-Quarter",
       label: "Three Quarter",
       subheader: "Sleeve ends between the elbow and wrist",
     },
     {
-      id: "long-sleeve",
+      id: "Long-Sleeve",
       label: "Long Sleeve",
       subheader: "Sleeve extends to the wrist",
     },
@@ -49,32 +47,31 @@ export default function LengthPage({
 
   const bottomOptions = [
     {
-      id: "above-knee",
+      id: "Above-Knee",
       label: "Above Knee",
       subheader: "Includes micro and mini lengths above the knee",
     },
     {
-      id: "knee-length-bermuda",
-      label: "Knee Length / Bermuda",
+      id: "Knee-Length-Bermuda",
+      label: "Knee Length/Bermuda",
       subheader: "Hem falls at or just around the knee",
     },
     {
-      id: "midi-capri",
+      id: "Midi-Capri",
       label: "Midi / Capri",
       subheader: "Falls below the knee to mid-calf",
     },
     {
-      id: "maxi-full-length",
+      id: "Full-Length-Maxi",
       label: "Maxi / Full Length",
       subheader: "Extends to the ankle or full leg length",
     },
   ];
 
   const lengthOptions =
-    category === "Tops" || category === "Outerwear"
+    itemType === "Top" || itemType === "Outerwear"
       ? topOptions
       : bottomOptions;
-  console.log("category: ", category, " length options: ", lengthOptions);
 
   // Length, bulk, material, fit
 
@@ -123,7 +120,7 @@ export default function LengthPage({
               >
                 What is the length of this item?
               </ThemedText>
-              {category === "Tops" || category === "Full Body" ? (
+              {itemType === "Tops" || itemType === "Full Body" ? (
                 <ThemedText style={{ fontSize: theme.sizes.h3 }}>
                   Where does the sleeve end on this item?
                 </ThemedText>

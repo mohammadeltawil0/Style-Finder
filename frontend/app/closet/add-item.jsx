@@ -14,14 +14,14 @@ import { useRouter } from "expo-router";
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
   const [uri, setUri] = useState(null);
-  const [category, setCategory] = useState("");
+  const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
-  const [event, setEvent] = useState(""); //TO DO: do we want one option or multi select
+  const [formality, setFormality] = useState(""); 
   const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
-  const [fit, setFit] = useState(1);
-  const [season, setSeason] = useState(""); //TO DO: do we want one option or multi select
+  const [fit, setFit] = useState(1); // default to middle value of 1, range from 0-2 (0: skinny, 1: regular, 2: loose)
+  const [season, setSeason] = useState(""); 
   const [length, setLength] = useState("");
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
 
@@ -45,8 +45,6 @@ export default function AddItemScreen() {
       ? (convertedBulk = 1)
       : (convertedBulk = 2);
 
-  console.log("category: ", category, " pattern: ", pattern, " color: ", color, " event: ", event, " material: ", material, " fit: ", fit, " season: ", season, " length: ", length, " bulk: ", bulk);
-
   const handleSubmit = () => {
     // TO DO: submit to backend, and navigate to inventory page!
     router.push({
@@ -60,12 +58,12 @@ export default function AddItemScreen() {
       {/* First Page: camera */}
       {page === 1 && <CameraPage setUri={setUri} setPage={setPage} uri={uri} />}
 
-      {/* Second Page: Category */}
+      {/* Second Page: Item Type */}
       {page === 2 && (
         <CategoryPage
           setPage={setPage}
-          category={category}
-          setCategory={setCategory}
+          itemType={itemType}
+          setItemType={setItemType}
           uri={uri}
         />
       )}
@@ -84,12 +82,12 @@ export default function AddItemScreen() {
         />
       )}
 
-      {/* Fourth Page: Event */}
+      {/* Fourth Page: Formality */}
       {page === 4 && (
         <EventPage
           setPage={setPage}
-          event={event}
-          setEvent={setEvent}
+          formality={formality}
+          setFormality={setFormality}
           uri={uri}
         />
       )}
@@ -107,19 +105,17 @@ export default function AddItemScreen() {
       {page === 6 && (
         <FitPage
           setPage={setPage}
-          category={category}
+          itemType={itemType}
           fit={fit}
           setFit={setFit}
           uri={uri}
         />
       )}
 
-      {/* TO DO: TO BE IMPLEMENTED */}
       {/* OPTIONAL PARAMETERS: Season */}
       {page === 7 && (
         <SeasonPage
           setPage={setPage}
-          category={category}
           season={season}
           setSeason={setSeason}
           uri={uri}
@@ -130,7 +126,7 @@ export default function AddItemScreen() {
       {page === 8 && (
         <LengthPage
           setPage={setPage}
-          category={category}
+          itemType={itemType}
           length={length}
           setLength={setLength}
           uri={uri}
@@ -152,15 +148,16 @@ export default function AddItemScreen() {
         <ReviewPage
           setPage={setPage}
           uri={uri}
-          event={event}
+          formality={formality}
           pattern={pattern}
           color={color}
-          category={category}
+          itemType={itemType}
           material={material}
           fit={convertedFit}
-          handleSubmit={handleSubmit}
+          season={season}
           length={length}
           bulk={convertedBulk}
+          handleSubmit={handleSubmit}
         />
       )}
     </>

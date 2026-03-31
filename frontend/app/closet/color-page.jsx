@@ -34,37 +34,37 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
 
   const patternOptions = [
     {
-      id: "solid",
-      label: "Solid / None",
+      id: "Solid",
+      label: "Solid",
       emoji: "🎨",
       subheader: "Unicolor with no visible print",
     },
     {
-      id: "striped",
+      id: "Striped",
       label: "Striped",
       emoji: "🦓",
       subheader: "Vertical or horizontal stripes",
     },
     {
-      id: "plaid-flannel",
+      id: "Plaid-Flannel",
       label: "Plaid / Flannel",
       emoji: "🧣",
       subheader: "Tartan or checkered pattern",
     },
     {
-      id: "floral",
+      id: "Floral",
       label: "Floral",
       emoji: "🌸",
       subheader: "Nature-inspired flower or leaf prints",
     },
     {
-      id: "graphic",
+      id: "Graphic",
       label: "Graphic",
       emoji: "🖼️",
       subheader: "Logos, large text, or statement prints",
     },
     {
-      id: "geometric-abstract",
+      id: "Geometric-Abstract",
       label: "Geometric / Abstract",
       emoji: "🔷",
       subheader: "Polka dots or repeating abstract shapes",
@@ -80,7 +80,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     return () => { isMounted = false; };
   }, []);
 
-  if (!isReady && pattern === "solid") {
+  if (!isReady && pattern === "Solid") {
     return (
       <ThemedView style={styles.page}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -108,7 +108,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
           </View>
 
           <View style={styles.mainContent}>
-            {pattern === "solid" && isSolid && (
+            {pattern === "Solid" && isSolid && (
               <>
                 <View style={styles.textContainer}>
                   <ThemedText style={{ fontSize: theme.sizes.h1, color: theme.colors.text, fontFamily: theme.fonts.bold, }}>

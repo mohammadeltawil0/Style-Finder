@@ -8,35 +8,35 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function SeasonPage({ category, season, setSeason, setPage, uri}) {
+export default function SeasonPage({ season, setSeason, setPage, uri}) {
   const theme = useTheme();
   const seasonOptions = [
     {
-      id: "all-seasons",
+      id: "All-Seasons",
       label: "All Seasons",
       emoji: "🌦️",
       subheader: "Versatile for year-round wear",
     },
     {
-      id: "winter",
+      id: "Winter",
       label: "Winter",
       emoji: "❄️",
       subheader: "Warm and layered outfits",
     },
     {
-      id: "spring",
+      id: "Spring",
       label: "Spring",
       emoji: "🌷",
       subheader: "Light and breezy outfits",
     },
     {
-      id: "summer",
+      id: "Summer",
       label: "Summer",
       emoji: "☀️",
       subheader: "Light and breezy outfits",
     },
     {
-      id: "fall",
+      id: "Fall",
       label: "Fall",
       emoji: "🍂",
       subheader: "Cozy and layered outfits",
