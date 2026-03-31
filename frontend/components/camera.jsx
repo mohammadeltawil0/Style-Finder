@@ -1,197 +1,374 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
-import { useRef, useState } from "react";
-import { Alert, Button, Pressable, StyleSheet, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { Image } from "expo-image";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import * as ImagePicker from 'expo-image-picker';
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import * as ImagePicker from "expo-image-picker";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
 
 export const Camera = ({ setUri, setPage, uri }) => {
-    const [permission, requestPermission] = useCameraPermissions();
-    const ref = useRef(null);
-    const [facing, setFacing] = useState("back");
+  const [permission, requestPermission] = useCameraPermissions();
+  const ref = useRef(null);
+  const [facing, setFacing] = useState("back");
+  const [isCameraAvailable, setIsCameraAvailable] = useState(true);
 
-    const theme = useTheme();
+  const { width } = useWindowDimensions();
 
-    if (!permission) return null;
+  const isWeb = Platform.OS === "web";
+  const isWide = width >= 768;
+  const buttonWidth = isWide ? 220 : "30%";
+  const theme = useTheme();
 
-    if (!permission.granted) {
-        return (
-            <View style={styles.permissionContainer}>
-                <Text style={{ textAlign: "center", marginBottom: 12 }}>
-                    We need your permission to use the camera
-                </Text>
-                <Button onPress={requestPermission} title="Grant permission" />
-            </View>
-        );
-    }
+  // this is specifically for web users or devices without cameras
+  // TO DO: test this on a device w/o cam
+  // TO DO: make a loading state for when we're checking for camera availability since that can take a sec
+  useEffect(() => {
+    const checkCameraAvailability = async () => {
+      if (Platform.OS !== "web") {
+        setIsCameraAvailable(true);
+        return;
+      }
 
-    const pickImage = async () => {
-        // 1. Request permission
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!navigator?.mediaDevices?.getUserMedia) {
+        setIsCameraAvailable(false);
+        return;
+      }
 
-        if (status !== 'granted') {
-            Alert.alert('Permission Denied', 'We need access to your photos to make this work!');
-            return;
-        }
-
-        // 2. Launch the library
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'], // Limit to images
-            allowsEditing: true,    // Allows cropping/rotating
-            aspect: [4, 3],         // Fixed aspect ratio for cropping
-            quality: 1,             // Highest quality
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
         });
-
-        // 3. Handle the result
-        if (!result.canceled) {
-            setUri(result.assets[0].uri);
-        }
+        stream.getTracks().forEach((track) => track.stop());
+        setIsCameraAvailable(true);
+      } catch {
+        setIsCameraAvailable(false);
+      }
     };
 
-    const takePicture = async () => {
-        const photo = await ref.current?.takePictureAsync();
-        if (photo?.uri) setUri(photo.uri);
-    };
+    checkCameraAvailability();
+  }, []);
 
-    const toggleFacing = () => {
-        setFacing((prev) => (prev === "back" ? "front" : "back"));
-    };
+  if (!isCameraAvailable) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+          paddingHorizontal: 40,
+        }}
+      >
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: theme.sizes.text,
+            marginBottom: 12,
+          }}
+        >
+          No camera detected on this device. Please upload an image from your
+          library instead.
+        </ThemedText>
+        <Pressable
+          style={{
+            alignSelf: "center",
+            backgroundColor: theme.colors.card,
+            borderRadius: 10,
+            paddingVertical: 10,
+            width: buttonWidth,
+          }}
+          onPress={() => setPage(2)}
+        >
+          <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+        </Pressable>
+      </View>
+    );
+  }
+  if (!permission) return null;
 
-    if (uri) {
-        return (
-            <View style={styles.previewContainer}>
-                <Image
-                    source={{ uri }}
-                    contentFit="contain"
-                    style={styles.previewImage}
-                />
-                <View style={styles.navigationButtons}>
-                    <Pressable onPress={() => setUri(null)} style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}>
-                        <ThemedText style={{ textAlign: "center" }}>
-                            Change Photo
-                        </ThemedText>
-                    </Pressable>
-                    <Pressable
-                        style={{ backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}
-                        onPress={() => setPage(2)}
-                    >
-                        <ThemedText style={{ textAlign: "center" }}>
-                            Next
-                        </ThemedText>
-                    </Pressable>
-                </View>
-            </View>
-        );
+  if (!permission.granted) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <ThemedText
+          style={{
+            textAlign: "center",
+            fontSize: theme.sizes.text,
+            marginBottom: 12,
+          }}
+        >
+          We need your permission to use the camera
+        </ThemedText>
+        <Pressable onPress={requestPermission}>
+          <ThemedText
+            style={{
+              backgroundColor: theme.colors.tabIconSelected,
+              color: theme.colors.text,
+              fontFamily: "semiBold",
+              fontSize: theme.sizes.h3,
+              padding: 10,
+              borderRadius: 5,
+            }}
+          >
+            GRANT PERMISSION
+          </ThemedText>
+        </Pressable>
+      </View>
+    );
+  }
+
+  const pickImage = async () => {
+    // 1. Request permission
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (status !== "granted") {
+      Alert.alert(
+        "Permission Denied",
+        "We need access to your photos to make this work!",
+      );
+      return;
     }
 
+    // 2. Launch the library
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"], // Limit to images
+      allowsEditing: true, // Allows cropping/rotating
+      aspect: [1, 1], // Fixed aspect ratio for cropping
+      quality: 1, // Highest quality
+    });
+
+    // 3. Handle the result
+    if (!result.canceled) {
+      setUri(result.assets[0].uri);
+    }
+  };
+
+  const takePicture = async () => {
+    const photo = await ref.current?.takePictureAsync();
+    if (photo?.uri) setUri(photo.uri);
+  };
+
+  const toggleFacing = () => {
+    setFacing((prev) => (prev === "back" ? "front" : "back"));
+  };
+
+  if (uri) {
     return (
-        <View style={styles.container}>
-            <CameraView
-                style={styles.camera}
-                ref={ref}
-                facing={facing}
-                pointerEvents="none"
-                animateShutter={false}
-            />
-            <View style={styles.shutterContainer}>
-                <Pressable onPress={toggleFacing} style={styles.iconBtn}>
-                    <FontAwesome6 name="rotate-left" size={32} color="white" />
-                </Pressable>
-                <Pressable onPress={takePicture}>
-                    {({ pressed }) => (
-                        <View style={[styles.shutterBtn, { opacity: pressed ? 0.5 : 1 }]}>
-                            <View style={styles.shutterBtnInner} />
-                        </View>
-                    )}
-                </Pressable>
-                <Pressable onPress={pickImage} style={styles.iconBtn}>
-                    <FontAwesome name="photo" size={32} color="white" />
-                </Pressable>
-            </View>
-            <View style={styles.nextButton}>
-                <Pressable
-                    style={{ alignSelf: "flex-end", backgroundColor: theme.colors.card, borderRadius: 10, padding: 10, width: "35%" }}
-                    onPress={() => setPage(2)}
-                >
-                    <ThemedText style={{ textAlign: "center" }}>
-                        Skip Image
-                    </ThemedText>
-                </Pressable>
-            </View>
+      <>
+        <View
+          style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}
+        >
+          <Image
+            source={{ uri }}
+            contentFit="cover"
+            style={[styles.previewImage, isWeb && styles.previewImageWeb]}
+          />
         </View>
+        <View
+          style={[
+            styles.navigationButtons,
+            isWeb && styles.navigationButtonsWeb,
+          ]}
+        >
+          <Pressable
+            onPress={() => setUri(null)}
+            style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              padding: 10,
+              width: 150,
+            }}
+          >
+            <ThemedText style={{ textAlign: "center" }}>
+              Change Photo
+            </ThemedText>
+          </Pressable>
+          <Pressable
+            style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              padding: 10,
+              width: buttonWidth,
+            }}
+            onPress={() => setPage(2)}
+          >
+            <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
+          </Pressable>
+        </View>
+      </>
     );
-}
+  }
+
+  return (
+    <View style={[styles.container, isWeb && styles.containerWeb]}>
+      <CameraView
+        style={[styles.camera, isWeb && styles.cameraWeb]}
+        ref={ref}
+        facing={facing}
+        pointerEvents="none"
+        animateShutter={false}
+      />
+      <View
+        style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}
+      >
+        <Pressable onPress={toggleFacing} style={styles.iconBtn}>
+          <FontAwesome6 name="rotate-left" size={32} color="white" />
+        </Pressable>
+        <Pressable onPress={takePicture}>
+          <View style={[styles.shutterBtn]}>
+            <View style={styles.shutterBtnInner} />
+          </View>
+        </Pressable>
+        <Pressable onPress={pickImage} style={styles.iconBtn}>
+          <FontAwesome name="photo" size={32} color="white" />
+        </Pressable>
+      </View>
+      <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
+        <Pressable
+          style={{
+            alignSelf: "center",
+            backgroundColor: theme.colors.card,
+            borderRadius: 10,
+            paddingVertical: 10,
+            width: buttonWidth,
+          }}
+          onPress={() => setPage(2)}
+        >
+          <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+        </Pressable>
+      </View>
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-    // TO DO: make sure permission style is how i like it; i dont remember LOL
-    permissionContainer: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    container: {
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    //TO DO: how much height do we want to give user????
-    camera: {
-        height: "80%",
-        width: "90%"
-    },
-    shutterContainer: {
-        alignItems: "center",
-        bottom: 44,
-        flexDirection: "row",
-        justifyContent: "space-between",
-        paddingBottom: 30,
-        paddingHorizontal: 40,
-        position: "absolute",
-        width: "90%"
-    },
-    shutterBtn: {
-        backgroundColor: "transparent",
-        borderWidth: 5,
-        borderColor: "white",
-        width: 85,
-        height: 85,
-        borderRadius: 45,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    shutterBtnInner: {
-        width: 70,
-        height: 70,
-        borderRadius: 35,
-        backgroundColor: "white",
-    },
-    iconBtn: {
-        width: 40,
-        alignItems: "center",
-    },
-    previewContainer: {
-        flex: 1,
-    },
-    previewImage: {
-        flex: 1,
-    },
-    navigationButtons: {
-        alignItems: "center",
-        flexDirection: "row",
-        gap: 40,
-        justifyContent: "center",
-        padding: 20,
-        position: "absolute",
-        bottom: 10,
-        width: "100%",
-    },
-    nextButton: {
-        alignSelf: "flex-end",
-        paddingRight: 20,
-        position: "absolute",
-        bottom: 10,
-        width: "100%",
-    }
+  container: {
+    flex: 1,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "flex-start",
+    position: "relative",
+  },
+  containerWeb: {
+    maxWidth: 680,
+    alignSelf: "center",
+    justifyContent: "flex-start",
+    paddingHorizontal: 24,
+    paddingTop: 6,
+  },
+  //TO DO: how much height do we want to give user????
+  camera: {
+    width: "90%",
+    aspectRatio: 1,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  cameraWeb: {
+    width: "100%",
+    maxWidth: 560,
+  },
+  shutterContainer: {
+    alignItems: "center",
+    bottom: 70,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingBottom: 30,
+    paddingHorizontal: 40,
+    position: "absolute",
+    width: "90%",
+  },
+  shutterContainerWeb: {
+    position: "relative",
+    bottom: 0,
+    width: "100%",
+    maxWidth: 560,
+    marginTop: 16,
+    paddingHorizontal: 12,
+    paddingBottom: 0,
+  },
+  shutterBtn: {
+    backgroundColor: "transparent",
+    borderWidth: 5,
+    borderColor: "white",
+    width: 60,
+    height: 60,
+    borderRadius: 45,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  shutterBtnInner: {
+    width: 45,
+    height: 45,
+    borderRadius: 35,
+    backgroundColor: "white",
+  },
+  iconBtn: {
+    width: 40,
+    alignItems: "center",
+  },
+  previewContainer: {
+    alignItems: "center",
+    flex: 1,
+    paddingHorizontal: 30,
+    justifyContent: "center",
+    width: "100%",
+  },
+  previewContainerWeb: {
+    alignSelf: "center",
+    paddingTop: 6,
+    paddingBottom: 24,
+  },
+  previewImage: {
+    width: "100%",
+    aspectRatio: 1,
+  },
+  previewImageWeb: {
+    borderRadius: 16,
+  },
+  navigationButtons: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: 40,
+    justifyContent: "center",
+    padding: 20,
+    position: "absolute",
+    bottom: 10,
+    width: "100%",
+  },
+  navigationButtonsWeb: {
+    position: "relative",
+    bottom: 0,
+    marginTop: 16,
+    gap: 16,
+    padding: 0,
+    justifyContent: "center",
+    flexWrap: "wrap",
+  },
+  nextButton: {
+    position: "absolute",
+    bottom: 25,
+    width: "100%",
+  },
+  nextButtonWeb: {
+    position: "relative",
+    bottom: 0,
+    width: "100%",
+    maxWidth: 560,
+    paddingRight: 0,
+    marginTop: 16,
+    alignSelf: "center",
+  },
 });

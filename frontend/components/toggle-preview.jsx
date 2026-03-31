@@ -17,7 +17,7 @@ export function TogglePreview({ uri }) {
 
     return (
         uri && !imageFailed && (
-            <View style={{ alignItems: "center", paddingHorizontal: 30, width: "100%" }}>
+            <View style={{ alignItems: "center", width: "100%" }}>
                 <Pressable
                     className="toggleHeader"
                     onPress={() => setTogglePreview(!togglePreview)}
@@ -30,8 +30,9 @@ export function TogglePreview({ uri }) {
                 {togglePreview &&
                     (<Image
                         source={{ uri }}
-                        contentFit="contain"
-                        style={{ width: "90%", height: 400 }}
+                        contentFit="cover"
+                        // height will look weird if loaded in the web since that image will be landscape
+                        style={{ width: "100%", aspectRatio: 1, marginTop: 20, borderRadius: 10 }}
                         onError={() => setImageFailed(true)}
                     />)}
             </View>
