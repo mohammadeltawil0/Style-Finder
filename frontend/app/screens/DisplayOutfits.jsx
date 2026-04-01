@@ -1,4 +1,4 @@
-import { View, Platform ,Text, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView } from "react-native";
+import { View, Platform ,Text, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -44,6 +44,7 @@ export default function OutfitResult() {
     // TODO: API call to save outfit 
     const saveSingleOutfit = async (outfit) => {
       try {
+        
         console.log("Saving outfit:", outfit);
         // API call, input paramenter may change based on backend sent to fronted in for display 
         /*
@@ -51,7 +52,25 @@ export default function OutfitResult() {
         
         });
         */
-        alert("Outfit saved!");
+       const userId = await AsyncStorage.getItem("userId");
+
+       const itemIds = [1, 2, 3]; //temporary
+       const payload = {
+        userId: Number(userId),
+        saved: true,
+        comments: "",
+        itemIds: itemIds,
+      };
+      const response = await fetch("http://api.stylefinder.tech/api/outfits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if(!response.ok) throw new Error("Failed");
+      Alert.alert("Outfit saved!");
+
       } catch (err) {
         console.log(err);
       }
