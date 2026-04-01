@@ -1,17 +1,28 @@
 import React from "react";
-import { render, fireEvent } from "@testing-library/react-native";
+import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { Alert, Text, View } from "react-native";
 import Login from "../app/auth/logIn.jsx";
 
+//mock router (capture navigation)
+const mockReplace = jest.fn();
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     push: jest.fn(),
-    replace: jest.fn(),
+    replace: mockReplace,
   }),
 }));
 
-// Properly mock Themed components (must return RN components)
+//mock API
+jest.mock("../scripts/apiClient", () => ({
+  apiClient: {
+    post: jest.fn(),
+  },
+}));
+
+import { apiClient } from "../scripts/apiClient";
+
+// Properly mock Themed components
 jest.mock("../components", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
@@ -26,7 +37,7 @@ jest.mock("../components", () => {
   };
 });
 
-// Mock useTheme but keep NavigationContainer working
+// Mock theme
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useTheme: () => ({
@@ -42,64 +53,97 @@ jest.mock("@react-navigation/native", () => ({
   }),
 }));
 
-//tests
+// ------------------ TESTS ------------------
+
 describe("Login Screen", () => {
-    const renderScreen = () =>
-        render(
-        <NavigationContainer><Login /></NavigationContainer>
+  const renderScreen = () =>
+    render(
+      <NavigationContainer>
+        <Login />
+      </NavigationContainer>
     );
 
-    beforeEach(() => {
-        jest.clearAllMocks();
-        jest.spyOn(Alert, "alert").mockImplementation(() => {});
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jest.spyOn(Alert, "alert").mockImplementation(() => {});
+  });
+
+  test("renders login inputs", () => {
+    const { getByPlaceholderText } = renderScreen();
+
+    expect(getByPlaceholderText("Username")).toBeTruthy();
+    expect(getByPlaceholderText("Password")).toBeTruthy();
+  });
+
+  test("user can type username and password", () => {
+    const { getByPlaceholderText } = renderScreen();
+
+    const usernameInput = getByPlaceholderText("Username");
+    const passwordInput = getByPlaceholderText("Password");
+
+    fireEvent.changeText(usernameInput, "stella");
+    fireEvent.changeText(passwordInput, "password");
+
+    expect(usernameInput.props.value).toBe("stella");
+    expect(passwordInput.props.value).toBe("password");
+  });
+
+  test("shows error when fields are empty", () => {
+    const { getByText } = renderScreen();
+
+    fireEvent.press(getByText("Sign In"));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Please enter username and password"
+    );
+  });
+
+  test("successful login calls API and navigates", async () => {
+    apiClient.post.mockResolvedValue({
+      data: {
+        userId: 1,
+        username: "stella",
+      },
     });
 
-    test("renders login inputs", () => {
-        const { getByPlaceholderText } = renderScreen();
+    const { getByPlaceholderText, getByText } = renderScreen();
 
-        expect(getByPlaceholderText("Username")).toBeTruthy();
-        expect(getByPlaceholderText("Password")).toBeTruthy();
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+
+    fireEvent.press(getByText("Sign In"));
+
+    await waitFor(() => {
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/users/login",
+        {
+          username: "stella",
+          password: "password",
+        }
+      );
+
+      expect(mockReplace).toHaveBeenCalled(); // navigates to home/tabs
+    });
+  });
+
+  test("API failure shows error alert", async () => {
+    apiClient.post.mockRejectedValue({
+      response: {
+        data: { message: "Invalid credentials" },
+      },
     });
 
-    test("user can type username", () => {
-        const { getByPlaceholderText } = renderScreen();
+    const { getByPlaceholderText, getByText } = renderScreen();
 
-        const usernameInput = getByPlaceholderText("Username");
-        fireEvent.changeText(usernameInput, "ava");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella");
+    fireEvent.changeText(getByPlaceholderText("Password"), "wrong");
 
-        expect(usernameInput.props.value).toBe("ava");
+    fireEvent.press(getByText("Sign In"));
+
+    await waitFor(() => {
+      expect(Alert.alert).toHaveBeenCalledWith(
+        expect.stringContaining("Invalid credentials")
+      );
     });
-
-    test("user can type password", () => {
-        const { getByPlaceholderText } = renderScreen();
-
-        const passwordInput = getByPlaceholderText("Password");
-        fireEvent.changeText(passwordInput, "password");
-
-        expect(passwordInput.props.value).toBe("password");
-    });
-
-    test("login button exists", () => {
-        const { getByText } = renderScreen();
-        expect(getByText("Sign In")).toBeTruthy();
-    });
-
-    test("shows error when fields are empty", () => {
-        const { getByText } = renderScreen();
-
-        fireEvent.press(getByText("Sign In"));
-
-        expect(Alert.alert).toHaveBeenCalledWith("Please enter username and password");
-    });
-
-    test("login button can be pressed when fields filled", () => {
-        const { getByPlaceholderText, getByText } = renderScreen();
-
-        fireEvent.changeText(getByPlaceholderText("Username"), "ava");
-        fireEvent.changeText(getByPlaceholderText("Password"), "password");
-
-        fireEvent.press(getByText("Sign In"));
-
-        expect(Alert.alert).not.toHaveBeenCalled();
-    });
+  });
 });
