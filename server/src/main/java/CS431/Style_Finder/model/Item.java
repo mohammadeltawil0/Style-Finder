@@ -1,5 +1,7 @@
 package CS431.Style_Finder.model;
 
+import CS431.Style_Finder.model.enums.PatternType;
+import CS431.Style_Finder.model.enums.LengthType;
 import CS431.Style_Finder.model.enums.Fit;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.model.enums.ItemType;
@@ -25,7 +27,7 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
@@ -34,12 +36,20 @@ public class Item {
     @Column(name = "color")
     private String color;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pattern")
+    private PatternType pattern;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "length")
-    private String length;
+    private LengthType length;
 
     // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
     @Column(name = "material")
     private Integer material;
+
+    @Column(name = "bulk")
+    private Integer bulk;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season_wear")
