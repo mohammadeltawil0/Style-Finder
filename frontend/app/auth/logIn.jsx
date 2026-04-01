@@ -4,7 +4,7 @@ import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {View, TextInput,TouchableOpacity,
-    KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
+    KeyboardAvoidingView, Platform, StyleSheet, Alert} from "react-native";
 import {apiClient} from "../../scripts/apiClient";
 
 export default function Login() {
@@ -17,7 +17,7 @@ export default function Login() {
 
    const handleLogin = async () => {
     if (!username || !password) {
-      alert("Please enter username and password");
+      Alert.alert("Please enter username and password");
       return;
     }
 
@@ -30,7 +30,7 @@ export default function Login() {
 
            const data = response.data;
            console.log("Login successful:", data);
-           alert("Login worked");
+           Alert.alert("Login worked");
            await AsyncStorage.setItem("username", data.username);
            await AsyncStorage.setItem("userId", data.userId.toString());
 
@@ -44,7 +44,7 @@ export default function Login() {
                || error.response?.data
                || "An error occurred during login. Please try again.";
 
-           alert("Login failed: " + errorMessage);
+           Alert.alert("Login failed: " + errorMessage);
        }
   };
 
