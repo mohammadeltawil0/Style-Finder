@@ -5,6 +5,7 @@ import { theme } from "../../../constants";
 import { useSurvey } from "../../../context/SurveyContext";
 import { useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {apiClient} from "../../../scripts/apiClient";
 
 const OPTIONS = {
   comfort: [ "Comfort is my top priority", "Balanced – style + comfort", "Style over comfort", ],
@@ -21,11 +22,9 @@ export default function Preferences1() {
     const loadPreferences = async () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
-        if (!userId) return;
+        if (userId == null) return;
 
-        const response = await fetch(
-          `http://api.stylefinder.tech/api/preferences/${userId}`
-        );
+        const response = await apiClient.post(`/api/preferences/${userId}`);
 
         if (!response.ok) return;
 

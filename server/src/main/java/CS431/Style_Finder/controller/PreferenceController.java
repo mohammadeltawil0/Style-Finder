@@ -12,11 +12,6 @@ public class PreferenceController {
 
     private final PreferenceService preferenceService;
 
-    @PostMapping
-    public PreferenceDto createOrUpdatePreference(@RequestBody PreferenceDto dto) {
-        return preferenceService.createOrUpdatePreference(dto);
-    }
-
     @GetMapping("/{userId}")
     public PreferenceDto getPreference(@PathVariable Long userId) {
         return preferenceService.getPreferenceByUserId(userId);
@@ -25,5 +20,10 @@ public class PreferenceController {
     @DeleteMapping("/{preferenceId}")
     public void deletePreference(@PathVariable Long preferenceId) {
         preferenceService.deletePreference(preferenceId);
+    }
+
+    @PostMapping
+    public PreferenceDto createOrUpdatePreference(@RequestBody PreferenceDto dto) {
+        return preferenceService.createOrUpdatePreference(dto);
     }
 }

@@ -3,7 +3,6 @@ package CS431.Style_Finder.controller;
 import CS431.Style_Finder.dto.UserDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,7 +25,7 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto request) {
         UserDto user = userService.login(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(user);
     }

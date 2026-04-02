@@ -34,6 +34,14 @@ public class Item {
     @Column(name = "color")
     private String color;
 
+    // New column for the algorithm
+    @Column(name = "color_category")
+    private String colorCategory;
+
+    // New column for the algorithm
+    @Column(name = "pattern")
+    private String pattern;
+
     @Column(name = "length")
     private String length;
 
@@ -53,6 +61,10 @@ public class Item {
     @Column(name = "fit")
     private Fit fit;
 
+    // New column for the algorithm
+    @Column(name = "bulk")
+    private double bulk;
+
     @Column(name = "times_worn")
     private Integer timesWorn;
 
@@ -63,4 +75,7 @@ public class Item {
     protected void onCreate() {
         if (timesWorn == null) timesWorn = 0;
     }
+
+    // New method for the algorithm
+    public double getWarmthScore() { return bulk * 10.0; }
 }
