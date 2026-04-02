@@ -18,12 +18,15 @@ export default function EditItemsModal({ setModalVisible }) {
   const [material, setMaterial] = useState("cotton");
   const [event, setEvent] = useState("casual");
   const [fit, setFit] = useState("regular");
+  const [season, setSeason] = useState(null);
   const [length, setLength] = useState(null);
   const [bulk, setBulk] = useState(null);
 
   const theme = useTheme();
 
   // TO DO: fetch item and then update states based on that
+  // TO DO: fix containers so that edit is in the middle (do like two containers and then flex-direction row)
+  
 
   const item = {
     id: { id },
@@ -428,6 +431,98 @@ export default function EditItemsModal({ setModalVisible }) {
               </View>
             </View>
             {/* OPTIONAL PARAMETERS */}
+            {season ? (
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
+                <View
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
+                >
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
+                        fontSize: theme.sizes.h3,
+                      },
+                    ]}
+                  >
+                    Season:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
+                        fontFamily: theme.fonts.regular,
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
+                  >
+                    {season}
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                  />
+                </View>
+              </View>
+            ) : (
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    alignItems: "center",
+                    backgroundColor: theme.colors.card,
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <View
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
+                >
+                  <ThemedText
+                    style={{
+                      fontSize: theme.sizes.h3,
+                      color: theme.colors.text,
+                      fontFamily: theme.fonts.regular,
+                    }}
+                  >
+                    Season not specified
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                  />
+                </View>
+              </View>
+            )}
             {length ? (
               <View
                 style={[
