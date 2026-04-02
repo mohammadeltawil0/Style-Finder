@@ -8,6 +8,6 @@ public enum LengthType {
     LONG_SLEEVE,
     ABOVE_KNEE,
     KNEE_LENGTH_OR_BERMUDA,
-    MIDI_or_CAPRI,
+    MIDI_OR_CAPRI,
     MAXI_OR_FULL_LENGTH
 }

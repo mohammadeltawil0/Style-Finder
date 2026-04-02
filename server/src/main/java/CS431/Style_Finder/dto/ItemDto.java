@@ -1,7 +1,5 @@
 package CS431.Style_Finder.dto;
 
-import java.util.regex.Pattern;
-
 import CS431.Style_Finder.model.enums.Fit;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.model.enums.ItemType;

@@ -1,11 +1,11 @@
 package CS431.Style_Finder.model;
 
-import CS431.Style_Finder.model.enums.PatternType;
 import CS431.Style_Finder.model.enums.LengthType;
 import CS431.Style_Finder.model.enums.Fit;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.model.enums.ItemType;
 import CS431.Style_Finder.model.enums.Season;
+import CS431.Style_Finder.model.enums.PatternType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -27,7 +27,7 @@ public class Item {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    private Long userId;
+    private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false)
