@@ -22,7 +22,7 @@ jest.mock("../scripts/apiClient", () => ({
 
 import { apiClient } from "../scripts/apiClient";
 
-// Properly mock Themed components
+//mock themed components
 jest.mock("../components", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
@@ -37,7 +37,7 @@ jest.mock("../components", () => {
   };
 });
 
-// Mock theme
+//mock theme
 jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useTheme: () => ({
@@ -142,7 +142,7 @@ describe("Login Screen", () => {
 
     await waitFor(() => {
       expect(Alert.alert).toHaveBeenCalledWith(
-        expect.stringContaining("Invalid credentials")
+        "Login failed: Invalid credentials"
       );
     });
   });
