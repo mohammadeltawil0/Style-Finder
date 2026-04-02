@@ -42,8 +42,12 @@ public class User {
     private LocalDateTime createdAt;
 
     // One-to-One with Preference
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Preference preference;
+
+    // One-to-One with user weights
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private UserWeights userWeights;
 
     // One-to-Many with Item
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)

@@ -64,10 +64,8 @@ public class UserServiceImpl implements UserService {
     }
 
     public UserDto login(String username, String password) {
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-
         if(!user.getPassword().equals(password)){
             throw new RuntimeException("Invalid password");
         }

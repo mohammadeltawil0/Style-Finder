@@ -14,7 +14,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ItemDto {
-    private Long itemId;
+    private Long itemId; // test
     private Long userId;
     private ItemType type;
     private String color;

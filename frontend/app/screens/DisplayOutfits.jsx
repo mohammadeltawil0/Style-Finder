@@ -1,4 +1,4 @@
-import { View, Platform ,Text, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView } from "react-native";
+import { View, Platform ,Text, StyleSheet, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert } from "react-native";
 import { useState, useEffect } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
@@ -13,8 +13,64 @@ export default function OutfitResult() {
   const router = useRouter();
   const [outfits, setOutfits] = useState([]);
   // access the currently displayed outfit. 
-  const currentOutfit = outfits[currentIndex];
   const [currentIndex, setCurrentIndex] = useState(0);
+  const currentOutfit = outfits[currentIndex] || {};
+
+
+  // Remove the dummy useEffect, once API is ready and connected to backend. 
+  useEffect(() => {
+    const dummy = {
+      outfits: [
+        {
+          outfit_id: 1,
+          items: [
+            {
+              item_id: 1,
+              type: "outerwear",
+              image_url:  "https://placekitten.com/200/120"
+            },
+            {
+              item_id: 2,
+              type: "top",
+              image_url:  "https://placekitten.com/200/120"
+            },
+            {
+              item_id: 3,
+              type: "bottom",
+              image_url:  "https://placekitten.com/200/120"
+            }
+          ]
+        },
+        {
+          outfit_id: 2,
+          items: [
+            {
+              item_id: 4,
+              type: "fullBody",
+              image_url:  "https://placekitten.com/200/120"
+            }
+          ]
+        },
+        {
+          outfit_id:3, 
+          items: [
+            {
+              item_id: 2,
+              type: "top",
+              image_url:  "https://placekitten.com/200/120"
+            },
+            {
+              item_id: 3,
+              type: "bottom",
+              image_url:  "https://placekitten.com/200/120"
+            }
+          ]
+        }
+      ]
+    };
+
+  setOutfits(dummy.outfits);
+}, []);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -42,8 +98,25 @@ export default function OutfitResult() {
   };
 
     // TODO: API call to save outfit 
+    /*
+      This UI expected backend to return outfit 
+      with item ids and image urls
+      ARRAY OF OUTFITS. 
+      {
+        "outfits": [
+          {
+            "outfit_id": 1,
+            "items": [
+              { "item_id": 1, "type": "outerwear", "image_url": "https://cdn.example.com/images/jacket.png" },
+              { "item_id": 2, "type": "top", "image_url": "https://cdn.example.com/images/tshirt.png" }
+            ]
+          }
+        ]
+      }
+    */
     const saveSingleOutfit = async (outfit) => {
       try {
+        
         console.log("Saving outfit:", outfit);
         // API call, input paramenter may change based on backend sent to fronted in for display 
         /*
@@ -51,7 +124,25 @@ export default function OutfitResult() {
         
         });
         */
-        alert("Outfit saved!");
+       const userId = await AsyncStorage.getItem("userId");
+
+       const itemIds = [1, 2, 3]; //temporary
+       const payload = {
+        userId: Number(userId),
+        saved: true,
+        comments: "",
+        itemIds: itemIds,
+      };
+      const response = await fetch("http://api.stylefinder.tech/api/outfits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+      if(!response.ok) throw new Error("Failed");
+      Alert.alert("Outfit saved!");
+
       } catch (err) {
         console.log(err);
       }
@@ -105,45 +196,15 @@ export default function OutfitResult() {
                       </TouchableOpacity>
 
                       {/* Placeholder Image */}
-                      <Image
-                          source={require("../../assets/images/placeholder.png")}
-                          style={styles.image}
-                      />
-                      {/* THIS IS JUST THE UI, TODO: CHANGE BASED ON HOW BACKEND SENDS DATA
-                          JUST TO SHOW BLOCK FOR EACH ITEM
-                      */}
-                      <View style={styles.piecesContainer}>
-                        {outfits[currentIndex]?.outerwear && (
-                          <View style={styles.pieceBox}>
-                            <Text style={styles.pieceText}>
-                              {outfits[currentIndex].outerwear}
-                            </Text>
-                          </View>
-                        )}
-
-                        {outfits[currentIndex]?.top && (
-                          <View style={styles.pieceBox}>
-                            <Text style={styles.pieceText}>
-                              {outfits[currentIndex].top}
-                            </Text>
-                          </View>
-                        )}
-
-                        {outfits[currentIndex]?.bottom && (
-                          <View style={styles.pieceBox}>
-                            <Text style={styles.pieceText}>
-                              {outfits[currentIndex].bottom}
-                            </Text>
-                          </View>
-                        )}
-
-                        {outfits[currentIndex]?.fullBody && (
-                          <View style={styles.pieceBox}>
-                            <Text style={styles.pieceText}>
-                              {outfits[currentIndex].fullBody}
-                            </Text>
-                          </View>
-                        )}
+                      <View style={styles.imageContainer}>
+                        {currentOutfit?.items?.map((item) => (
+                          // <Image
+                          //   key={item.item_id}
+                          //   source={{ uri: item.image_url }}
+                          //   style={styles.itemImage}
+                          // />
+                          <Image source={require("../../assets/images/placeholder.png")} style={styles.itemImage} />
+                        ))}
                       </View>
                     </View>
 
@@ -215,6 +276,17 @@ const styles = StyleSheet.create({
     width: 200,
     height: 350,
     resizeMode: "contain"
+  },
+  imageContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  itemImage: {
+    width: 180,
+    height: 120,
+    resizeMode: "contain",
+    marginVertical: 6
   },
 
   closeBtn: {

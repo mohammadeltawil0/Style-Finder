@@ -5,6 +5,7 @@ import { theme } from "../../../constants";
 import { Alert } from "react-native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import {apiClient} from "../../../scripts/apiClient";
 
 
 const OPTIONS = {
@@ -48,7 +49,7 @@ export default function Preferences2() {
     const storedUserId = await AsyncStorage.getItem("userId");
 
     const payload = {
-      userId: Number(storedUserId),
+      userId: parseInt(storedUserId),
       comfort: answers.comfort,
       occasion: answers.occasion,
       weather: answers.weather,
@@ -61,9 +62,7 @@ export default function Preferences2() {
       tripPriority: answers.tripPriority,
     };
 
-    const response = await fetch("http://api.stylefinder.tech/api/preferences", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const response = await apiClient.post("/api/preferences", {
       body: JSON.stringify(payload),
     });
 

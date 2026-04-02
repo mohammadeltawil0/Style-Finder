@@ -3,7 +3,6 @@ package CS431.Style_Finder.controller;
 import CS431.Style_Finder.dto.UserDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +19,15 @@ public class UserController {
 
     // POST /api/users
     // Body: { "firstName":"Stella", "username":"stella123", "passwordHash":"abc", "role":"ROLE_USER" }
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(dto));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto request) {
+        UserDto user = userService.login(request.getUsername(), request.getPassword());
+        return ResponseEntity.ok(user);
     }
 
     // GET /api/users/{id}
@@ -52,11 +57,4 @@ public class UserController {
         return ResponseEntity.ok("User deleted successfully.");
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequestDto request) {
-
-        UserDto user = userService.login(request.getUsername(), request.getPassword());
-
-        return ResponseEntity.ok(user);
-    }
 }

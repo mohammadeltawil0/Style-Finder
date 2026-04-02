@@ -31,8 +31,9 @@ export default function Login() {
            const data = response.data;
            console.log("Login successful:", data);
            alert("Login worked");
-           await AsyncStorage.setItem("username", response.data.username);
-           await AsyncStorage.setItem("userId", response.data.userId.toString());
+           await AsyncStorage.setItem("username", data.username);
+           await AsyncStorage.setItem("userId", data.userId.toString());
+
            router.replace("/(tabs)");
 
        } catch (error) {

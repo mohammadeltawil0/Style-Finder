@@ -28,7 +28,7 @@ public class OutfitServiceImpl implements OutfitService {
 
     @Override
     @Transactional
-    public OutfitDto createOutfit(OutfitDto dto) {
+    public OutfitDto createOutfit( OutfitDto dto) {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
 
