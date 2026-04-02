@@ -89,13 +89,27 @@ export default function ReviewPage({
   const convertedFormality = formality
     ? sanitize("formality", formality)
     : null;
-  const convertedMaterial = material ? sanitize("material", material) : null;
+  // const convertedMaterial = material ? sanitize("material", material) : null;
+  const materialMap = {
+    1: "Cotton",
+    2: "Linen/Hemp",
+    3: "Wool/Fleece",
+    4: "Silk/Satin",
+    5: "Leather/Faux Leather",
+    6: "Synthetics",
+    7: "Other"
+  };
+  const convertedMaterial = material ? materialMap[material] : null;
   const convertedSeason = season ? sanitize("season", season) : null;
   const convertedLength = length ? sanitize("length", length) : null;
 
   // Convert enum/int fit states to actual categories for review page display
   const convertedFit =
-    fit === 0 ? "Skinny" : fit === 1 ? "Regular" : "Oversized";
+    fit < 0.5
+    ? "Skinny"
+    : fit < 1.5
+    ? "Regular"
+    : "Oversized";
 
   const convertedBulk = bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
 

@@ -34,37 +34,37 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
 
   const patternOptions = [
     {
-      id: "Solid",
+      id: "SOLID",
       label: "Solid",
       emoji: "🎨",
       subheader: "Unicolor with no visible print",
     },
     {
-      id: "Striped",
+      id: "STRIPED",
       label: "Striped",
       emoji: "🦓",
       subheader: "Vertical or horizontal stripes",
     },
     {
-      id: "Plaid-Flannel",
+      id: "PLAID_OR_FLANNEL",
       label: "Plaid / Flannel",
       emoji: "🧣",
       subheader: "Tartan or checkered pattern",
     },
     {
-      id: "Floral",
+      id: "FLORAL",
       label: "Floral",
       emoji: "🌸",
       subheader: "Nature-inspired flower or leaf prints",
     },
     {
-      id: "Graphic",
+      id: "GRAPHIC",
       label: "Graphic",
       emoji: "🖼️",
       subheader: "Logos, large text, or statement prints",
     },
     {
-      id: "Geometric-Abstract",
+      id: "GEOMETRIC_OR_ABSTRACT",
       label: "Geometric / Abstract",
       emoji: "🔷",
       subheader: "Polka dots or repeating abstract shapes",
@@ -80,7 +80,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     return () => { isMounted = false; };
   }, []);
 
-  if (!isReady && pattern === "Solid") {
+  if (!isReady && pattern === "SOLID") {
     return (
       <ThemedView style={styles.page}>
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -108,7 +108,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
           </View>
 
           <View style={styles.mainContent}>
-            {pattern === "Solid" && isSolid && (
+            {pattern === "SOLID" && isSolid && (
               <>
                 <View style={styles.textContainer}>
                   <ThemedText style={{ fontSize: theme.sizes.h1, color: theme.colors.text, fontFamily: theme.fonts.bold, }}>
@@ -188,7 +188,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                           } else {
                             setPattern(option.id);
                             setIsSolid(false);
-                            if (option.id !== "solid") {
+                            if (option.id !== "SOLID") {
                               setColor("");
                             }
                           }
@@ -245,7 +245,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {((color && pattern === "solid") || (!color && pattern !== "solid" && pattern.length > 0)) && (
+        {((color && pattern === "SOLID") || (!color && pattern !== "SOLID" && pattern.length > 0)) && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -258,7 +258,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
         )}
-        {pattern === "solid" && color === "" && (
+        {pattern === "SOLID" && color === "" && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,

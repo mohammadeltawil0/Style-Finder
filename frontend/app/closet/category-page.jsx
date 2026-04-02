@@ -70,8 +70,8 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
 
           <View className="categoryOptions" style={styles.categoryOptions}>
             <Pressable
-              onPress={() => setItemType("Top")}
-              style={[styles.optionCard, getOptionStyle(itemType === "Top")]}
+              onPress={() => setItemType("TOP")}
+              style={[styles.optionCard, getOptionStyle(itemType === "TOP")]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <Ionicons name="shirt" size={24} color="black" />
@@ -97,8 +97,8 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setItemType("Bottom")}
-              style={[styles.optionCard, getOptionStyle(itemType === "Bottom")]}
+              onPress={() => setItemType("BOTTOM")}
+              style={[styles.optionCard, getOptionStyle(itemType === "BOTTOM")]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
                 <Ionicons name="shirt" size={24} color="black" />
@@ -124,10 +124,10 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setItemType("Full Body")}
+              onPress={() => setItemType("FULL_BODY")}
               style={[
                 styles.optionCard,
-                getOptionStyle(itemType === "Full Body"),
+                getOptionStyle(itemType === "FULL_BODY"),
               ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>
@@ -154,10 +154,10 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
             </Pressable>
 
             <Pressable
-              onPress={() => setItemType("Outerwear")}
+              onPress={() => setItemType("OUTERWEAR")}
               style={[
                 styles.optionCard,
-                getOptionStyle(itemType === "Outerwear"),
+                getOptionStyle(itemType === "OUTERWEAR"),
               ]}
             >
               <View className="optionTitle" style={styles.optionTitle}>

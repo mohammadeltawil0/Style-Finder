@@ -1,9 +1,11 @@
 package CS431.Style_Finder.model;
 
+import CS431.Style_Finder.model.enums.LengthType;
 import CS431.Style_Finder.model.enums.Fit;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.model.enums.ItemType;
 import CS431.Style_Finder.model.enums.Season;
+import CS431.Style_Finder.model.enums.PatternType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -35,19 +37,27 @@ public class Item {
     private String color;
 
     // New column for the algorithm
+    @Enumerated(EnumType.STRING)
+    @Column(name = "pattern")
+    private PatternType pattern;
+    
+    // @Column(name = "pattern")
+    // private String pattern;
+  
+    // New column for the algorithm
+    @Enumerated(EnumType.STRING)
     @Column(name = "color_category")
     private String colorCategory;
 
-    // New column for the algorithm
-    @Column(name = "pattern")
-    private String pattern;
-
     @Column(name = "length")
-    private String length;
+    private LengthType length;
 
     // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
     @Column(name = "material")
     private Integer material;
+
+    @Column(name = "bulk")
+    private Integer bulk;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season_wear")

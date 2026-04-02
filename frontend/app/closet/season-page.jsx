@@ -12,31 +12,31 @@ export default function SeasonPage({ season, setSeason, setPage, uri}) {
   const theme = useTheme();
   const seasonOptions = [
     {
-      id: "All-Seasons",
+      id: "ALL_SEASONS",
       label: "All Seasons",
       emoji: "🌦️",
       subheader: "Versatile for year-round wear",
     },
     {
-      id: "Winter",
+      id: "WINTER",
       label: "Winter",
       emoji: "❄️",
       subheader: "Warm and layered outfits",
     },
     {
-      id: "Spring",
+      id: "SPRING",
       label: "Spring",
       emoji: "🌷",
       subheader: "Light and breezy outfits",
     },
     {
-      id: "Summer",
+      id: "SUMMER",
       label: "Summer",
       emoji: "☀️",
       subheader: "Light and breezy outfits",
     },
     {
-      id: "Fall",
+      id: "FALL",
       label: "Fall",
       emoji: "🍂",
       subheader: "Cozy and layered outfits",

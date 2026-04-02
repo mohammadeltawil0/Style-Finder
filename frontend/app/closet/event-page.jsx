@@ -12,37 +12,37 @@ export default function EventPage({ setPage, formality, setFormality, uri}) {
   const theme = useTheme();
   const eventOptions = [
     {
-      id: "Versatile",
+      id: "VERSATILE",
       label: "Versatile",
       emoji: "✨",
       subheader: "Works for many occasions",
     },
     {
-      id: "Casual",
+      id: "CASUAL",
       label: "Casual",
       emoji: "🧢",
       subheader: "Everyday and relaxed outfits",
     },
     {
-      id: "Work-Smart",
+      id: "WORK_OR_SMART",
       label: "Work/Smart",
       emoji: "💼",
       subheader: "Office and polished looks",
     },
     {
-      id: "Party-Night",
+      id: "PARTY_OR_NIGHT_OUT",
       label: "Party/Night Out",
       emoji: "🌙",
       subheader: "Evening and social events",
     },
     {
-      id: "Formal",
+      id: "FORMAL",
       label: "Formal",
       emoji: "🎩",
       subheader: "Dressy and special occasions",
     },
     {
-      id: "Active-Sport",
+      id: "ACTIVE_OR_SPORT",
       label: "Active/Sport",
       emoji: "🏃",
       subheader: "Movement-friendly outfits",

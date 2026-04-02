@@ -19,27 +19,27 @@ export default function LengthPage({
   // specifically for where it ends on the waist
   const topOptions = [
     {
-      id: "Sleeveless",
+      id: "SLEEVELESS",
       label: "Sleeveless",
       subheader: "No sleeves; exposes the shoulders and arms",
     },
     {
-      id: "Cap",
+      id: "CAP",
       label: "Cap",
       subheader: "Very short sleeve that sits over the shoulder cap",
     },
     {
-      id: "Short-Sleeve",
+      id: "SHORT_SLEEVE",
       label: "Short Sleeve",
       subheader: "Sleeve ends around the upper arm",
     },
     {
-      id: "Three-Quarter",
+      id: "THREE_QUARTER",
       label: "Three Quarter",
       subheader: "Sleeve ends between the elbow and wrist",
     },
     {
-      id: "Long-Sleeve",
+      id: "LONG_SLEEVE",
       label: "Long Sleeve",
       subheader: "Sleeve extends to the wrist",
     },
@@ -47,29 +47,29 @@ export default function LengthPage({
 
   const bottomOptions = [
     {
-      id: "Above-Knee",
+      id: "ABOVE_KNEE",
       label: "Above Knee",
       subheader: "Includes micro and mini lengths above the knee",
     },
     {
-      id: "Knee-Length-Bermuda",
+      id: "KNEE_LENGTH_OR_BERMUDA",
       label: "Knee Length/Bermuda",
       subheader: "Hem falls at or just around the knee",
     },
     {
-      id: "Midi-Capri",
+      id: "MIDI_OR_CAPRI",
       label: "Midi / Capri",
       subheader: "Falls below the knee to mid-calf",
     },
     {
-      id: "Full-Length-Maxi",
+      id: "MAXI_OR_FULL_LENGTH",
       label: "Maxi / Full Length",
       subheader: "Extends to the ankle or full leg length",
     },
   ];
 
   const lengthOptions =
-    itemType === "Top" || itemType === "Outerwear"
+    itemType === "TOP" || itemType === "OUTERWEAR"
       ? topOptions
       : bottomOptions;
 
@@ -120,7 +120,7 @@ export default function LengthPage({
               >
                 What is the length of this item?
               </ThemedText>
-              {itemType === "Tops" || itemType === "Full Body" ? (
+              {itemType === "TOP" || itemType === "FULL_BODY" ? (
                 <ThemedText style={{ fontSize: theme.sizes.h3 }}>
                   Where does the sleeve end on this item?
                 </ThemedText>
