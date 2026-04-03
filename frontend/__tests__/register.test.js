@@ -1,47 +1,117 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
+import Register from "../app/auth/register";
 import { NavigationContainer } from "@react-navigation/native";
-import { Alert } from "react-native";
-import Register from "../app/auth/register.jsx";
 
-// Mock expo-router (since your component uses useRouter)
+//mock API
+import { apiClient } from "../scripts/apiClient";
+jest.mock("../scripts/apiClient");
+
+//mock router
 jest.mock("expo-router", () => ({
   useRouter: () => ({
-    push: jest.fn(),
     replace: jest.fn(),
   }),
 }));
 
-describe("Register Screen", () => {
+//mock useTheme--fixed crash
+jest.mock("@react-navigation/native", () => ({
+  ...jest.requireActual("@react-navigation/native"),
+  useTheme: () => ({
+    colors: {
+      text: "#000",
+      card: "#ccc",
+    },
+  }),
+}));
 
-  const renderScreen = () =>
-    render(
-      <NavigationContainer>
-        <Register />
-      </NavigationContainer>
-    );
+//mock alert
+import { Alert } from "react-native";
+jest.spyOn(Alert, "alert");
+
+const renderWithProviders = (ui) => {
+  return render(
+    <NavigationContainer>
+      {ui}
+    </NavigationContainer>
+  );
+};
+
+describe("Register Screen - Unit Tests", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  it("renders all input fields", () => {
-    const { getByPlaceholderText } = renderScreen();
+  test("successful registration", async () => {
+    apiClient.post.mockResolvedValue({
+      data: { message: "success" },
+    });
 
-    expect(getByPlaceholderText("First Name")).toBeTruthy();
-    expect(getByPlaceholderText("Email")).toBeTruthy();
-    expect(getByPlaceholderText("Username")).toBeTruthy();
-    expect(getByPlaceholderText("Password")).toBeTruthy();
-    expect(getByPlaceholderText("Confirm Password")).toBeTruthy();
+    const { getByPlaceholderText, getByText } = renderWithProviders(<Register />);
+
+    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password");
+
+    fireEvent.press(getByText("Sign Up"));
+
+    await waitFor(() => {
+      expect(apiClient.post).toHaveBeenCalledWith(
+        "/api/users/register",
+        expect.objectContaining({
+          firstName: "Stella",
+          email: "test@test.com",
+          username: "stella123",
+          password: "password",
+        })
+      );
+    });
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Success",
+      "Account Created Successfully!"
+    );
   });
 
-  it("shows error if passwords do not match", () => {
-    jest.spyOn(Alert, "alert").mockImplementation(() => {});
+  test("shows error if fields are missing", () => {
+    const { getByText } = renderWithProviders(<Register />);
 
-    const { getByPlaceholderText, getByText } = renderScreen();
+    fireEvent.press(getByText("Sign Up"));
 
-    fireEvent.changeText(getByPlaceholderText("Password"), "1234");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "5678");
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Error",
+      expect.stringContaining("All fields are required")
+    );
+  });
+
+  test("shows error for invalid email", () => {
+    const { getByPlaceholderText, getByText } = renderWithProviders(<Register />);
+
+    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+    fireEvent.changeText(getByPlaceholderText("Email"), "invalid-email");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password");
+
+    fireEvent.press(getByText("Sign Up"));
+
+    expect(Alert.alert).toHaveBeenCalledWith(
+      "Error",
+      "Please enter a valid email address"
+    );
+  });
+
+  test("shows error if passwords do not match", () => {
+    const { getByPlaceholderText, getByText } = renderWithProviders(<Register />);
+
+    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
+    fireEvent.changeText(getByPlaceholderText("Password"), "password1");
+    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password2");
 
     fireEvent.press(getByText("Sign Up"));
 
@@ -51,50 +121,28 @@ describe("Register Screen", () => {
     );
   });
 
-  it("shows confirmation alert when valid", () => {
-    jest.spyOn(Alert, "alert").mockImplementation(() => {});
-
-    const { getByPlaceholderText, getByText } = renderScreen();
-
-    fireEvent.changeText(getByPlaceholderText("First Name"), "Ava");
-    fireEvent.changeText(getByPlaceholderText("Email"), "ava@gmail.com");
-    fireEvent.changeText(getByPlaceholderText("Username"), "ava123");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password");
-
-    fireEvent.press(getByText("Sign Up"));
-
-    expect(Alert.alert).toHaveBeenCalledWith(
-      "Confirm Sign Up",
-      expect.any(String),
-      expect.any(Array)
-    );
-  });
-
-  it("clears fields after confirming signup", async () => {
-    // Auto-trigger Confirm button inside Alert
-    jest.spyOn(Alert, "alert").mockImplementation((title, message, buttons) => {
-      const confirmButton = buttons?.find(b => b.text === "Confirm");
-      confirmButton?.onPress?.();
+  test("shows backend error (username exists)", async () => {
+    apiClient.post.mockRejectedValue({
+      response: {
+        data: { message: "Username exists" },
+      },
     });
 
-    const { getByPlaceholderText, getByText } = renderScreen();
+    const { getByPlaceholderText, getByText } = renderWithProviders(<Register />);
 
-    fireEvent.changeText(getByPlaceholderText("First Name"), "Ava");
-    fireEvent.changeText(getByPlaceholderText("Email"), "ava@gmail.com");
-    fireEvent.changeText(getByPlaceholderText("Username"), "ava123");
+    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
     fireEvent.changeText(getByPlaceholderText("Password"), "password");
     fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password");
 
     fireEvent.press(getByText("Sign Up"));
 
     await waitFor(() => {
-      expect(getByPlaceholderText("First Name").props.value).toBe("");
-      expect(getByPlaceholderText("Email").props.value).toBe("");
-      expect(getByPlaceholderText("Username").props.value).toBe("");
-      expect(getByPlaceholderText("Password").props.value).toBe("");
-      expect(getByPlaceholderText("Confirm Password").props.value).toBe("");
+      expect(Alert.alert).toHaveBeenCalledWith(
+        "Error",
+        "Sign Up Failed: Username exists"
+      );
     });
   });
-
 });
