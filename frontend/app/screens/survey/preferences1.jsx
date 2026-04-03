@@ -21,14 +21,20 @@ export default function Preferences1() {
   useEffect(() => {
     const loadPreferences = async () => {
       try {
-        const userId = await AsyncStorage.getItem("userId");
-        if (userId == null) return;
+        const storedUserId = await AsyncStorage.getItem("userId");
+        if (!storedUserId) return;
 
-        const response = await apiClient.post(`/api/preferences/${userId}`);
+        console.log("Found stored userId:", storedUserId);
+        console.log("type:", typeof storedUserId);
+        
+        const userId = Number(storedUserId);
+        if (!Number.isInteger(userId) || userId <= 0) {
+          console.warn("Invalid stored userId:", storedUserId);
+          return;``
+        }
 
-        if (!response.ok) return;
-
-        const data = await response.json();
+        const response = await apiClient.get(`/api/preferences/${userId}`);
+        const data = response.data;
 
         console.log("LOADED PREFS:", data);
 

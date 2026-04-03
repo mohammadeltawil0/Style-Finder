@@ -48,8 +48,14 @@ export default function Preferences2() {
   try {
     const storedUserId = await AsyncStorage.getItem("userId");
 
+    const userId = Number(storedUserId);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      Alert.alert("Error", "Please log in again before saving preferences.");
+      return;
+    }
+
     const payload = {
-      userId: parseInt(storedUserId),
+      userId,
       comfort: answers.comfort,
       occasion: answers.occasion,
       weather: answers.weather,
@@ -62,11 +68,7 @@ export default function Preferences2() {
       tripPriority: answers.tripPriority,
     };
 
-    const response = await apiClient.post("/api/preferences", {
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) throw new Error("Failed");
+    await apiClient.post("/api/preferences", payload);
 
     Alert.alert("Preferences saved!");
     setTimeout(() => {
@@ -75,6 +77,7 @@ export default function Preferences2() {
     }, 300);
     
   } catch (error) {
+    console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
     Alert.alert("Error", "Failed to save preferences");
   }
 };
