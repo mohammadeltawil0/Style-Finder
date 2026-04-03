@@ -28,14 +28,15 @@ export default function GeneratingScreen() {
         // await AsyncStorage.setItem("latestOutfitResult", JSON.stringify(result));
 
         // Navigate to results screen with the resulting data 
-        router.replace("/screens/OutfitResult");
+        await new Promise(res => setTimeout(res, 3000)); // 2s delay
+        router.replace("/screens/DisplayOutfits");
 
       } catch (error) {
         console.error("Error:", error);
       }
     };
 
-    fetchOutfit();
+    generateOutfit();
   }, []);
 
   const scaleAnim = useRef(new Animated.Value(1)).current;
