@@ -137,7 +137,7 @@ export default function Recommendations() {
     resetAllConstraints();
 
     await AsyncStorage.setItem("pendingOutfitRequest", JSON.stringify(data));
-    router.push("/screens/GeneratingScreen");
+    router.push("/screens/OutfitswaitingScreen");
 
   };
 
