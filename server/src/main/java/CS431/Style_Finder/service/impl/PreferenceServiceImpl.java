@@ -10,7 +10,9 @@ import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.PreferenceService;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,9 @@ public class PreferenceServiceImpl implements PreferenceService {
 
     @Override
     public PreferenceDto createOrUpdatePreference(PreferenceDto dto) {
+                if (dto == null || dto.getUserId() == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "userId is required");
+                }
 
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() ->
