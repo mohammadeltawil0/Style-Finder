@@ -196,7 +196,7 @@ jest.mock("../app/closet/review-page", () => (props) => {
   );
 });
 
-describe("Use Case: Add Item to Digital Wardrobe", () => {
+describe("Add Item to Closet", () => {
   it("should complete full flow and submit item", async () => {
     const { getByText } = render(
       <NavigationContainer>

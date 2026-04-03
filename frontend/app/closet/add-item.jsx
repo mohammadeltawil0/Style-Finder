@@ -10,6 +10,8 @@ import FitPage from "./fit-page.jsx";
 import LengthPage from "./length-page.jsx";
 import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
@@ -30,27 +32,135 @@ export default function AddItemScreen() {
   // Convert states to match backend
   //1. Convert fit
   // TO DO: convert 0.1 steps to enums to match our Fit Model
-  let convertedFit = 0;
   let convertedBulk = 0;
 
-  fit >= 0 && fit < 0.5
-    ? (convertedFit = 0)
-    : fit >= 0.5 && fit < 1.5
-      ? (convertedFit = 1)
-      : (convertedFit = 2);
+  const convertFit = (fit) => {
+    if (fit < 0.5) return "SLIM";
+    if (fit < 1.5) return "REGULAR";
+    return "LOOSE";
+  };
 
   bulk >= 0 && bulk <= 0.50
     ? (convertedBulk = 0)
     : bulk >= 0.51 && bulk < 1.49
       ? (convertedBulk = 1)
       : (convertedBulk = 2);
+  
+  const convertPattern = (pattern) => {
+    const map = {
+      "Solid": "SOLID",
+      "Striped": "STRIPED",
+      "Plaid": "PLAID_OR_FLANNEL",
+      "Floral": "FLORAL",
+      "GRAPHIC": "GRAPHIC",
+      "GEOMETRIC": "GEOMETRIC",
+    };
+    return map[pattern] || pattern;
+  };
 
-  const handleSubmit = () => {
+  const convertItemType = (itemType) => {
+    const map = {
+      "Top": "TOP",
+      "Bottom": "BOTTOM",
+      "Full Body": "FULL_BODY",
+      "Outerwear": "OUTERWEAR",
+    };
+    return map[itemType] || itemType;
+  }
+
+  const convertFormality = (formality) => {
+    const map = {
+      "Versatile": "VERSATILE",
+      "Casual": "CASUAL",
+      "Work/Smart": "WORK_OR_SMART",
+      "Party/Night Out": "PARTY_OR_NIGHT_OUT",
+      "Formal": "FORMAL",
+      "Active/Sport": "ACTIVE_OR_SPORT",
+    };
+    return map[formality] || formality;
+  }
+
+  // const convertLength = (length) => {
+  //   const map = {
+  //   "Sleeveless": "SLEEVELESS",
+  //   "Cap": "CAP",
+  //   "Short-Sleeve": "SHORT_SLEEVE",
+  //   "Three-Quarter": "THREE_QUARTER",
+  //   "Long-Sleeve": "LONG_SLEEVE",
+  //   "Above-Knee": "ABOVE_KNEE",
+  //   "Knee-Length-Bermuda": "KNEE_LENGTH_OR_BERMUDA",
+  //   "Midi-Capri": "MIDI_or_CAPRI",
+  //   "Full-Length-Maxi": "MAXI_OR_FULL_LENGTH",
+  // };
+
+  //   return map[length] || null;
+  // };
+
+  // const convertSeason = (season) => {
+  // const map = {
+  //   "All-Seasons": "ALL_SEASONS",
+  //   "Winter": "WINTER",
+  //   "Spring": "SPRING",
+  //   "Summer": "SUMMER",
+  //   "Fall": "FALL",
+  // };
+
+  // return map[season] || null;
+  // };    
+
+  const convertMaterial = (material) => {
+    return material ? Number(material) : null; // Convert material to number or return null if not set
+  };
+
+  let convertedFit = convertFit(fit);
+
+  const handleSubmit = async () => {
     // TO DO: submit to backend, and navigate to inventory page!
-    router.push({
-      pathname: "/closet",
-      params: { tab: "inventory" },
-    });
+    // router.push({
+    //   pathname: "/closet",
+    //   params: { tab: "inventory" },
+    // });
+
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      const itemData = {
+        userId: Number(userId),
+        type: convertItemType(itemType),
+        color: color || null,
+        pattern: convertPattern(pattern),
+        length: length ? length : null, // Handle optional length
+        material: convertMaterial(material),
+        bulk: convertedBulk,
+        seasonWear: season || null, // Handle optional season
+        formality: convertFormality(formality),
+        fit: convertFit(fit),
+        imageUrl: uri ? uri : null, // Handle optional image
+      };
+      
+      console.log("Submitting item data:", itemData); // Log the data being submitted
+
+      const response = await fetch(`http://localhost:8080/api/items`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(itemData),
+      });
+
+      if (!response.ok) {
+        alert("Failed to submit item. Please try again." + JSON.stringify(itemData));
+        throw new Error("Failed to submit item");
+      } 
+      
+      alert("Item submitted successfully!");
+      router.push({
+        pathname: "/closet",
+        params: { tab: "inventory" },
+      });
+
+    } catch (error) {
+      console.error("Error submitting item:", error);
+    }
   };
 
   return (
@@ -153,7 +263,7 @@ export default function AddItemScreen() {
           color={color}
           itemType={itemType}
           material={material}
-          fit={convertedFit}
+          fit={fit}
           season={season}
           length={length}
           bulk={convertedBulk}
