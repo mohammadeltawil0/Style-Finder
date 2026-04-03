@@ -21,7 +21,7 @@ public class ItemDto {
     private PatternType pattern;
     private LengthType length;
     private Integer material;
-    private Integer bulk;
+    private Double bulk;
     private Season seasonWear;
     private Formality formality;
     private Fit fit;

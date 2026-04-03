@@ -67,7 +67,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             double specificColorScore = evaluateComboAverage(vw.getColorWeights(), combo.top().getColorCategory(), combo.bottom().getColorCategory());
 
             double fitScore = evaluateComboAverage(vw.getFitWeights(), combo.top().getFit().toString(), combo.bottom().getFit().toString());
-            double patternScore = evaluateComboAverage(vw.getPatternWeights(), combo.top().getPattern(), combo.bottom().getPattern());
+            double patternScore = evaluateComboAverage(vw.getPatternWeights(), combo.top().getPattern().name(), combo.bottom().getPattern().name());
             double materialScore = evaluateComboAverage(vw.getMaterialWeights(), combo.top().getMaterial().toString(), combo.bottom().getMaterial().toString());
 
             double finalScore = (fitScore + patternScore + materialScore + colorHarmonyScore + specificColorScore) - thermalScore;

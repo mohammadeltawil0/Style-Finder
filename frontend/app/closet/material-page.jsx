@@ -145,7 +145,6 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
                         style={{
                           color: theme.colors.text,
                           fontSize: theme.sizes.h3,
-                          color: theme.colors.text,
                           fontFamily: theme.fonts.bold,
                         }}
                       >

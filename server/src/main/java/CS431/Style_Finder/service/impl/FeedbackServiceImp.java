@@ -74,10 +74,10 @@ public class FeedbackServiceImp implements FeedbackService {
 
             // Adjust Pattern Weights
             if (actualTop != null && !suggestedTop.getPattern().equals(actualTop.getPattern())) {
-                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern(), -delta);
-                adjustWeight(vw.getPatternWeights(), actualTop.getPattern(), delta);
+                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern().name(), -delta);
+                adjustWeight(vw.getPatternWeights(), actualTop.getPattern().name(), delta);
             } else if (actualTop == null) {
-                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern(), delta);
+                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern().name(), delta);
             }
         }
     }

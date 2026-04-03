@@ -9,8 +9,6 @@ import CS431.Style_Finder.model.enums.PatternType;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -45,7 +43,6 @@ public class Item {
     // private String pattern;
   
     // New column for the algorithm
-    @Enumerated(EnumType.STRING)
     @Column(name = "color_category")
     private String colorCategory;
 
@@ -55,9 +52,6 @@ public class Item {
     // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
     @Column(name = "material")
     private Integer material;
-
-    @Column(name = "bulk")
-    private Integer bulk;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season_wear")

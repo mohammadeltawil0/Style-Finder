@@ -130,7 +130,6 @@ export default function SeasonPage({ season, setSeason, setPage, uri}) {
                         style={{
                           color: theme.colors.text,
                           fontSize: theme.sizes.h3,
-                          color: theme.colors.text,
                           fontFamily: theme.fonts.bold,
                         }}
                       >

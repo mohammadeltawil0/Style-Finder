@@ -4,9 +4,6 @@ import {IconSymbol} from "../../components/ui";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {theme} from "../../constants";
-import {useEffect, useState} from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import SuggestionHub from "./recommendations";
 
 export default function TabLayout() {
 

@@ -5,7 +5,7 @@ public enum ItemType {
     TOP,
     BOTTOM,
     OUTERWEAR,
-    FULL_BODY
+    FULL_BODY,
     ACCESSORY,
     OVER
 }
