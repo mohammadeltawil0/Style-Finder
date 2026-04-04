@@ -53,12 +53,14 @@ export default function RootLayout() {
             name="auth/logIn"
             options={{
               header: () => <CustomHeader page="logIn" />,
+              headerShown: false, // Hide header for login screen
             }}
           />
           <Stack.Screen
             name="auth/register"
             options={{
               header: () => <CustomHeader page="register" />,
+              headerShown: false, // Hide header for register screen
             }}
           />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
