@@ -52,8 +52,8 @@ export default function AddItemScreen() {
       "Striped": "STRIPED",
       "Plaid": "PLAID_OR_FLANNEL",
       "Floral": "FLORAL",
-      "GRAPHIC": "GRAPHIC",
-      "GEOMETRIC": "GEOMETRIC",
+      "Graphic": "GRAPHIC",
+      "Geometric": "GEOMETRIC_OR_ABSTRACT",
     };
     return map[pattern] || pattern;
   };
@@ -80,47 +80,46 @@ export default function AddItemScreen() {
     return map[formality] || formality;
   }
 
-  // const convertLength = (length) => {
-  //   const map = {
-  //   "Sleeveless": "SLEEVELESS",
-  //   "Cap": "CAP",
-  //   "Short-Sleeve": "SHORT_SLEEVE",
-  //   "Three-Quarter": "THREE_QUARTER",
-  //   "Long-Sleeve": "LONG_SLEEVE",
-  //   "Above-Knee": "ABOVE_KNEE",
-  //   "Knee-Length-Bermuda": "KNEE_LENGTH_OR_BERMUDA",
-  //   "Midi-Capri": "MIDI_or_CAPRI",
-  //   "Full-Length-Maxi": "MAXI_OR_FULL_LENGTH",
-  // };
-
-  //   return map[length] || null;
-  // };
-
-  // const convertSeason = (season) => {
-  // const map = {
-  //   "All-Seasons": "ALL_SEASONS",
-  //   "Winter": "WINTER",
-  //   "Spring": "SPRING",
-  //   "Summer": "SUMMER",
-  //   "Fall": "FALL",
-  // };
-
-  // return map[season] || null;
-  // };    
-
   const convertMaterial = (material) => {
     return material ? Number(material) : null; // Convert material to number or return null if not set
   };
 
+  // Temporary: utilized since backend is not fully updated!
+  const withLegacyAliases = (payload) => ({
+    ...payload,
+    // Older backend deployments may still expect these legacy tokens.
+    pattern:
+      payload.pattern === "GEOMETRIC_OR_ABSTRACT"
+        ? "GEOMETRIC"
+        : payload.pattern,
+    length:
+      payload.length === "MIDI_OR_CAPRI"
+        ? "MIDI_or_CAPRI"
+        : payload.length,
+  });
+
+  const normalizeEnum = (value) => {
+    if (value === "" || value === undefined) return null;
+    return value;
+  };
+
+  const buildItemPayload = (userId) => ({
+    userId,
+    type: normalizeEnum(convertItemType(itemType)),
+    color: color || null,
+    pattern: normalizeEnum(convertPattern(pattern)),
+    length: normalizeEnum(length),
+    material: convertMaterial(material),
+    bulk: convertedBulk,
+    seasonWear: normalizeEnum(season),
+    formality: normalizeEnum(convertFormality(formality)),
+    fit: normalizeEnum(convertFit(fit)),
+    imageUrl: uri ? uri : null,
+  });
+
   let convertedFit = convertFit(fit);
 
   const handleSubmit = async () => {
-    // TO DO: submit to backend, and navigate to inventory page!
-    // router.push({
-    //   pathname: "/closet",
-    //   params: { tab: "inventory" },
-    // });
-
     try {
       const storedUserId = await AsyncStorage.getItem("userId");
       const userId = Number(storedUserId);
@@ -130,26 +129,26 @@ export default function AddItemScreen() {
         return;
       }
 
-      const itemData = {
-        userId,
-        type: convertItemType(itemType),
-        color: color || null,
-        pattern: convertPattern(pattern),
-        length: length ? length : null, // Handle optional length
-        material: convertMaterial(material),
-        bulk: convertedBulk,
-        seasonWear: season || null, // Handle optional season
-        formality: convertFormality(formality),
-        fit: convertFit(fit),
-        imageUrl: uri ? uri : null, // Handle optional image
-      };
+      const itemData = buildItemPayload(userId);
       
-      console.log("Submitting item data:", itemData); // Log the data being submitted
+      console.log("Submitting:", JSON.stringify(itemData));
 
       try {
         await apiClient.post("/api/items", itemData);
       } catch (error) {
+        if (error?.response?.status === 400) {
+          const legacyPayload = withLegacyAliases(itemData);
+          try {
+            await apiClient.post("/api/items", legacyPayload);
+          } catch (legacyError) {
+            console.error("Legacy retry failed payload:", legacyPayload);
+            console.log("Full error response:", JSON.stringify(error?.response?.data));
+            throw legacyError;
+          }
+        } else {
+          console.log("Full error response:", JSON.stringify(error?.response?.data));
           throw error;
+        }
       }
       
       alert("Item submitted successfully!");
