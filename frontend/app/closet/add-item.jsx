@@ -20,11 +20,11 @@ export default function AddItemScreen() {
   const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
-  const [formality, setFormality] = useState(""); 
+  const [formality, setFormality] = useState("");
   const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
   const [fit, setFit] = useState(1); // default to middle value of 1, range from 0-2 (0: skinny, 1: regular, 2: loose)
-  const [season, setSeason] = useState(""); 
+  const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
 
@@ -45,7 +45,7 @@ export default function AddItemScreen() {
     : bulk >= 0.51 && bulk < 1.49
       ? (convertedBulk = 1)
       : (convertedBulk = 2);
-  
+
   const convertPattern = (pattern) => {
     const map = {
       "Solid": "SOLID",
@@ -130,27 +130,28 @@ export default function AddItemScreen() {
       }
 
       const itemData = buildItemPayload(userId);
-      
       console.log("Submitting:", JSON.stringify(itemData));
 
       try {
         await apiClient.post("/api/items", itemData);
       } catch (error) {
         if (error?.response?.status === 400) {
-          const legacyPayload = withLegacyAliases(itemData);
+          // Deployed backend may not support pattern/bulk/length/mobile URL yet — strip them
+          const { pattern, bulk, length, imageUrl, ...legacyPayload } = itemData;
+          console.log("Legacy payload:", JSON.stringify(legacyPayload)); // add this
           try {
             await apiClient.post("/api/items", legacyPayload);
           } catch (legacyError) {
-            console.error("Legacy retry failed payload:", legacyPayload);
-            console.log("Full error response:", JSON.stringify(error?.response?.data));
+            console.error("Legacy status:", legacyError?.response?.status);
+            console.error("Legacy headers:", JSON.stringify(legacyError?.response?.headers));
+            console.error("Legacy data:", JSON.stringify(legacyError?.response?.data));
             throw legacyError;
           }
         } else {
-          console.log("Full error response:", JSON.stringify(error?.response?.data));
           throw error;
         }
       }
-      
+
       alert("Item submitted successfully!");
       router.push({
         pathname: "/closet",
@@ -158,9 +159,8 @@ export default function AddItemScreen() {
       });
 
     } catch (error) {
-      console.error("Error response:", error?.response?.data || error?.message || error);
+      console.error("Error submitting item:", error?.response?.data || error?.message || error);
       alert("Failed to submit item. Please try again.");
-      console.error("Error submitting item:", error);
     }
   };
 
