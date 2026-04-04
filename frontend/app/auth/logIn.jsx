@@ -1,51 +1,53 @@
-import { useState } from "react";
+import { use, useState } from "react";
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import {View, TextInput,TouchableOpacity,
-    KeyboardAvoidingView, Platform, StyleSheet, Alert} from "react-native";
-import {apiClient} from "../../scripts/apiClient";
+import {
+  View, TextInput, TouchableOpacity,
+  KeyboardAvoidingView, Platform, StyleSheet, Alert
+} from "react-native";
+import { apiClient } from "../../scripts/apiClient";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
   const router = useRouter();
-  
+  const theme = useTheme();
 
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
-   const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       Alert.alert("Please enter username and password");
       return;
     }
 
-       try {
-           console.log("Sending login request...");
-           const response = await apiClient.post("/api/users/login", {
-               username: username,
-               password: password,
-           });
+    try {
+      console.log("Sending login request...");
+      const response = await apiClient.post("/api/users/login", {
+        username: username,
+        password: password,
+      });
 
-           const data = response.data;
-           console.log("Login successful:", data);
-           Alert.alert("Login worked");
-           await AsyncStorage.setItem("username", data.username);
-           await AsyncStorage.setItem("userId", data.userId.toString());
+      const data = response.data;
+      console.log("Login successful:", data);
+      Alert.alert("Login worked");
+      await AsyncStorage.setItem("username", data.username);
+      await AsyncStorage.setItem("userId", data.userId.toString());
 
-           router.replace("/(tabs)");
+      router.replace("/(tabs)");
 
-       } catch (error) {
-           console.error("Error during login:", error);
+    } catch (error) {
+      console.error("Error during login:", error);
 
-           // Axios safely extracts the backend's error message (e.g., "User not found!")
-           const errorMessage = error.response?.data?.message
-               || error.response?.data
-               || "An error occurred during login. Please try again.";
+      // Axios safely extracts the backend's error message (e.g., "User not found!")
+      const errorMessage = error.response?.data?.message
+        || error.response?.data
+        || "An error occurred during login. Please try again.";
 
-           Alert.alert("Login failed: " + errorMessage);
-       }
+      Alert.alert("Login failed: " + errorMessage);
+    }
   };
 
 
@@ -78,17 +80,19 @@ export default function Login() {
 
           <TextInput
             placeholder="Username"
+            placeholderTextColor={theme.colors.lightText}
             value={username}
             onChangeText={setusername}
-            style={styles.input}
+            style={[styles.input, { color: theme.colors.text }]}
           />
 
           <TextInput
             placeholder="Password"
+            placeholderTextColor={theme.colors.lightText}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            style={styles.input}
+            style={[styles.input, { color: theme.colors.text }]}
           />
 
           <TouchableOpacity
@@ -119,16 +123,16 @@ export default function Login() {
           >
             Don’t have an account?{"  "}
             <TouchableOpacity onPress={() => router.replace("/auth/register")}>
-            <ThemedText
-              style={{
-                fontSize:13,
-                fontFamily: fonts.semiBold,
-                textDecorationLine: "underline",
-              }}
-            >
-              SIGN UP
-            </ThemedText>
-          </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: 13,
+                  fontFamily: fonts.semiBold,
+                  textDecorationLine: "underline",
+                }}
+              >
+                SIGN UP
+              </ThemedText>
+            </TouchableOpacity>
           </ThemedText>
         </View>
       </KeyboardAvoidingView>

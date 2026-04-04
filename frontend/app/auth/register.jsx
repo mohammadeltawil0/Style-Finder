@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
@@ -13,6 +13,8 @@ function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
   const [index, setIndex] = useState(0);
   const [deleting, setDeleting] = useState(false);
+
+  const theme = useTheme();
 
   useEffect(() => {
     const speed = deleting ? 80 : 120;
@@ -39,7 +41,7 @@ function LiveTyping({ text }) {
   }, [index, deleting, text]);
 
   return (
-    <Text style={{ fontSize: 26, fontWeight: "bold" }}>
+    <Text style={{ fontSize: 26, fontWeight: "bold", color: theme.colors.text }}>
       {displayed}
       <Text style={{ opacity: 0.8 }}>|</Text>
     </Text>
@@ -55,6 +57,8 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
+  const theme = useTheme();
+  
   // validate correct email format 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -137,38 +141,43 @@ export default function Register() {
         </View>
         <TextInput
           placeholder="First Name"
+          placeholderTextColor={theme.colors.lightText}
           value={firstName}
           onChangeText={setName}
-          style={styles.input}
+          style={[styles.input, { color: theme.colors.text }]}
         />
         <TextInput
           placeholder="Email"
+          placeholderTextColor={theme.colors.lightText}
           value={email}
           onChangeText={setEmail}
-          style={styles.input}
+          style={[styles.input, { color: theme.colors.text }]}
         />
         <TextInput
           placeholder="Username"
+          placeholderTextColor={theme.colors.lightText}
           value={username}
           onChangeText={setUserName}
-          style={styles.input}
+          style={[styles.input, { color: theme.colors.text }]}
         />
         <TextInput
           placeholder = "Password"
+          placeholderTextColor={theme.colors.lightText}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          style={styles.input}
+          style={[styles.input, { color: theme.colors.text }]}
           autoCapitalize="none"
           autoCorrect={false}
           textContentType="none"
         />
         <TextInput
           placeholder = "Confirm Password"
+          placeholderTextColor={theme.colors.lightText}
           value={confirmPassword}
           secureTextEntry
           onChangeText={setConfirmPassword}
-          style={styles.input}
+          style={[styles.input, { color: theme.colors.text }]}
         />
         
         <TouchableOpacity
@@ -177,8 +186,6 @@ export default function Register() {
           style={{
               backgroundColor: colors.card,
               borderRadius: 12,
-              borderWidth: 2,
-              borderColor: "#ccc",
               alignItems: "center",
               marginTop: 10,
               paddingVertical: 10, 
@@ -188,9 +195,7 @@ export default function Register() {
           Sign Up
         </ThemedText>
         </TouchableOpacity>
-        
       </View>
-
     </ScrollView>
     </KeyboardAvoidingView>
     </ThemedView>
