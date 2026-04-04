@@ -7,7 +7,8 @@
 - 
 
 ### Changed
-- Changed from using alert to toast #24
+- Changed from using alert to toast (#24)
+- Removed headers from login and register pages (#26)
 
 ## [1.1.0] - 2026-04-02
 
