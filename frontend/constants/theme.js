@@ -33,7 +33,7 @@ export const theme = {
     border: "#B4907B",  // to be changed
     lightBrown: "#E3D5CA",
     text: "#4A3A33",
-    // text: "#000000",
+    lightText: "#7B6B63",
     tabIconDefault: "#EDEDE9",
     tabIconSelected: "#B4907B"  
   },
