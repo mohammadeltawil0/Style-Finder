@@ -36,14 +36,6 @@ export default function ClosetScreen() {
   // Dummy data for outfits and trips
   // TODO: fetch data from database when we have actual data
 
-  // const [outfits, setOutfits] = useState([]);
-  // useEffect(() => {
-  //   const fetchOutfits = async () => {
-  //     setOutfits(data);
-  //   };
-  //   fetchOutfits();
-  // }, []);
-
   // TO DO: get all the items based on category; for now just have dummy items with no images
   const items = [
     { id: "1", name: "Item 1" },
@@ -63,13 +55,6 @@ export default function ClosetScreen() {
     { id: "o5", name: "Outfit3", items: [{}] },
   ];
 
-  // const [trips, setTrips] = useState([]);
-  // useEffect(() => {
-  //   const fetchTrips = async () => {
-  //     setTrips(data);
-  //   };
-  //   fetchTrips();
-  // }, []);
   const trips = [
     {
       id: "t1",
@@ -139,12 +124,11 @@ export default function ClosetScreen() {
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
-      <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+      <View style={{ flex: 1, width: "100%", alignItems: "center", position: "relative" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
             setModalVisible={setEditItemsModalVisible}
             itemId={currItemId} // pass the id of the item that user wants to edit to the edit item modal
-            // maybe add a close modal here
           />
       ) : (
         <View>
@@ -222,23 +206,24 @@ export default function ClosetScreen() {
             editItemsModalVisible={editItemsModalVisible}
           />
           <Pressable
-            style={{
-              backgroundColor: theme.colors.tabIconSelected,
-              borderRadius: 100,
-              bottom: 30,
-              padding: 5,
-              position: "absolute",
-              right: 30,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.5,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }}
-            onPress={() => router.push("../closet/add-item")} // TO DO: link this to add item page
-          >
-            <Ionicons name="add-sharp" size={40} color="black" />
-          </Pressable>
+          style={{
+            position: "absolute",
+            right: 30,
+            bottom: 30,
+            backgroundColor: theme.colors.tabIconSelected,
+            borderRadius: 100,
+            padding: 5,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.5,
+            shadowRadius: 3.84,
+            elevation: 5,
+            zIndex: 20,
+          }}
+          onPress={() => router.push("../closet/add-item")}
+        >
+          <Ionicons name="add-sharp" size={40} color="black" />
+        </Pressable>
         </>
       ) : (
         // else outfit history

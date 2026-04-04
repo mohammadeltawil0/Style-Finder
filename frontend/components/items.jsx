@@ -3,7 +3,14 @@ import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
 
-export const Items = ({ items, setCurrItemId, currItemId, setEditItemsModalVisible, editItemsModalVisible }) => {
+export const Items = ({
+  items,
+  setCurrItemId,
+  currItemId,
+  setEditItemsModalVisible,
+  editItemsModalVisible,
+  listFooterComponent,
+}) => {
   const theme = useTheme();
 
   return (
@@ -18,6 +25,7 @@ export const Items = ({ items, setCurrItemId, currItemId, setEditItemsModalVisib
           justifyContent: "center",
           gap: 15,
         }}
+        ListFooterComponent={listFooterComponent}
         renderItem={({ item }) => (
           <View
             className="item"

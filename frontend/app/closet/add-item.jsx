@@ -11,6 +11,7 @@ import LengthPage from "./length-page.jsx";
 import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiClient } from "../../scripts/apiClient";
 
 
 export default function AddItemScreen() {
@@ -31,7 +32,6 @@ export default function AddItemScreen() {
 
   // Convert states to match backend
   //1. Convert fit
-  // TO DO: convert 0.1 steps to enums to match our Fit Model
   let convertedBulk = 0;
 
   const convertFit = (fit) => {
@@ -122,9 +122,16 @@ export default function AddItemScreen() {
     // });
 
     try {
-      const userId = await AsyncStorage.getItem("userId");
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const userId = Number(storedUserId);
+
+      if (!Number.isInteger(userId) || userId <= 0) {
+        alert("Please log in again before adding an item.");
+        return;
+      }
+
       const itemData = {
-        userId: Number(userId),
+        userId,
         type: convertItemType(itemType),
         color: color || null,
         pattern: convertPattern(pattern),
@@ -139,18 +146,11 @@ export default function AddItemScreen() {
       
       console.log("Submitting item data:", itemData); // Log the data being submitted
 
-      const response = await fetch(`http://localhost:8080/api/items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(itemData),
-      });
-
-      if (!response.ok) {
-        alert("Failed to submit item. Please try again." + JSON.stringify(itemData));
-        throw new Error("Failed to submit item");
-      } 
+      try {
+        await apiClient.post("/api/items", itemData);
+      } catch (error) {
+          throw error;
+      }
       
       alert("Item submitted successfully!");
       router.push({
@@ -159,6 +159,8 @@ export default function AddItemScreen() {
       });
 
     } catch (error) {
+      console.error("Error response:", error?.response?.data || error?.message || error);
+      alert("Failed to submit item. Please try again.");
       console.error("Error submitting item:", error);
     }
   };
