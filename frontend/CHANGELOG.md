@@ -1,3 +1,14 @@
+## [1.1.1] - 2026-04-28
+
+### Added
+- 
+
+### Fixed
+- 
+
+### Changed
+- Changed from using alert to toast #24
+
 ## [1.1.0] - 2026-04-02
 
 ### Added
