@@ -2,12 +2,11 @@ import React, { useState, useEffect, use } from "react";
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
-import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
+import {View, Text, TextInput, ScrollView,TouchableOpacity,
   KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
 import {apiClient} from "../../scripts/apiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
-
-
+import Toast from 'react-native-toast-message';
 
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
@@ -68,17 +67,30 @@ export default function Register() {
   const handleSignUp = () => {
     // check required fields
     if (!firstName || !email || !username || !password || !confirmPassword) {
-      Alert.alert("Error", "All fields are required. You are missing one or more field ");
+      Toast.show({
+        type: 'error',
+        text1: 'Error!',
+        text2: 'You are missing one or more fields.'
+      });
       return;
     }
+
     // check email format
     if (!isValidEmail(email)) {
-      Alert.alert("Error", "Please enter a valid email address");
+      Toast.show({
+        type: 'error',
+        text1: 'Error!',
+        text2: 'Please enter a valid email address.'
+      });
       return;
     }
 
     if(password !== confirmPassword){
-      Alert.alert("Error", "Passwords do not match"); 
+      Toast.show({
+        type: 'error',
+        text1: 'Error!',
+        text2: 'Passwords do not match.'
+      });
       return; 
     }
 
@@ -108,7 +120,11 @@ export default function Register() {
       console.log("Response:", response.data);
 
       // If we reach this line, the backend has accepted the signup request
-      Alert.alert("Success", "Account Created Successfully!");
+      Toast.show({
+        type: 'success',
+        text1: 'Success!',
+        text2: 'Account Created Successfully!'
+      });
       router.replace("/auth/logIn");
 
     } catch (error) {
@@ -118,7 +134,11 @@ export default function Register() {
           || error.response?.data
           || "An error occurred during sign up. Please try again.";
 
-      Alert.alert("Error", "Sign Up Failed: " + errorMessage);
+      Toast.show({
+        type: 'error',
+        text1: 'Error!',
+        text2: 'Sign Up Failed: ' + errorMessage
+      });
     }
   };
 
