@@ -10,6 +10,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { CustomHeader } from "../components";
 import { SurveyProvider } from "../context/SurveyContext";
+import Toast from 'react-native-toast-message';
+import { useToastConfig } from "constants/toastConfig";
+
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +20,11 @@ export const unstable_settings = {
   initialRouteName: "auth/logIn",
   anchor: "(tabs)",
 };
+
+function ThemedToast() {
+  const toastConfig = useToastConfig();
+  return <Toast config={toastConfig} />;
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -114,6 +122,7 @@ export default function RootLayout() {
           />
         </Stack>
         <StatusBar style="auto" />
+        <ThemedToast />
       </SurveyProvider>
     </ThemeProvider>
   );

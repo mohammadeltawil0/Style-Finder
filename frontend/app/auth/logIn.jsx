@@ -8,18 +8,39 @@ import {
   KeyboardAvoidingView, Platform, StyleSheet, Alert
 } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
+import Toast from 'react-native-toast-message';
 
 export default function Login() {
-  const { colors, fonts } = useTheme();
-  const router = useRouter();
   const theme = useTheme();
+  const router = useRouter();
+
+  const showSuccessToast = () => {
+    Toast.show({
+      type: 'success',
+      text1: 'Welcome back!',
+      text2: 'You have successfully logged in.',
+    });
+  }
+
+  // Pass message to show in toast, e.g. "Please enter username and password"
+  const showErrorToast = (message) => {
+    Toast.show({
+      type: 'error',
+      text1: 'Login Failed',
+      text2: message,
+    });
+  }
 
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
+  console.log("username:", username);
+  console.log("password:", password);
+
   const handleLogin = async () => {
     if (!username || !password) {
-      Alert.alert("Please enter username and password");
+      // Alert.alert("Please enter username and password");
+      showErrorToast("Please enter username and password");
       return;
     }
 
@@ -32,7 +53,7 @@ export default function Login() {
 
       const data = response.data;
       console.log("Login successful:", data);
-      Alert.alert("Login worked");
+      showSuccessToast();
       await AsyncStorage.setItem("username", data.username);
       await AsyncStorage.setItem("userId", data.userId.toString());
 
@@ -46,7 +67,7 @@ export default function Login() {
         || error.response?.data
         || "An error occurred during login. Please try again.";
 
-      Alert.alert("Login failed: " + errorMessage);
+      showErrorToast(errorMessage);
     }
   };
 
@@ -65,14 +86,14 @@ export default function Login() {
         <View
           style={[
             styles.card,
-            { backgroundColor: colors.lightBrown }
+            { backgroundColor: theme.colors.lightBrown }
           ]}
         >
           <ThemedText
             style={{
               fontSize: 28,
               marginBottom: 20,
-              fontFamily: fonts.bold,
+              fontFamily: theme.fonts.bold,
             }}
           >
             Welcome Back
@@ -100,14 +121,14 @@ export default function Login() {
             activeOpacity={0.7}
             style={[
               styles.button,
-              { backgroundColor: colors.card }
+              { backgroundColor: theme.colors.card }
             ]}
           >
             <ThemedText
               style={{
                 fontSize: 18,
                 fontWeight: "bold",
-                color: colors.text,
+                color: theme.colors.text,
               }}
             >
               Sign In
@@ -118,7 +139,7 @@ export default function Login() {
             style={{
               textAlign: "center",
               marginTop: 20,
-              fontFamily: fonts.light,
+              fontFamily: theme.fonts.light,
             }}
           >
             Don’t have an account?{"  "}
@@ -126,7 +147,7 @@ export default function Login() {
               <ThemedText
                 style={{
                   fontSize: 13,
-                  fontFamily: fonts.semiBold,
+                  fontFamily: theme.fonts.semiBold,
                   textDecorationLine: "underline",
                 }}
               >

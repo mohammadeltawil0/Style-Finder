@@ -35,7 +35,10 @@ export const theme = {
     text: "#4A3A33",
     lightText: "#7B6B63",
     tabIconDefault: "#EDEDE9",
-    tabIconSelected: "#B4907B"  
+    tabIconSelected: "#B4907B",
+    success: "#34D399", // Green for success messages
+    error: "#F87171",   // Red for error messages
+    info: "#60A5FA",    // Blue for informational messages  
   },
   fonts: Fonts, 
   sizes: {
