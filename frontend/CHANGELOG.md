@@ -4,7 +4,7 @@
 - 
 
 ### Fixed
-- 
+- Centered camera in camera-page (#23)
 
 ### Changed
 - Changed from using alert to toast (#24)
