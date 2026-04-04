@@ -75,9 +75,6 @@ export default function ClosetScreen() {
     }, [])
   );
 
-  console.log("Current items in state:", items);
-  console.log("Item 0:", items[0], " url", items[0]?.imageUrl);
-
   const outfits = [
     { id: "o1", name: "Outfit1", items: [{}, {}] },
     { id: "o2", name: "Outfit2", items: [{}] },
@@ -159,8 +156,8 @@ export default function ClosetScreen() {
       <View style={{ flex: 1, width: "100%", alignItems: "center", position: "relative" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.id === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            itemId={currItemId} // pass the id of the item that user wants to edit to the edit item modal
           // maybe add a close modal here
           />
         ) : (

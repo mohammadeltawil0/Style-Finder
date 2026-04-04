@@ -2,15 +2,11 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "../../components";
 import Entypo from "@expo/vector-icons/Entypo";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 
-// TO DO: fetch data
-// TO DO: edit item
-
-export default function EditItemsModal({ setModalVisible }) {
-  //dummy data excluding picture
-
+// TO DO: edit item logic
+export default function EditItemsModal({ item, setModalVisible }) {
   const [uri, setUri] = useState(null);
   const [category, setCategory] = useState("Top");
   const [pattern, setPattern] = useState("solid-unicolor");
@@ -27,19 +23,42 @@ export default function EditItemsModal({ setModalVisible }) {
   // TO DO: fetch item and then update states based on that
   // TO DO: fix containers so that edit is in the middle (do like two containers and then flex-direction row)
   
+  console.log("Editing item:", item);
+  // const item = {
+  //   id: { id },
+  //   url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c",
+  //   category: "Top",
+  //   pattern: "solid-unicolor",
+  //   color: "red",
+  //   material: "cotton",
+  //   formality: "casual",
+  //   season: "summer",
+  //   fit: "regular",
+  //   // and so on, but forgot
+  // };
 
-  const item = {
-    id: { id },
-    url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c",
-    category: "Top",
-    pattern: "solid-unicolor",
-    color: "red",
-    material: "cotton",
-    formality: "casual",
-    season: "summer",
-    fit: "regular",
-    // and so on, but forgot
+  const fitToSliderValue = (value) => {
+    if (typeof value === "number") return value;
+    if (value === "SLIM") return 0;
+    if (value === "REGULAR") return 1;
+    if (value === "LOOSE") return 2;
+    return 1;
   };
+
+  useEffect(() => {
+    if (!item) return;
+
+    setUri(item.imageUrl || item.uri || null);
+    setCategory(item.type || item.category || "Top");
+    setPattern(item.pattern || "solid-unicolor");
+    setColor(item.color || null);
+    setMaterial(item.material ?? "cotton");
+    setEvent(item.formality || item.event || "casual");
+    setFit(fitToSliderValue(item.fit));
+    setSeason(item.seasonWear || item.season || null);
+    setLength(item.length || null);
+    setBulk(typeof item.bulk === "number" ? item.bulk : null);
+  }, [item]);
 
   let convertedFit = 0;
   let convertedBulk = 0;
@@ -81,7 +100,7 @@ export default function EditItemsModal({ setModalVisible }) {
                 <Entypo name="chevron-left" size={30} color="black" />
               </Pressable>
             </View>
-            {uri ? (
+            {!uri ? (
               <View className="image"></View>
             ) : (
               <View
