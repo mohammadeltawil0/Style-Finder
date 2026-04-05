@@ -259,18 +259,19 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
     alignItems: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     position: "relative",
   },
   containerWeb: {
     maxWidth: 680,
     alignSelf: "center",
-    justifyContent: "flex-start",
+    justifyContent: "center",
     paddingHorizontal: 24,
     paddingTop: 6,
   },
   //TO DO: how much height do we want to give user????
   camera: {
+    alignSelf: "center",
     width: "90%",
     aspectRatio: 1,
     borderRadius: 16,
@@ -282,12 +283,10 @@ const styles = StyleSheet.create({
   },
   shutterContainer: {
     alignItems: "center",
-    bottom: 70,
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingBottom: 30,
+    paddingTop: 20,
     paddingHorizontal: 40,
-    position: "absolute",
     width: "90%",
   },
   shutterContainerWeb: {
@@ -358,9 +357,8 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
   },
   nextButton: {
-    position: "absolute",
-    bottom: 25,
     width: "100%",
+    marginTop: 12,
   },
   nextButtonWeb: {
     position: "relative",

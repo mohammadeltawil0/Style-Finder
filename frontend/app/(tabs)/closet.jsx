@@ -20,7 +20,9 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScrollView } from "react-native";
+import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
+
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -28,10 +30,11 @@ export default function ClosetScreen() {
   const [category, setCategory] = useState("all"); // state to hold the selected category
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [currItemId, setCurrItemId] = useState(null); // state to hold the id of the item that user wants to edit when they click on the three dots; this is used to pass to the edit item modal so that we know which item user is editing
-  const params = useLocalSearchParams();
-
-  const router = useRouter();
   const [mode, setMode] = useState("regular"); // outfit toggle: regular/trip
+  const [items, setItems] = useState([]); // state to hold the items fetched from database; for now just have dummy items with no images
+
+  const params = useLocalSearchParams();
+  const router = useRouter();
 
   // Dummy data for outfits and trips
   // TODO: fetch data from database when we have actual data
@@ -44,15 +47,33 @@ export default function ClosetScreen() {
   //   fetchOutfits();
   // }, []);
 
-  // TO DO: get all the items based on category; for now just have dummy items with no images
-  const items = [
-    { id: "1", name: "Item 1" },
-    { id: "2", name: "Item 2" },
-    { id: "3", name: "Item 3" },
-    { id: "4", name: "Item 4" },
-    { id: "5", name: "Item 5" },
-    { id: "6", name: "Item 6" },
-  ];
+  useFocusEffect(
+    useCallback(() => {
+      // Load or initialize data when the screen is focused
+      const loadData = async () => {
+        try {
+          // Fetch items from the database and set them in state
+          // const response = await apiClient.get("/api/items");
+          // setItems(response.data);
+          const storedUserId = await AsyncStorage.getItem("userId");
+          if (!storedUserId) return;
+
+          const userId = Number(storedUserId);
+          if (!Number.isInteger(userId) || userId <= 0) {
+            console.warn("Invalid stored userId:", storedUserId);
+            return; ``
+          }
+
+          const response = await apiClient.get(`/api/items/user/${userId}`);
+          console.log("User ", userId, "fetched items:", response.data);
+          setItems(response.data);
+        } catch (e) {
+          console.error("Error loading items:", e);
+        }
+      };
+      loadData();
+    }, [])
+  );
 
   const outfits = [
     { id: "o1", name: "Outfit1", items: [{}, {}] },
@@ -63,13 +84,6 @@ export default function ClosetScreen() {
     { id: "o5", name: "Outfit3", items: [{}] },
   ];
 
-  // const [trips, setTrips] = useState([]);
-  // useEffect(() => {
-  //   const fetchTrips = async () => {
-  //     setTrips(data);
-  //   };
-  //   fetchTrips();
-  // }, []);
   const trips = [
     {
       id: "t1",
@@ -139,244 +153,244 @@ export default function ClosetScreen() {
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
-      <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+      <View style={{ flex: 1, width: "100%", alignItems: "center", position: "relative" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.id === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            itemId={currItemId} // pass the id of the item that user wants to edit to the edit item modal
-            // maybe add a close modal here
+          // maybe add a close modal here
           />
-      ) : (
-        <View>
-          <SearchBar
-            value={searchText}
-            onChangeText={(text) => setSearchText(text)}
-            onSubmit={handleSearchSubmit}
-          />
-      {isItems ? (
-        <>
-          <View
-            className="item-categories"
-            style={{
-              flexDirection: "row",
-              gap: 38,
-              justifyContent: "space-between",
-              padding: 15,
-            }}
-          >
-            <Pressable
-              className="tops-category"
-              style={{
-                backgroundColor: theme.colors.lightBrown,
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-              }}
-              onPress={() => setCategory("tops")}
-            >
-              <ThemedText
-                style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
-              >
-                Tops
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              className="bottoms-category"
-              style={{
-                backgroundColor: theme.colors.lightBrown,
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-              }}
-              onPress={() => setCategory("bottoms")}
-            >
-              <ThemedText
-                style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
-              >
-                Bottoms
-              </ThemedText>
-            </Pressable>
-            <Pressable
-              className="dresses-category"
-              style={{
-                backgroundColor: theme.colors.lightBrown,
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 10,
-              }}
-              onPress={() => setCategory("dresses")}
-            >
-              <ThemedText
-                style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
-              >
-                Dresses
-              </ThemedText>
-            </Pressable>
-          </View>
-
-          <Items
-            items={items}
-            setCurrItemId={setCurrItemId}
-            currItemId={currItemId}
-            setEditItemsModalVisible={setEditItemsModalVisible}
-            editItemsModalVisible={editItemsModalVisible}
-          />
-          <Pressable
-            style={{
-              backgroundColor: theme.colors.tabIconSelected,
-              borderRadius: 100,
-              bottom: 30,
-              padding: 5,
-              position: "absolute",
-              right: 30,
-              shadowColor: "#000",
-              shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.5,
-              shadowRadius: 3.84,
-              elevation: 5,
-            }}
-            onPress={() => router.push("../closet/add-item")} // TO DO: link this to add item page
-          >
-            <Ionicons name="add-sharp" size={40} color="black" />
-          </Pressable>
-        </>
-      ) : (
-        // else outfit history
-        <>
-          <View style={styles.outfitToggle}>
-            <TouchableOpacity
-              style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
-              onPress={() => setMode("trip")}
-            >
-              <ThemedText>Trip</ThemedText>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.toggleBtn,
-                mode === "regular" && styles.activeToggle,
-              ]}
-              onPress={() => setMode("regular")}
-            >
-              <ThemedText>Regular</ThemedText>
-            </TouchableOpacity>
-          </View>
-
-          {mode === "regular" && (
-            <FlatList
-              className="regularOutfit-list"
-              data={outfits} // An array of user regular outfit TODO: remeber when fetch have array
-              keyExtractor={(outfits) => outfits.id} // Unique ID for outfit
-              numColumns="2"
-              style={{
-                marginVertical: 15,
-                paddingHorizontal: 30,
-                width: "100%",
-              }}
-              columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-              renderItem={({ item }) => (
+        ) : (
+          <View>
+            <SearchBar
+              value={searchText}
+              onChangeText={(text) => setSearchText(text)}
+              onSubmit={handleSearchSubmit}
+            />
+            {isItems ? (
+              <>
                 <View
-                  className="regularOufit"
+                  className="item-categories"
                   style={{
-                    borderColor: theme.colors.border,
-                    backgroundColor: theme.colors.lightBrown,
-                    borderRadius: 10,
-                    marginBottom: 20,
-                    width: "48%",
+                    flexDirection: "row",
+                    gap: 38,
+                    justifyContent: "space-between",
+                    padding: 15,
                   }}
                 >
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/closet/outfitsHistory/itemProperty",
-                        params: { id: item.id },
-                      })
-                    }
-                  >
-                    <View
-                      className="outfit-image"
-                      style={{ height: 175, marginBottom: 10 }}
-                    />
-                  </TouchableOpacity>
-                  {/* TO DO: add logic and possible placeholder for when user has no outfit image */}
-                  {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
-                  <View
-                    className="outfit-footer"
+                  <Pressable
+                    className="tops-category"
                     style={{
-                      backgroundColor: theme.colors.card,
-                      borderBottomLeftRadius: 10,
-                      borderBottomRightRadius: 10,
-                      borderTopColor: theme.colors.border,
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      padding: 10,
-                      alignItems: "center",
+                      backgroundColor: theme.colors.lightBrown,
+                      borderRadius: 10,
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
                     }}
+                    onPress={() => setCategory("tops")}
                   >
-                    <ThemedText> {item.name} </ThemedText>
-                    <Pressable>
-                      <Feather
-                        name="more-horizontal"
-                        size={20}
-                        color={theme.colors.text}
-                      />
-                    </Pressable>
-                  </View>
-                </View>
-              )}
-            />
-          )}
-
-          {mode === "trip" && (
-            <FlatList
-              className="trip_Oufit_Details"
-              data={trips}
-              keyExtractor={(trip) => trip.id}
-              // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
-              style={{
-                marginVertical: 15,
-                paddingHorizontal: 30,
-                width: "100%",
-              }}
-              renderItem={({ item }) => (
-                <View className="TripOufit" style={styles.tripCard}>
-                  <TouchableOpacity
-                    onPress={() =>
-                      router.push({
-                        pathname: "/closet/outfitsHistory/tripOutfits",
-                        params: { id: item.id },
-                      })
-                    }
-                  >
-                    <View style={styles.tripHeader}>
-                      <View>
-                        <ThemedText> {item.name} </ThemedText>
-                        <ThemedText>{item.dates}</ThemedText>
-                        <ThemedText># Trip</ThemedText>
-                      </View>
-                      <Ionicons name="ellipsis-horizontal" size={18} />
-                    </View>
-                  </TouchableOpacity>
-                  <View style={styles.previewRow}>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={true}
+                    <ThemedText
+                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
                     >
-                      {item.outfits.map(
-                        (
-                          outfit,
-                          index, // Place Holder only
-                        ) => (
-                          <View key={index} style={styles.previewBox} />
-                        ),
-                      )}
-                    </ScrollView>
-                  </View>
+                      Tops
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    className="bottoms-category"
+                    style={{
+                      backgroundColor: theme.colors.lightBrown,
+                      borderRadius: 10,
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => setCategory("bottoms")}
+                  >
+                    <ThemedText
+                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+                    >
+                      Bottoms
+                    </ThemedText>
+                  </Pressable>
+                  <Pressable
+                    className="dresses-category"
+                    style={{
+                      backgroundColor: theme.colors.lightBrown,
+                      borderRadius: 10,
+                      paddingHorizontal: 20,
+                      paddingVertical: 10,
+                    }}
+                    onPress={() => setCategory("dresses")}
+                  >
+                    <ThemedText
+                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+                    >
+                      Dresses
+                    </ThemedText>
+                  </Pressable>
                 </View>
-              )}
-            />
-          )}
-        </>
-      )}
+
+                <Items
+                  items={items}
+                  setCurrItemId={setCurrItemId}
+                  currItemId={currItemId}
+                  setEditItemsModalVisible={setEditItemsModalVisible}
+                  editItemsModalVisible={editItemsModalVisible}
+                />
+                <Pressable
+                  style={{
+                    backgroundColor: theme.colors.tabIconSelected,
+                    borderRadius: 100,
+                    bottom: 30,
+                    padding: 5,
+                    position: "absolute",
+                    right: 30,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.5,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                  }}
+                  onPress={() => router.push("../closet/add-item")} // TO DO: link this to add item page
+                >
+                  <Ionicons name="add-sharp" size={40} color="black" />
+                </Pressable>
+              </>
+            ) : (
+              // else outfit history
+              <>
+                <View style={styles.outfitToggle}>
+                  <TouchableOpacity
+                    style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
+                    onPress={() => setMode("trip")}
+                  >
+                    <ThemedText>Trip</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleBtn,
+                      mode === "regular" && styles.activeToggle,
+                    ]}
+                    onPress={() => setMode("regular")}
+                  >
+                    <ThemedText>Regular</ThemedText>
+                  </TouchableOpacity>
+                </View>
+
+                {mode === "regular" && (
+                  <FlatList
+                    className="regularOutfit-list"
+                    data={outfits} // An array of user regular outfit TODO: remeber when fetch have array
+                    keyExtractor={(outfits) => outfits.id} // Unique ID for outfit
+                    numColumns="2"
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
+                    columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
+                    renderItem={({ item }) => (
+                      <View
+                        className="regularOufit"
+                        style={{
+                          borderColor: theme.colors.border,
+                          backgroundColor: theme.colors.lightBrown,
+                          borderRadius: 10,
+                          marginBottom: 20,
+                          width: "48%",
+                        }}
+                      >
+                        <TouchableOpacity
+                          onPress={() =>
+                            router.push({
+                              pathname: "/closet/outfitsHistory/itemProperty",
+                              params: { id: item.id },
+                            })
+                          }
+                        >
+                          <View
+                            className="outfit-image"
+                            style={{ height: 175, marginBottom: 10 }}
+                          />
+                        </TouchableOpacity>
+                        {/* TO DO: add logic and possible placeholder for when user has no outfit image */}
+                        {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
+                        <View
+                          className="outfit-footer"
+                          style={{
+                            backgroundColor: theme.colors.card,
+                            borderBottomLeftRadius: 10,
+                            borderBottomRightRadius: 10,
+                            borderTopColor: theme.colors.border,
+                            flexDirection: "row",
+                            justifyContent: "space-between",
+                            padding: 10,
+                            alignItems: "center",
+                          }}
+                        >
+                          <ThemedText> {item.name} </ThemedText>
+                          <Pressable>
+                            <Feather
+                              name="more-horizontal"
+                              size={20}
+                              color={theme.colors.text}
+                            />
+                          </Pressable>
+                        </View>
+                      </View>
+                    )}
+                  />
+                )}
+
+                {mode === "trip" && (
+                  <FlatList
+                    className="trip_Oufit_Details"
+                    data={trips}
+                    keyExtractor={(trip) => trip.id}
+                    // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
+                    renderItem={({ item }) => (
+                      <View className="TripOufit" style={styles.tripCard}>
+                        <TouchableOpacity
+                          onPress={() =>
+                            router.push({
+                              pathname: "/closet/outfitsHistory/tripOutfits",
+                              params: { id: item.id },
+                            })
+                          }
+                        >
+                          <View style={styles.tripHeader}>
+                            <View>
+                              <ThemedText> {item.name} </ThemedText>
+                              <ThemedText>{item.dates}</ThemedText>
+                              <ThemedText># Trip</ThemedText>
+                            </View>
+                            <Ionicons name="ellipsis-horizontal" size={18} />
+                          </View>
+                        </TouchableOpacity>
+                        <View style={styles.previewRow}>
+                          <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={true}
+                          >
+                            {item.outfits.map(
+                              (
+                                outfit,
+                                index, // Place Holder only
+                              ) => (
+                                <View key={index} style={styles.previewBox} />
+                              ),
+                            )}
+                          </ScrollView>
+                        </View>
+                      </View>
+                    )}
+                  />
+                )}
+              </>
+            )}
           </View>
         )}
       </View>

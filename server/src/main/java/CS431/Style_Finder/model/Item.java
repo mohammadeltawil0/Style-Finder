@@ -46,6 +46,7 @@ public class Item {
     @Column(name = "color_category")
     private String colorCategory;
 
+   @Enumerated(EnumType.STRING)
     @Column(name = "length")
     private LengthType length;
 
@@ -67,7 +68,7 @@ public class Item {
 
     // New column for the algorithm
     @Column(name = "bulk")
-    private double bulk;
+    private Double bulk;
 
     @Column(name = "times_worn")
     private Integer timesWorn;
@@ -81,5 +82,5 @@ public class Item {
     }
 
     // New method for the algorithm
-    public double getWarmthScore() { return bulk * 10.0; }
+    public double getWarmthScore() { return bulk != null ? bulk * 10.0 : 0.0; }
 }
