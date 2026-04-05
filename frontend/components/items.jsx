@@ -2,6 +2,7 @@ import { FlatList, Image, Pressable, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
+import { useQuery } from '@tanstack/react-query';
 
 export const Items = ({
   items,
@@ -18,7 +19,9 @@ export const Items = ({
       <FlatList
         className="items-list"
         data={paddedItems} // An array of user items
-        keyExtractor={(item) => item.id} // Unique ID for each item
+        keyExtractor={(item, index) =>
+          item?.itemId != null ? String(item.itemId) : item?.id != null ? String(item.id) : `item-${index}`
+        }
         numColumns={2} // Display items in a grid with 2 columns
         style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
         columnWrapperStyle={{
@@ -76,7 +79,7 @@ export const Items = ({
                 <ThemedText>{item.name}</ThemedText>
                 <Pressable
                   onPress={() => {
-                    setCurrItemId(item.id);
+                    setCurrItemId(item.itemId);
                     setEditItemsModalVisible(!editItemsModalVisible);
                   }}
                 >

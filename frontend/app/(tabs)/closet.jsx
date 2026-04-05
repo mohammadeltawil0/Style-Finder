@@ -22,7 +22,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScrollView } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
-
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -31,7 +31,6 @@ export default function ClosetScreen() {
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [currItemId, setCurrItemId] = useState(null); // state to hold the id of the item that user wants to edit when they click on the three dots; this is used to pass to the edit item modal so that we know which item user is editing
   const [mode, setMode] = useState("regular"); // outfit toggle: regular/trip
-  const [items, setItems] = useState([]); // state to hold the items fetched from database; for now just have dummy items with no images
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -47,32 +46,25 @@ export default function ClosetScreen() {
   //   fetchOutfits();
   // }, []);
 
+  const fetchItems = async () => {
+    const storedUserId = await AsyncStorage.getItem("userId");
+    if (!storedUserId) return [];
+    const userId = Number(storedUserId);
+    if (!Number.isInteger(userId) || userId <= 0) return [];
+    const response = await apiClient.get(`/api/items/user/${userId}`);
+    return response.data;
+  };
+
+  // replace useFocusEffect loadData with:
+  const { data: items = [], isLoading, refetch } = useQuery({
+    queryKey: ['items'],
+    queryFn: fetchItems,
+  });
+
   useFocusEffect(
     useCallback(() => {
-      // Load or initialize data when the screen is focused
-      const loadData = async () => {
-        try {
-          // Fetch items from the database and set them in state
-          // const response = await apiClient.get("/api/items");
-          // setItems(response.data);
-          const storedUserId = await AsyncStorage.getItem("userId");
-          if (!storedUserId) return;
-
-          const userId = Number(storedUserId);
-          if (!Number.isInteger(userId) || userId <= 0) {
-            console.warn("Invalid stored userId:", storedUserId);
-            return; ``
-          }
-
-          const response = await apiClient.get(`/api/items/user/${userId}`);
-          console.log("User ", userId, "fetched items:", response.data);
-          setItems(response.data);
-        } catch (e) {
-          console.error("Error loading items:", e);
-        }
-      };
-      loadData();
-    }, [])
+      refetch();
+    }, [refetch])
   );
 
   const outfits = [
@@ -81,7 +73,7 @@ export default function ClosetScreen() {
     { id: "o3", name: "Outfit3", items: [{}, {}] },
     { id: "o4", name: "Outfit1", items: [{}] },
     { id: "o5", name: "Outfit2", items: [{}, {}] },
-    { id: "o5", name: "Outfit3", items: [{}] },
+    { id: "o6", name: "Outfit3", items: [{}] },
   ];
 
   const trips = [
