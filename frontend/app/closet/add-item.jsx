@@ -12,7 +12,9 @@ import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiClient } from "../../scripts/apiClient";
-
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
@@ -29,6 +31,7 @@ export default function AddItemScreen() {
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Convert states to match backend
   //1. Convert fit
@@ -114,54 +117,61 @@ export default function AddItemScreen() {
     seasonWear: normalizeEnum(season),
     formality: normalizeEnum(convertFormality(formality)),
     fit: normalizeEnum(convertFit(fit)),
-    imageUrl: uri ? uri : null,
+    // removed imageUrl here since we set it after base64 conversion
   });
 
   let convertedFit = convertFit(fit);
 
-  const handleSubmit = async () => {
-    try {
-      const storedUserId = await AsyncStorage.getItem("userId");
-      const userId = Number(storedUserId);
+  const convertToBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: 'base64',  // ✅ use string instead of FileSystem.EncodingType.Base64
+    });
+    return `data:image/jpeg;base64,${base64}`;
+  };
 
-      if (!Number.isInteger(userId) || userId <= 0) {
-        alert("Please log in again before adding an item.");
-        return;
-      }
+  const submitItem = async (payload) => {
+    const response = await apiClient.post("/api/items", payload);
+    console.log("Submission response:", response.data);
+    return response;
+  };
 
-      const itemData = buildItemPayload(userId);
-      console.log("Submitting:", JSON.stringify(itemData));
-
-      try {
-        await apiClient.post("/api/items", itemData);
-      } catch (error) {
-        if (error?.response?.status === 400) {
-          // Deployed backend may not support pattern/bulk/length/mobile URL yet — strip them
-          const { pattern, bulk, length, imageUrl, ...legacyPayload } = itemData;
-          console.log("Legacy payload:", JSON.stringify(legacyPayload)); // add this
-          try {
-            await apiClient.post("/api/items", legacyPayload);
-          } catch (legacyError) {
-            console.error("Legacy status:", legacyError?.response?.status);
-            console.error("Legacy headers:", JSON.stringify(legacyError?.response?.headers));
-            console.error("Legacy data:", JSON.stringify(legacyError?.response?.data));
-            throw legacyError;
-          }
-        } else {
-          throw error;
-        }
-      }
-
-      alert("Item submitted successfully!");
-      router.push({
-        pathname: "/closet",
-        params: { tab: "inventory" },
+  // Use useMutation to handle item submission with automatic loading and error states
+  const { mutate, isPending } = useMutation({
+    mutationFn: submitItem,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      Toast.show({ type: 'success', text1: 'Item added!' });
+      console.log("✅ onSuccess fired:", data);
+      router.push({ pathname: "/closet", params: { tab: "items" } }); 
+    },
+    onError: (error) => {
+      const status = error.response?.status;
+      console.log("❌ onError fired:", error);
+      const messages = {
+        400: 'Invalid item data.',
+        422: 'Image format not supported.',
+        500: 'Server error. Please try again.',
+      };
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to add item',
+        text2: messages[status] || 'Something went wrong.',
       });
+    },
+  });
 
-    } catch (error) {
-      console.error("Error submitting item:", error?.response?.data || error?.message || error);
-      alert("Failed to submit item. Please try again.");
+  const handleSubmit = async () => {
+    const storedUserId = await AsyncStorage.getItem("userId");
+    const userId = Number(storedUserId);
+
+    if (!Number.isInteger(userId) || userId <= 0) {
+      Toast.show({ type: 'error', text1: 'Please log in again.' });
+      return;
     }
+
+    const imageData = uri ? await convertToBase64(uri) : null;
+    const payload = { ...buildItemPayload(userId), imageUrl: imageData };
+    mutate(payload); // useMutation handles everything from here
   };
 
   return (
@@ -269,6 +279,7 @@ export default function AddItemScreen() {
           length={length}
           bulk={convertedBulk}
           handleSubmit={handleSubmit}
+          isPending={isPending}
         />
       )}
     </>
