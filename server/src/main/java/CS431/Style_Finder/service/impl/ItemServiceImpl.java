@@ -2,6 +2,10 @@ package CS431.Style_Finder.service.impl;
 
 import CS431.Style_Finder.dto.ItemDto;
 import CS431.Style_Finder.exception.ResourceNotFoundException;
+import CS431.Style_Finder.exception.InvalidUserDataException;
+import CS431.Style_Finder.exception.ItemCreationException;
+import CS431.Style_Finder.exception.InvalidUserDataException;
+
 import CS431.Style_Finder.mapper.ItemMapper;
 import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.User;
@@ -25,10 +29,27 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto dto) {
+        if (dto == null) {
+            throw new InvalidUserDataException("Item data cannot be null");
+        }
+
+        if (dto.getUserId() == null) {
+            throw new InvalidUserDataException("User ID is required");
+        }
+
+        if (dto.getType() == null) {
+            throw new InvalidUserDataException("Item type is required");
+        }
+
         User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
-        Item saved = itemRepository.save(itemMapper.toEntity(dto, user));
-        return itemMapper.toDto(saved);
+            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
+
+        try {
+            Item saved = itemRepository.save(itemMapper.toEntity(dto, user));
+            return itemMapper.toDto(saved);
+        } catch (Exception e) {
+            throw new ItemCreationException("Failed to create item", e);
+        }
     }
 
     @Override

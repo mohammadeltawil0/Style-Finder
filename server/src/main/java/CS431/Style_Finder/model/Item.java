@@ -43,11 +43,11 @@ public class Item {
     // private String pattern;
   
     // New column for the algorithm
-    @Column(name = "color_category")
+    @Column(name = "color_category", nullable = true)
     private String colorCategory;
 
-   @Enumerated(EnumType.STRING)
-    @Column(name = "length")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "length", nullable = true)
     private LengthType length;
 
     // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
@@ -55,7 +55,7 @@ public class Item {
     private Integer material;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "season_wear")
+    @Column(name = "season_wear", nullable = true)
     private Season seasonWear;
 
     @Enumerated(EnumType.STRING)
@@ -67,13 +67,13 @@ public class Item {
     private Fit fit;
 
     // New column for the algorithm
-    @Column(name = "bulk")
+    @Column(name = "bulk", nullable = true)
     private Double bulk;
 
     @Column(name = "times_worn")
     private Integer timesWorn;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @PrePersist
