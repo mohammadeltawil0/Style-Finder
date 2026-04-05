@@ -14,33 +14,16 @@ export default function Login() {
   const theme = useTheme();
   const router = useRouter();
 
-  const showSuccessToast = () => {
-    Toast.show({
-      type: 'success',
-      text1: 'Welcome back!',
-      text2: 'You have successfully logged in.',
-    });
-  }
-
-  // Pass message to show in toast, e.g. "Please enter username and password"
-  const showErrorToast = (message) => {
-    Toast.show({
-      type: 'error',
-      text1: 'Login Failed',
-      text2: message,
-    });
-  }
-
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
 
-  console.log("username:", username);
-  console.log("password:", password);
-
   const handleLogin = async () => {
     if (!username || !password) {
-      // Alert.alert("Please enter username and password");
-      showErrorToast("Please enter username and password");
+      Toast.show({
+        type: 'error',
+        text1: 'Missing Fields',
+        text2: 'Please enter both username and password.',
+      });
       return;
     }
 
@@ -53,21 +36,31 @@ export default function Login() {
 
       const data = response.data;
       console.log("Login successful:", data);
-      showSuccessToast();
+
+      Toast.show({
+        type: 'success',
+        text1: 'Welcome back!',
+        text2: 'You have successfully logged in.',
+      });
+
       await AsyncStorage.setItem("username", data.username);
       await AsyncStorage.setItem("userId", data.userId.toString());
 
       router.replace("/(tabs)");
 
     } catch (error) {
-      console.error("Error during login:", error);
+      const status = error.response?.status;
 
-      // Axios safely extracts the backend's error message (e.g., "User not found!")
-      const errorMessage = error.response?.data?.message
-        || error.response?.data
-        || "An error occurred during login. Please try again.";
+    const messages = {
+      401: 'Invalid username or password.',
+      500: 'Server error. Please try again later.', //TO DO: idk if this implemented in backend
+    };
 
-      showErrorToast(errorMessage);
+    Toast.show({
+      type: 'error',
+      text1: 'Login Failed',
+      text2: messages[status] || 'Something went wrong.',
+    });
     }
   };
 

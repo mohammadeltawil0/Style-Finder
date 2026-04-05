@@ -43,4 +43,11 @@ public class GlobalExceptionHandler {
             .status(HttpStatus.BAD_REQUEST)
             .body(new ApiError(400, "Validation Failed", message));
     }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiError> handleInvalidCredentials(InvalidCredentialsException ex) {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)  // 401
+            .body(new ApiError(401, "Unauthorized", ex.getMessage()));
+    }
 }

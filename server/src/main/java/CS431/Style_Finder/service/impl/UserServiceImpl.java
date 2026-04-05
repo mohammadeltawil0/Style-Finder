@@ -5,6 +5,7 @@ import CS431.Style_Finder.exception.DuplicateUsernameException;
 import CS431.Style_Finder.exception.InvalidUserDataException;
 import CS431.Style_Finder.exception.ResourceNotFoundException;
 import CS431.Style_Finder.exception.UserCreationException;
+import CS431.Style_Finder.exception.InvalidCredentialsException;
 import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.repository.UserRepository;
@@ -84,9 +85,10 @@ public class UserServiceImpl implements UserService {
 
     public UserDto login(String username, String password) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        if(!user.getPassword().equals(password)){
-            throw new RuntimeException("Invalid password");
+            .orElseThrow(() -> new InvalidCredentialsException());
+
+        if (!user.getPassword().equals(password)) {
+            throw new InvalidCredentialsException();
         }
 
         return userMapper.toDto(user);
