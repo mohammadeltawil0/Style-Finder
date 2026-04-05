@@ -42,8 +42,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
-
-
     // PUT /api/users/{id}
     @PutMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto dto) {
@@ -57,4 +55,13 @@ public class UserController {
         return ResponseEntity.ok("User deleted successfully.");
     }
 
+    // GET /api/users/check-username?username={username}
+    @GetMapping("/check-username")
+    public ResponseEntity<Void> checkDuplicateUsername(@RequestParam String username) {
+        System.out.println(">>> check-username hit with: " + username);
+        if (userService.duplicateUsername(username)) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+        return ResponseEntity.ok().build();
+    }
 }

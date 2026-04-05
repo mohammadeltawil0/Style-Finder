@@ -2,8 +2,9 @@
 import axios from 'axios';
 
 // 1. Verify the URL loaded correctly (Debugging)
-const API_URL = "https://api.stylefinder.tech";
+// const API_URL = "https://api.stylefinder.tech";
 // const API_URL = "http://localhost:8080";
+const API_URL = "http://{replace local ip}"; // machine's local ip address
 
 console.log("Connecting to Backend at:", API_URL);
 

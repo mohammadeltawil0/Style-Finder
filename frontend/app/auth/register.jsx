@@ -2,9 +2,11 @@ import React, { useState, useEffect, use } from "react";
 import { ThemedText, ThemedView } from "../../components";
 import { useRouter } from "expo-router";
 import { useTheme } from "@react-navigation/native";
-import {View, Text, TextInput, ScrollView,TouchableOpacity,
-  KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
-import {apiClient} from "../../scripts/apiClient";
+import {
+  View, Text, TextInput, ScrollView, TouchableOpacity,
+  KeyboardAvoidingView, Platform, StyleSheet
+} from "react-native";
+import { apiClient } from "../../scripts/apiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import Toast from 'react-native-toast-message';
 
@@ -50,190 +52,188 @@ function LiveTyping({ text }) {
 export default function Register() {
   const router = useRouter(); // TODO: once sign up done should take to home page !!
   const { colors } = useTheme();
-  const [firstName, setName] = useState(""); 
+  const [firstName, setName] = useState("");
   const [email, setEmail] = useState("");
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const theme = useTheme();
-  
+
   // validate correct email format 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  const handleSignUp = () => {
-    // check required fields
+  // if returns true, we want to fail the sign up process and show error toast that username is taken
+  const duplicateUsernameCheck = async (username) => {
+      console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
+
+  try {
+    await apiClient.get(`/api/users/check-username?username=${username}`);
+    return false; // 200 = username is available
+  } catch (error) {
+    if (error.response?.status === 409) {
+      return true; // 409 = username is taken
+    }
+    console.error("Error checking username:", error);
+    return false;
+  }
+};
+
+  const handleSignUp = async () => {
     if (!firstName || !email || !username || !password || !confirmPassword) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error!',
-        text2: 'You are missing one or more fields.'
-      });
+      Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill in all fields.' });
       return;
     }
 
-    // check email format
     if (!isValidEmail(email)) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error!',
-        text2: 'Please enter a valid email address.'
-      });
+      Toast.show({ type: 'error', text1: 'Invalid Email', text2: 'Please enter a valid email address.' });
       return;
     }
 
-    if(password !== confirmPassword){
-      Toast.show({
-        type: 'error',
-        text1: 'Error!',
-        text2: 'Passwords do not match.'
-      });
-      return; 
+    if (password !== confirmPassword) {
+      Toast.show({ type: 'error', text1: 'Password Mismatch', text2: 'Passwords do not match.' });
+      return;
     }
 
-    // for debugging - remove later
-    //TODO: Add backend logic 
-    console.log(firstName)
-    console.log(email)
-    console.log(username)
-    console.log(password)
+    const isDuplicate = await duplicateUsernameCheck(username);
+    if (isDuplicate) {
+      Toast.show({ type: 'error', text1: 'Username Taken', text2: 'Please choose a different username.' });
+      return;
+    }
 
     processSignUp();
-    };
+  };
 
 
   const processSignUp = async () => {
     try {
-      console.log("Sending signup request...");
       const response = await apiClient.post("/api/users/register", {
-        firstName: firstName,
-        email: email,
-        username: username,
-        password: password,
+        firstName,
+        email,
+        username,
+        password,
         role: "USER",
         createdAt: new Date().toISOString(),
       });
-      console.log("Line after that...");
-      console.log("Response:", response.data);
 
-      // If we reach this line, the backend has accepted the signup request
-      Toast.show({
-        type: 'success',
-        text1: 'Success!',
-        text2: 'Account Created Successfully!'
-      });
+      Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully.' });
       router.replace("/auth/logIn");
 
     } catch (error) {
-      console.error("Error during sign up:", error);
+      const status = error.response?.status;
+      const serverMessage = error.response?.data?.message;
 
-      const errorMessage = error.response?.data?.message
-          || error.response?.data
-          || "An error occurred during sign up. Please try again.";
+      // map each status code to a user-friendly message
+      const messages = {
+        400: serverMessage || 'Invalid data. Please check your inputs.',
+        409: 'Username or email is already taken.',
+        500: 'Server error. Please try again later.',
+      };
 
       Toast.show({
         type: 'error',
-        text1: 'Error!',
-        text2: 'Sign Up Failed: ' + errorMessage
+        text1: 'Sign Up Failed',
+        text2: messages[status] || 'Something went wrong. Please try again.',
       });
     }
   };
 
   return (
     <ThemedView gradient={true} style={{ flex: 1, alignItems: "center", justifyContent: "center" }} >
-    <KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} >
-    
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 16, }}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      <LiveTyping text="Let's get started!" />
-      <ThemedText style={{fontSize: 20, marginBottom: 40}}> Sign-up To Plan For Outfits</ThemedText>
-      
-      <View style={styles.card} > 
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
-          <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
-          <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
-        </View>
-        <TextInput
-          placeholder="First Name"
-          placeholderTextColor={theme.colors.lightText}
-          value={firstName}
-          onChangeText={setName}
-          style={[styles.input, { color: theme.colors.text }]}
-        />
-        <TextInput
-          placeholder="Email"
-          placeholderTextColor={theme.colors.lightText}
-          value={email}
-          onChangeText={setEmail}
-          style={[styles.input, { color: theme.colors.text }]}
-        />
-        <TextInput
-          placeholder="Username"
-          placeholderTextColor={theme.colors.lightText}
-          value={username}
-          onChangeText={setUserName}
-          style={[styles.input, { color: theme.colors.text }]}
-        />
-        <TextInput
-          placeholder = "Password"
-          placeholderTextColor={theme.colors.lightText}
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          style={[styles.input, { color: theme.colors.text }]}
-          autoCapitalize="none"
-          autoCorrect={false}
-          textContentType="none"
-        />
-        <TextInput
-          placeholder = "Confirm Password"
-          placeholderTextColor={theme.colors.lightText}
-          value={confirmPassword}
-          secureTextEntry
-          onChangeText={setConfirmPassword}
-          style={[styles.input, { color: theme.colors.text }]}
-        />
-        
-        <TouchableOpacity
-          onPress={handleSignUp}
-          activeOpacity={0.7}
-          style={{
-              backgroundColor: colors.card,
-              borderRadius: 12,
-              alignItems: "center",
-              marginTop: 10,
-              paddingVertical: 10, 
-          }}
+      <KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} >
+
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 16, }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-        <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}>
-          Sign Up
-        </ThemedText>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-    </KeyboardAvoidingView>
+          <LiveTyping text="Let's get started!" />
+          <ThemedText style={{ fontSize: 20, marginBottom: 40 }}> Sign-up To Plan For Outfits</ThemedText>
+
+          <View style={styles.card} >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
+              <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
+              <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
+            </View>
+            <TextInput
+              placeholder="First Name"
+              placeholderTextColor={theme.colors.lightText}
+              value={firstName}
+              onChangeText={setName}
+              style={[styles.input, { color: theme.colors.text }]}
+            />
+            <TextInput
+              placeholder="Email"
+              placeholderTextColor={theme.colors.lightText}
+              value={email}
+              onChangeText={setEmail}
+              style={[styles.input, { color: theme.colors.text }]}
+            />
+            <TextInput
+              placeholder="Username"
+              placeholderTextColor={theme.colors.lightText}
+              value={username}
+              onChangeText={setUserName}
+              style={[styles.input, { color: theme.colors.text }]}
+            />
+            <TextInput
+              placeholder="Password"
+              placeholderTextColor={theme.colors.lightText}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              style={[styles.input, { color: theme.colors.text }]}
+              autoCapitalize="none"
+              autoCorrect={false}
+              textContentType="none"
+            />
+            <TextInput
+              placeholder="Confirm Password"
+              placeholderTextColor={theme.colors.lightText}
+              value={confirmPassword}
+              secureTextEntry
+              onChangeText={setConfirmPassword}
+              style={[styles.input, { color: theme.colors.text }]}
+            />
+
+            <TouchableOpacity
+              onPress={handleSignUp}
+              activeOpacity={0.7}
+              style={{
+                backgroundColor: colors.card,
+                borderRadius: 12,
+                alignItems: "center",
+                marginTop: 10,
+                paddingVertical: 10,
+              }}
+            >
+              <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica' }}>
+                Sign Up
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {width: "100%",
-          maxWidth: 400,
-          padding: 25,
-          backgroundColor: "#E3D5CA",
-          borderRadius: 15,
-          shadowColor: "#000",
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.3,
-          shadowRadius: 6,
-          elevation: 8
-        },
+  card: {
+    width: "100%",
+    maxWidth: 400,
+    padding: 25,
+    backgroundColor: "#E3D5CA",
+    borderRadius: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 5 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 8
+  },
   input: {
     backgroundColor: "#ffffff",
     marginBottom: 15,

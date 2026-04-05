@@ -1,12 +1,14 @@
 package CS431.Style_Finder.service.impl;
 
 import CS431.Style_Finder.dto.UserDto;
+import CS431.Style_Finder.exception.DuplicateUsernameException;
+import CS431.Style_Finder.exception.InvalidUserDataException;
 import CS431.Style_Finder.exception.ResourceNotFoundException;
+import CS431.Style_Finder.exception.UserCreationException;
 import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -23,11 +25,28 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto createUser(UserDto dto) {
-        if (userRepository.existsByUsername(dto.getUsername())) {
-            throw new IllegalArgumentException("Username already taken: " + dto.getUsername());
+        if (dto == null) {
+            throw new InvalidUserDataException("User data cannot be null");
         }
-        User saved = userRepository.save(userMapper.toEntity(dto));
-        return userMapper.toDto(saved);
+
+        if (dto.getUsername() == null || dto.getUsername().isBlank()) {
+            throw new InvalidUserDataException("Username is required");
+        }
+
+        if (dto.getPassword() == null || dto.getPassword().isBlank()) {
+            throw new InvalidUserDataException("Password is required");
+        }
+
+        if (userRepository.existsByUsername(dto.getUsername())) {
+            throw new DuplicateUsernameException(dto.getUsername());
+        }
+
+        try {
+            User saved = userRepository.save(userMapper.toEntity(dto));
+            return userMapper.toDto(saved);
+        } catch (Exception e) {
+            throw new UserCreationException("Failed to create user", e);
+        }
     }
 
     @Override
@@ -71,5 +90,10 @@ public class UserServiceImpl implements UserService {
         }
 
         return userMapper.toDto(user);
+    }
+
+    @Override
+    public Boolean duplicateUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 }
