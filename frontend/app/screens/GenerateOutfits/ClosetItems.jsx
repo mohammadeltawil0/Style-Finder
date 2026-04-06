@@ -15,6 +15,8 @@ export default function ClosetItems() {
   const router = useRouter();
   const replaceType = params.type?.toString().toUpperCase() || "ALL";
 
+  
+
   const fetchItems = async () => {
     const storedUserId = await AsyncStorage.getItem("userId");
     if (!storedUserId) return [];
@@ -59,6 +61,49 @@ export default function ClosetItems() {
     await AsyncStorage.setItem("selectedReplacementItem", JSON.stringify(item));
     router.back();
   };
+
+  //   // Dummy data for testing
+  // const dummyItems = [
+  //   {
+  //     id: 1,
+  //     name: "Blue T-Shirt",
+  //     type: "TOP",
+  //     imageUrl: require("../../../assets/images/custom-logo.png"),
+  //   },
+  //   {
+  //     id: 2,
+  //     name: "Black Jeans",
+  //     type: "BOTTOM",
+  //     imageUrl: require("../../../assets/images/custom-logo-2.png"),
+  //   },
+  //   {
+  //     id: 3,
+  //     name: "Red Dress",
+  //     type: "FULL_BODY",
+  //     imageUrl: require("../../../assets/images/logo.png"),
+  //   },
+  //   {
+  //     id: 4,
+  //     name: "White Sneakers",
+  //     type: "BOTTOM", // Assuming shoes are bottom for now
+  //     imageUrl: require("../../../assets/images/placeholder.png"),
+  //   },
+  //   {
+  //     id: 5,
+  //     name: "Green Jacket",
+  //     type: "OUTERWEAR",
+  //     imageUrl: require("../../../assets/images/custom-logo.png"),
+  //   },
+  //   {
+  //     id: 6,
+  //     name: "Gray Hoodie",
+  //     type: "TOP",
+  //     imageUrl: require("../../../assets/images/custom-logo-2.png"),
+  //   },
+  // ];
+
+  // //  dummy data 
+  // const items = dummyItems;
 
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>

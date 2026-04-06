@@ -13,7 +13,7 @@ export default function GeneratingScreen() {
       try {
         const saved = await AsyncStorage.getItem("pendingOutfitRequest");
         const payload = JSON.parse(saved);
-
+        console.log("Payload for outfit generation:", payload);
         // TODO: API call here: Note const data have all the data regular outfit ask for 
         // TODO: change API URL 
         // const response = await fetch("https://api.stylefinder.tech/api/", {
@@ -28,7 +28,45 @@ export default function GeneratingScreen() {
         // await AsyncStorage.setItem("latestOutfitResult", JSON.stringify(result));
 
         // Navigate to results screen with the resulting data 
-        await new Promise(res => setTimeout(res, 3000)); // 2s delay
+        //await new Promise(res => setTimeout(res, 3000)); // 2s delay
+        // const response = await fetch("https://api.stylefinder.tech/api/v1/suggestions/generate", {
+        //   method: "POST",
+        //   headers: {
+        //     "Content-Type": "application/json"
+        //   },
+        //   body: JSON.stringify({
+        //     userId: 1,  // Get from user session/auth
+        //     ...payload
+        //   })
+        // });
+        // const result = await response.json();
+        const result = {
+          outfits: [
+            {
+              id: 1,
+              items: [
+                { id: 101, type: "top", imageUrl: "https://example.com" },
+                { id: 102, type: "bottom", imageUrl: "https://example.com" },
+                { id: 103, type: "outerwear", imageUrl: "https://example.com" },
+              ],
+            },
+            {
+              id: 2,
+              items: [
+                { id: 201, type: "full_body", imageUrl: "https://example.com" },
+              ],
+            },
+            {
+              id: 3,
+              items: [
+                { id: 101, type: "top", imageUrl: "https://example.com" },
+                { id: 102, type: "bottom", imageUrl: "https://example.com" },
+              ],
+
+            },
+          ],
+        };  
+        await AsyncStorage.setItem("latestOutfitResult", JSON.stringify(result));
         router.replace("/screens/GenerateOutfits/DisplayOutfits");
 
       } catch (error) {

@@ -101,7 +101,7 @@ export default function Recommendations() {
   // Call when additional constriants is click send current state of data 
   const handleAdditionalConstraints = () => {
     router.push({
-      pathname: "/screens/AdditionalConstraints", 
+      pathname: "/screens/GenerateOutfits/AdditionalConstraints", 
       params: {
         constraints: JSON.stringify(extraConstraints || {}),
         location,

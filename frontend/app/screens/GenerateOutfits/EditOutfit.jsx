@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
-import { View, TouchableOpacity, StyleSheet, Image, ScrollView } from "react-native";
-import { ThemedView, ThemedText } from "../../../components";
-import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useEffect, useState } from "react";
+import { Image, ScrollView,StyleSheet, TouchableOpacity,  View, } from "react-native";
+import { ThemedText, ThemedView } from "../../../components";
 
 const placeholderImage = require("../../../assets/images/placeholder.png");
 
@@ -18,7 +19,10 @@ const ITEM_LABELS = {
 
 const normalizeType = (type) => {
   if (!type) return "";
-  const normalized = type.toString().replace(/[^a-zA-Z]/g, "").toLowerCase();
+  const normalized = type
+    .toString()
+    .replace(/[^a-zA-Z]/g, "")
+    .toLowerCase();
   if (normalized.includes("outer")) return "outerwear";
   if (normalized.includes("bottom")) return "bottom";
   if (normalized.includes("full")) return "fullbody";
@@ -70,7 +74,36 @@ export default function EditOutfit() {
       }
     };
     loadOutfit();
-  }, [params]);
+  }, [params.outfit, params.index]);
+
+  // Item replacement when returning from ClosetItems
+  useFocusEffect(
+    useCallback(() => {
+      const checkForReplacement = async () => {
+        try {
+          const selectedItem = await AsyncStorage.getItem(
+            "selectedReplacementItem",
+          );
+          if (selectedItem) {
+            const replacementItem = JSON.parse(selectedItem);
+            // Find the item to replace based on type
+            setItems((currentItems) =>
+              currentItems.map((item) =>
+                normalizeType(item.type) === normalizeType(replacementItem.type)
+                  ? { ...item, ...replacementItem }
+                  : item,
+              ),
+            );
+            // Clear the stored item
+            await AsyncStorage.removeItem("selectedReplacementItem");
+          }
+        } catch (error) {
+          console.log("Error checking for replacement item:", error);
+        }
+      };
+      checkForReplacement();
+    }, []),
+  );
 
   const onItemPress = (item) => {
     router.push({
@@ -79,14 +112,51 @@ export default function EditOutfit() {
     });
   };
 
-  const handleSave = () => {
-    console.log("Outfit saved");
+  const handleSave = async () => {
+    try {
+      // Get the current outfit data
+      const saved = await AsyncStorage.getItem("latestOutfitResult");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const index = Number(params.index ?? -1);
+
+        if (index >= 0) {
+          // Update the specific outfit in the results
+          const updatedOutfits = Array.isArray(parsed?.outfits)
+            ? [...parsed.outfits]
+            : [...parsed];
+
+          if (updatedOutfits[index]) {
+            updatedOutfits[index] = {
+              ...updatedOutfits[index],
+              items: items,
+            };
+
+            const updatedData = Array.isArray(parsed?.outfits)
+              ? { ...parsed, outfits: updatedOutfits }
+              : updatedOutfits;
+
+            await AsyncStorage.setItem(
+              "latestOutfitResult",
+              JSON.stringify(updatedData),
+            );
+            console.log("Outfit updated successfully");
+            router.back(); // Go back to display outfits
+          }
+        }
+        console.log(parsed);
+      }
+    } catch (error) {
+      console.log("Error saving outfit:", error);
+    }
   };
 
   return (
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
-        <ThemedText style={styles.title}>Want to change a few things?</ThemedText>
+        <ThemedText style={styles.title}>
+          Want to change a few things?
+        </ThemedText>
         <ThemedText style={styles.subtitle}>
           Tap any item to replace it from your closet.
         </ThemedText>
@@ -108,10 +178,7 @@ export default function EditOutfit() {
             return (
               <TouchableOpacity
                 key={`${typeKey}-${index}`}
-                style={[
-                  styles.itemCard,
-                  isFullBody && styles.fullBodyCard,
-                ]}
+                style={[styles.itemCard, isFullBody && styles.fullBodyCard]}
                 onPress={() => onItemPress(item)}
               >
                 <Image source={imageSource} style={styles.itemImage} />
@@ -155,6 +222,7 @@ const styles = StyleSheet.create({
     width: "100%",
     gap: 16,
     alignItems: "center",
+    backgroundColor: "F1F2F6", 
   },
   itemCard: {
     width: "100%",

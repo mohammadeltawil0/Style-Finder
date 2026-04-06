@@ -3,7 +3,7 @@ import Feather from "@expo/vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Image,
@@ -25,67 +25,80 @@ export default function OutfitResult() {
   const currentOutfit = outfits[currentIndex] || {};
 
   // Remove the dummy useEffect, once API is ready and connected to backend.
-  useEffect(() => {
-    const dummy = {
-      outfits: [
-        {
-          outfit_id: 1,
-          items: [
-            {
-              item_id: 1,
-              type: "outerwear",
-              image_url: "https://placekitten.com/200/120",
-            },
-            {
-              item_id: 2,
-              type: "top",
-              image_url: "https://placekitten.com/200/120",
-            },
-            {
-              item_id: 3,
-              type: "bottom",
-              image_url: "https://placekitten.com/200/120",
-            },
-          ],
-        },
-        {
-          outfit_id: 2,
-          items: [
-            {
-              item_id: 4,
-              type: "fullBody",
-              image_url: "https://placekitten.com/200/120",
-            },
-          ],
-        },
-        {
-          outfit_id: 3,
-          items: [
-            {
-              item_id: 2,
-              type: "top",
-              image_url: "https://placekitten.com/200/120",
-            },
-            {
-              item_id: 3,
-              type: "bottom",
-              image_url: "https://placekitten.com/200/120",
-            },
-          ],
-        },
-      ],
-    };
+  // useEffect(() => {
+  //   const dummy = {
+  //     outfits: [
+  //       {
+  //         outfit_id: 1,
+  //         items: [
+  //           {
+  //             item_id: 1,
+  //             type: "outerwear",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //           {
+  //             item_id: 2,
+  //             type: "top",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //           {
+  //             item_id: 3,
+  //             type: "bottom",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //         ],
+  //       },
+  //       {
+  //         outfit_id: 2,
+  //         items: [
+  //           {
+  //             item_id: 4,
+  //             type: "fullBody",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //         ],
+  //       },
+  //       {
+  //         outfit_id: 3,
+  //         items: [
+  //           {
+  //             item_id: 2,
+  //             type: "top",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //           {
+  //             item_id: 3,
+  //             type: "bottom",
+  //             image_url: "https://placekitten.com/200/120",
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //   };
 
-    setOutfits(dummy.outfits);
-  }, []);
+  //   setOutfits(dummy.outfits);
+  // }, []);
 
   useFocusEffect(
     React.useCallback(() => {
       const loadOutfits = async () => {
-        const saved = await AsyncStorage.getItem("latestOutfitResult");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          setOutfits(parsed.outfits || parsed || []);
+        try {
+          const saved = await AsyncStorage.getItem("latestOutfitResult");
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            let outfitList = [];
+            if (parsed && typeof parsed === "object") {
+              if (Array.isArray(parsed.outfits)) {
+                outfitList = parsed.outfits;
+              } else if (Array.isArray(parsed)) {
+                outfitList = parsed;
+              }
+            }
+            setOutfits(outfitList);
+          }
+        } catch (error) {
+          console.error("Error loading outfits:", error);
+          setOutfits([]);
         }
       };
       loadOutfits();
@@ -224,6 +237,7 @@ export default function OutfitResult() {
                     //   style={styles.itemImage}
                     // />
                     <Image
+                      key={item.item_id || item.itemId}
                       source={require("../../../assets/images/placeholder.png")}
                       style={styles.itemImage}
                     />
