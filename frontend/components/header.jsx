@@ -5,7 +5,6 @@ import { TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "./themed-text";
 import { Logo } from "./ui/logo";
-import { usePathname } from "expo-router";
 
 //TO DO: Add a settings page and link the settings icon to it
 //TO DO: Add a back button to header based on navigation state
@@ -18,8 +17,8 @@ export const CustomHeader = ({ page }) => {
     page === "settings" ||
     page === "logIn" ||
     page === "register" ||
-    page === "add-item";
-
+    page === "add-item" ||
+    page === "ClosetItems";
 
   return (
     <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card }}>
@@ -77,8 +76,42 @@ export const CustomHeader = ({ page }) => {
               GENERATE OUTFITS
             </ThemedText>
           )}
+          {page === "EditOutfit" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "EditOutfit" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              EDIT OUTFITS
+            </ThemedText>
+          )}
+          {page === "ClosetItems" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "ClosetItems" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SELECT ITEM
+            </ThemedText>
+          )}
           {page === "add-item" && (
-            <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
+            <View
+              style={{ flexDirection: "row", gap: 20, alignItems: "center" }}
+            >
               <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
@@ -99,11 +132,7 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "settings" && (
             <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons
-                name="arrow-back"
-                size={24}
-                color={theme.colors.text}
-              />
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
             </TouchableOpacity>
           )}
           {page === "settings" && (
@@ -142,27 +171,27 @@ export const CustomHeader = ({ page }) => {
           {page === "AdditionalConstraints" && (
             <>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  GENERATE OUTFITS
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                GENERATE OUTFITS
+              </ThemedText>
             </>
           )}
           {page === "OutfitswaitingScreen" && (
             <>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Generating Outfits...
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Generating Outfits...
+              </ThemedText>
             </>
           )}
           {page === "RegularOutfitDetail" && (
@@ -175,14 +204,14 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Regular Outfit Details
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Regular Outfit Details
+              </ThemedText>
             </>
           )}
           {page === "TripOutfitDetail" && (
@@ -195,14 +224,14 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Trip Outfit Details
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Trip Outfit Details
+              </ThemedText>
             </>
           )}
           {page === "survey" && (
@@ -215,17 +244,16 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Preference Survey
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Preference Survey
+              </ThemedText>
             </>
           )}
-
         </View>
 
         {!hideSettingsIcon && (

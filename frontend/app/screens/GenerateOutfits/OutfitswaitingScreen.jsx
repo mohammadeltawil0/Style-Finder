@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Animated , View} from "react-native";
-import { ThemedView } from "../../components";
+import { ThemedView } from "../../../components";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -29,7 +29,7 @@ export default function GeneratingScreen() {
 
         // Navigate to results screen with the resulting data 
         await new Promise(res => setTimeout(res, 3000)); // 2s delay
-        router.replace("/screens/DisplayOutfits");
+        router.replace("/screens/GenerateOutfits/DisplayOutfits");
 
       } catch (error) {
         console.error("Error:", error);

@@ -125,7 +125,9 @@ export default function Recommendations() {
   const handleGenerateOutfit = async () =>{
     if(!location || !formality){
        Alert.alert("Location and Formality are required input");
+       return; 
     }
+
     console.log("Generate handle here") 
     const data = {
       location, formality,
@@ -137,11 +139,9 @@ export default function Recommendations() {
     resetAllConstraints();
 
     await AsyncStorage.setItem("pendingOutfitRequest", JSON.stringify(data));
-    router.push("/screens/OutfitswaitingScreen");
-
+    router.push("/screens/GenerateOutfits/OutfitswaitingScreen");
   };
 
-  // Reset everything helper once generate click
   const resetAllConstraints = async () => {
     await AsyncStorage.removeItem("recommendationConstraints");
 
@@ -151,6 +151,7 @@ export default function Recommendations() {
     setWeatherEnabled(true);
     setIsRegularOutfit(true);
   };
+
   return (
     <ThemedView gradient={false} style={{ flex: 1 }}>
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { View, Switch, TextInput, ScrollView, TouchableOpacity, StyleSheet , Platform, KeyboardAvoidingView, Image} from "react-native";
-import { ThemedText, ThemedView } from "../../components";
+import { ThemedText, ThemedView } from "../../../components";
 import { useTheme } from "@react-navigation/native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -130,7 +130,7 @@ export default function AdditionalConstraints() {
             <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, margin: 30 }}>Continue Adding Filters!  </ThemedText>
           </View>
           <View style={{ width: "20%", alignItems: "center", justifyContent: "center" }}>
-            <Image source={require("../../assets/images/logo.png")}
+            <Image source={require("../../../assets/images/logo.png")}
               style={{ width: 80, height: 80 }}
               resizeMode="cover"
             />
