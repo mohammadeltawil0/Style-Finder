@@ -3,11 +3,13 @@ import { StyleSheet, Animated , View} from "react-native";
 import { ThemedView } from "../../components";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
 
 export default function GeneratingScreen() {
   const router = useRouter();
   const { payload } = useLocalSearchParams();
-
+  const theme = useTheme();
+  
   useEffect(() => {
     const generateOutfit = async () => {
       try {
@@ -95,7 +97,7 @@ export default function GeneratingScreen() {
 
   return (
     <ThemedView gradient={true} style={styles.container}>
-       <Animated.Text style={[styles.text, { opacity: fadeAnim }]}>
+       <Animated.Text style={[styles.text, { opacity: fadeAnim, color: theme.colors.text }]}>
           Finding styles for you...
        </Animated.Text>
         <Animated.View
@@ -106,10 +108,11 @@ export default function GeneratingScreen() {
                 { scale: scaleAnim },
                 { translateY: moveAnim },
               ],
+              borderColor: theme.colors.tabIconSelected,
             },
           ]}
         />
-        <Animated.Text style={[styles.text, { opacity: fadeAnim }, {marginTop: 100} ]}>
+        <Animated.Text style={[styles.text, { opacity: fadeAnim, text: theme.colors.text }, {marginTop: 100} ]}>
             FINDING OUTFITS
         </Animated.Text>
     </ThemedView>
@@ -135,7 +138,6 @@ const styles = StyleSheet.create({
     height: 250, 
     borderRadius: 200, 
     borderWidth: 6, 
-    borderColor: "#d39f44", 
     justifyContent: "center",
     alignItems: "center", 
     shadowColor: "#000", 
