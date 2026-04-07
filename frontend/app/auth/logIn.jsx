@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import {View, TextInput,TouchableOpacity,
     KeyboardAvoidingView, Platform, StyleSheet, Alert} from "react-native";
 import {apiClient} from "../../scripts/apiClient";
+import { useSurvey } from "context/SurveyContext";
 
 export default function Login() {
   const { colors, fonts } = useTheme();
@@ -14,40 +15,55 @@ export default function Login() {
 
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
+  const { resetAnswers } = useSurvey();
 
-   const handleLogin = async () => {
+  const handleLogin = async () => {
     if (!username || !password) {
       Alert.alert("Please enter username and password");
       return;
     }
-
-       try {
-           console.log("Sending login request...");
-           const response = await apiClient.post("/api/users/login", {
-               username: username,
-               password: password,
-           });
-
-           const data = response.data;
-           console.log("Login successful:", data);
-           Alert.alert("Login worked");
-           await AsyncStorage.setItem("username", data.username);
-           await AsyncStorage.setItem("userId", data.userId.toString());
-
-           router.replace("/(tabs)");
-
-       } catch (error) {
-           console.error("Error during login:", error);
-
-           // Axios safely extracts the backend's error message (e.g., "User not found!")
-           const errorMessage = error.response?.data?.message
-               || error.response?.data
-               || "An error occurred during login. Please try again.";
-
-           Alert.alert("Login failed: " + errorMessage);
-       }
+    try {
+      console.log("Sending login request...");
+      const response = await apiClient.post("/api/users/login", {
+        username: username,
+        password: password,
+      });
+      const data = response.data;
+      console.log("Login successful:", data);
+      Alert.alert("Login worked");
+      await AsyncStorage.setItem("username", data.username);
+      await AsyncStorage.setItem("userId", data.userId.toString());
+      let hasPreferences = false;
+      try {
+        const prefResponse = await apiClient.get(`/api/preferences/${data.userId}`);
+        if (prefResponse.data){
+          hasPreferences = true;
+        }
+      } catch (err) {
+        if(err.response?.status === 404){
+          console.log("No preferences found. Redirected to survey");
+          hasPreferences = false;
+        } else {
+          throw err;
+        }
+      }
+      resetAnswers();
+      if(hasPreferences){
+        router.replace("/(tabs)"); //for returniing user
+      } else {
+        router.replace("/screens/survey/preferences1"); //new user
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+           
+      // Axios safely extracts the backend's error message (e.g., "User not found!")
+          
+      const errorMessage = error.response?.data?.message    
+      || error.response?.data   
+      || "An error occurred during login. Please try again.";
+      Alert.alert("Login failed: " + errorMessage);
+    }
   };
-
 
   return (
     <ThemedView gradient style={{ flex: 1 }}>
