@@ -11,7 +11,7 @@ import { useEffect } from 'react';
 import { CustomHeader } from "../components";
 import { SurveyProvider } from "../context/SurveyContext";
 import Toast from 'react-native-toast-message';
-import { useToastConfig } from "constants/toastConfig";
+import { useToastConfig } from "../constants/toastConfig";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Prevent the splash screen from auto-hiding
