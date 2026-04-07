@@ -4,7 +4,6 @@ import CS431.Style_Finder.dto.ItemDto;
 import CS431.Style_Finder.exception.ResourceNotFoundException;
 import CS431.Style_Finder.exception.InvalidUserDataException;
 import CS431.Style_Finder.exception.ItemCreationException;
-import CS431.Style_Finder.exception.InvalidUserDataException;
 
 import CS431.Style_Finder.mapper.ItemMapper;
 import CS431.Style_Finder.model.Item;
