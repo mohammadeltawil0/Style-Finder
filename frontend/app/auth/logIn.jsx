@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
 import Toast from 'react-native-toast-message';
+import { useSurvey } from "context/SurveyContext";
 
 export default function Login() {
   const theme = useTheme();
@@ -16,6 +17,7 @@ export default function Login() {
 
   const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
+  const { resetAnswers } = useSurvey();
 
   const handleLogin = async () => {
     if (!username || !password) {
@@ -26,7 +28,6 @@ export default function Login() {
       });
       return;
     }
-
     try {
       console.log("Sending login request...");
       const response = await apiClient.post("/api/users/login", {
@@ -37,33 +38,55 @@ export default function Login() {
       const data = response.data;
       console.log("Login successful:", data);
 
+      let hasPreferences = false;
+
+      // Check if user has preferences to determine where to navigate after login
+      try {
+        const prefResponse = await apiClient.get(`/api/preferences/${data.userId}`);
+        if (prefResponse.data) {
+          hasPreferences = true;
+        }
+      } catch (err) {
+        if (err.response?.status === 404) {
+          console.log("No preferences found. Redirected to survey");
+          hasPreferences = false;
+        } else {
+          throw err;
+        }
+      }
+
+      resetAnswers();
+      await AsyncStorage.setItem("username", data.username);  // ← moved here
+      await AsyncStorage.setItem("userId", data.userId.toString()); // ← moved here
+
       Toast.show({
         type: 'success',
         text1: 'Welcome back!',
         text2: 'You have successfully logged in.',
       });
 
-      await AsyncStorage.setItem("username", data.username);
-      await AsyncStorage.setItem("userId", data.userId.toString());
-
-      router.replace("/(tabs)");
-
+      if (hasPreferences) {
+        router.replace("/(tabs)"); //for returniing user
+      } else {
+        router.replace("/screens/survey/preferences1"); //new user
+      }
     } catch (error) {
+      console.error("Error during login:", error);
+
       const status = error.response?.status;
 
-    const messages = {
-      401: 'Invalid username or password.',
-      500: 'Server error. Please try again later.', //TO DO: idk if this implemented in backend
-    };
+      const messages = {
+        401: 'Invalid username or password.',
+        500: 'Server error. Please try again later.', //TO DO: idk if this implemented in backend
+      };
 
-    Toast.show({
-      type: 'error',
-      text1: 'Login Failed',
-      text2: messages[status] || 'Something went wrong.',
-    });
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: messages[status] || 'Something went wrong.',
+      });
     }
-  };
-
+  }
 
   return (
     <ThemedView gradient style={{ flex: 1 }}>

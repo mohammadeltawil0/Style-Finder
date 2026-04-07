@@ -29,11 +29,6 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
-function ThemedToast() {
-  const toastConfig = useToastConfig();
-  return <Toast config={toastConfig} />;
-}
-
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     'Figtree-Bold': require('../assets/fonts/Figtree-Bold.ttf'),

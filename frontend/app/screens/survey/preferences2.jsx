@@ -24,8 +24,8 @@ export default function Preferences2() {
 
   const toggleMulti = (key, value) => {
     setAnswers((prev) => {
-      const exists = prev[key].includes(value);
-      return { ...prev, [key]: exists ? prev[key].filter((v) => v !== value) : [...prev[key], value], };
+      const exists = (prev[key] || []).includes(value);
+      return { ...prev, [key]: exists ? prev[key].filter((v) => v !== value)  : [...(prev[key] || []), value], };
     });
   };
 
