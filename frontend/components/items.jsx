@@ -2,7 +2,6 @@ import { FlatList, Image, Pressable, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
-import { useQuery } from '@tanstack/react-query';
 
 export const Items = ({
   items,
