@@ -75,7 +75,7 @@ export const Items = ({
                   alignItems: "center",
                 }}
               >
-                <ThemedText>{item.name}</ThemedText>
+                {/* <ThemedText>{item.name}</ThemedText> */}
                 <Pressable
                   onPress={() => {
                     setCurrItemId(item.itemId);
