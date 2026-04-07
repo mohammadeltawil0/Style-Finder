@@ -73,7 +73,7 @@ export default function Preferences2() {
     Alert.alert("Preferences saved!");
     setTimeout(() => {
       console.log("Successfully saved");
-      router.replace("/(tabs)"); //TODO: change navigation
+      router.replace("/auth/logIn"); //TODO: change navigation
     }, 300);
     
   } catch (error) {
