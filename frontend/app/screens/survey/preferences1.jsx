@@ -24,9 +24,6 @@ export default function Preferences1() {
         const storedUserId = await AsyncStorage.getItem("userId");
         if (!storedUserId) return;
 
-        console.log("Found stored userId:", storedUserId);
-        console.log("type:", typeof storedUserId);
-        
         const userId = Number(storedUserId);
         if (!Number.isInteger(userId) || userId <= 0) {
           console.warn("Invalid stored userId:", storedUserId);

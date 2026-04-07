@@ -6,6 +6,8 @@ public enum ItemType {
     BOTTOM,
     OUTERWEAR,
     FULL_BODY,
+    @Deprecated
     ACCESSORY,
-    OVER
+    @Deprecated
+    OVER,
 }

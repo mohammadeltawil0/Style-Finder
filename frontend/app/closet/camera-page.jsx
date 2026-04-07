@@ -6,9 +6,9 @@ export default function CameraPage({ setUri, setPage, uri }) {
   return (
     <ThemedView
       gradient={true}
-      style={{ backgroundColor: theme.colors.background, flex: 1 }}
+      style={{ backgroundColor: theme.colors.background,  paddingVertical: 30, flex: 1 }}
     >
-      <View style={{ paddingHorizontal: 30, paddingTop: 20, paddingBottom: 8, zIndex: 1 }}>
+      <View style={{ paddingHorizontal: 30, zIndex: 1, paddingTop: 30 }}>
         <ThemedText
           style={{
             fontSize: theme.sizes.h2,

@@ -11,7 +11,10 @@ import LengthPage from "./length-page.jsx";
 import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
+import { apiClient } from "../../scripts/apiClient";
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
 export default function AddItemScreen() {
   const [page, setPage] = useState(1);
@@ -19,19 +22,19 @@ export default function AddItemScreen() {
   const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
-  const [formality, setFormality] = useState(""); 
+  const [formality, setFormality] = useState("");
   const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
   const [fit, setFit] = useState(1); // default to middle value of 1, range from 0-2 (0: skinny, 1: regular, 2: loose)
-  const [season, setSeason] = useState(""); 
+  const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
 
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   // Convert states to match backend
   //1. Convert fit
-  // TO DO: convert 0.1 steps to enums to match our Fit Model
   let convertedBulk = 0;
 
   const convertFit = (fit) => {
@@ -45,15 +48,15 @@ export default function AddItemScreen() {
     : bulk >= 0.51 && bulk < 1.49
       ? (convertedBulk = 1)
       : (convertedBulk = 2);
-  
+
   const convertPattern = (pattern) => {
     const map = {
       "Solid": "SOLID",
       "Striped": "STRIPED",
       "Plaid": "PLAID_OR_FLANNEL",
       "Floral": "FLORAL",
-      "GRAPHIC": "GRAPHIC",
-      "GEOMETRIC": "GEOMETRIC",
+      "Graphic": "GRAPHIC",
+      "Geometric": "GEOMETRIC_OR_ABSTRACT",
     };
     return map[pattern] || pattern;
   };
@@ -80,87 +83,81 @@ export default function AddItemScreen() {
     return map[formality] || formality;
   }
 
-  // const convertLength = (length) => {
-  //   const map = {
-  //   "Sleeveless": "SLEEVELESS",
-  //   "Cap": "CAP",
-  //   "Short-Sleeve": "SHORT_SLEEVE",
-  //   "Three-Quarter": "THREE_QUARTER",
-  //   "Long-Sleeve": "LONG_SLEEVE",
-  //   "Above-Knee": "ABOVE_KNEE",
-  //   "Knee-Length-Bermuda": "KNEE_LENGTH_OR_BERMUDA",
-  //   "Midi-Capri": "MIDI_or_CAPRI",
-  //   "Full-Length-Maxi": "MAXI_OR_FULL_LENGTH",
-  // };
-
-  //   return map[length] || null;
-  // };
-
-  // const convertSeason = (season) => {
-  // const map = {
-  //   "All-Seasons": "ALL_SEASONS",
-  //   "Winter": "WINTER",
-  //   "Spring": "SPRING",
-  //   "Summer": "SUMMER",
-  //   "Fall": "FALL",
-  // };
-
-  // return map[season] || null;
-  // };    
-
   const convertMaterial = (material) => {
     return material ? Number(material) : null; // Convert material to number or return null if not set
   };
 
+  const normalizeEnum = (value) => {
+    if (value === "" || value === undefined) return null;
+    return value;
+  };
+
+  const buildItemPayload = (userId) => ({
+    userId,
+    type: normalizeEnum(convertItemType(itemType)),
+    color: color || null,
+    pattern: normalizeEnum(convertPattern(pattern)),
+    length: normalizeEnum(length),
+    material: convertMaterial(material),
+    bulk: convertedBulk,
+    seasonWear: normalizeEnum(season),
+    formality: normalizeEnum(convertFormality(formality)),
+    fit: normalizeEnum(convertFit(fit)),
+    // removed imageUrl here since we set it after base64 conversion
+  });
+
   let convertedFit = convertFit(fit);
 
-  const handleSubmit = async () => {
-    // TO DO: submit to backend, and navigate to inventory page!
-    // router.push({
-    //   pathname: "/closet",
-    //   params: { tab: "inventory" },
-    // });
+  const convertToBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: 'base64',  // ✅ use string instead of FileSystem.EncodingType.Base64
+    });
+    return `data:image/jpeg;base64,${base64}`;
+  };
 
-    try {
-      const userId = await AsyncStorage.getItem("userId");
-      const itemData = {
-        userId: Number(userId),
-        type: convertItemType(itemType),
-        color: color || null,
-        pattern: convertPattern(pattern),
-        length: length ? length : null, // Handle optional length
-        material: convertMaterial(material),
-        bulk: convertedBulk,
-        seasonWear: season || null, // Handle optional season
-        formality: convertFormality(formality),
-        fit: convertFit(fit),
-        imageUrl: uri ? uri : null, // Handle optional image
+  const submitItem = async (payload) => {
+    const response = await apiClient.post("/api/items", payload);
+    console.log("Submission response:", response.data);
+    return response;
+  };
+
+  // Use useMutation to handle item submission with automatic loading and error states
+  const { mutate, isPending } = useMutation({
+    mutationFn: submitItem,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      Toast.show({ type: 'success', text1: 'Item added!' });
+      console.log("✅ onSuccess fired:", data);
+      router.push({ pathname: "/closet", params: { tab: "items" } }); 
+    },
+    onError: (error) => {
+      const status = error.response?.status;
+      console.log("❌ onError fired:", error);
+      const messages = {
+        400: 'Invalid item data.',
+        422: 'Image format not supported.',
+        500: 'Server error. Please try again.',
       };
-      
-      console.log("Submitting item data:", itemData); // Log the data being submitted
-
-      const response = await fetch(`http://localhost:8080/api/items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(itemData),
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to add item',
+        text2: messages[status] || 'Something went wrong.',
       });
+    },
+  });
 
-      if (!response.ok) {
-        alert("Failed to submit item. Please try again." + JSON.stringify(itemData));
-        throw new Error("Failed to submit item");
-      } 
-      
-      alert("Item submitted successfully!");
-      router.push({
-        pathname: "/closet",
-        params: { tab: "inventory" },
-      });
+  const handleSubmit = async () => {
+    const storedUserId = await AsyncStorage.getItem("userId");
+    const userId = Number(storedUserId);
 
-    } catch (error) {
-      console.error("Error submitting item:", error);
+    if (!Number.isInteger(userId) || userId <= 0) {
+      Toast.show({ type: 'error', text1: 'Please log in again.' });
+      return;
     }
+
+    const imageData = uri ? await convertToBase64(uri) : null;
+    const payload = { ...buildItemPayload(userId), imageUrl: imageData };
+    mutate(payload); // useMutation handles everything from here
   };
 
   return (
@@ -268,6 +265,7 @@ export default function AddItemScreen() {
           length={length}
           bulk={convertedBulk}
           handleSubmit={handleSubmit}
+          isPending={isPending}
         />
       )}
     </>

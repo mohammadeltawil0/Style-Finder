@@ -65,6 +65,7 @@ export default function ReviewPage({
   length,
   bulk,
   handleSubmit,
+  isPending
 }) {
   const { isWide } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
@@ -870,13 +871,14 @@ export default function ReviewPage({
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
         <Pressable
+          onPress={handleSubmit}
+          disabled={isPending}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
             width: "35%",
           }}
-          onPress={() => handleSubmit()}
         >
           <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
         </Pressable>
