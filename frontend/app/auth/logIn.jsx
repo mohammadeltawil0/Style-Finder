@@ -47,7 +47,8 @@ export default function Login() {
           hasPreferences = true;
         }
       } catch (err) {
-        if (err.response?.status === 404) {
+        if(err.response?.status === 404){
+          //not an error, only occuring in the console because user has no preferences
           console.log("No preferences found. Redirected to survey");
           hasPreferences = false;
         } else {
