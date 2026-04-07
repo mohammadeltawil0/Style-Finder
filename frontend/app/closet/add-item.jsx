@@ -87,20 +87,6 @@ export default function AddItemScreen() {
     return material ? Number(material) : null; // Convert material to number or return null if not set
   };
 
-  // Temporary: utilized since backend is not fully updated!
-  const withLegacyAliases = (payload) => ({
-    ...payload,
-    // Older backend deployments may still expect these legacy tokens.
-    pattern:
-      payload.pattern === "GEOMETRIC_OR_ABSTRACT"
-        ? "GEOMETRIC"
-        : payload.pattern,
-    length:
-      payload.length === "MIDI_OR_CAPRI"
-        ? "MIDI_or_CAPRI"
-        : payload.length,
-  });
-
   const normalizeEnum = (value) => {
     if (value === "" || value === undefined) return null;
     return value;
