@@ -73,7 +73,7 @@ public class Item {
     @Column(name = "times_worn")
     private Integer timesWorn;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", columnDefinition = "TEXT")
     private String imageUrl;
 
     @PrePersist
