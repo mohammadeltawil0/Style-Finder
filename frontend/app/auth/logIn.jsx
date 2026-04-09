@@ -34,7 +34,7 @@ export default function Login() {
            await AsyncStorage.setItem("username", data.username);
            await AsyncStorage.setItem("userId", data.userId.toString());
 
-           router.replace("/(tabs)");
+           router.replace("/screens/WelcomeScreen");
 
        } catch (error) {
            console.error("Error during login:", error);
