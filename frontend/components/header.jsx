@@ -7,9 +7,6 @@ import { ThemedText } from "./themed-text";
 import { Logo } from "./ui/logo";
 import { usePathname } from "expo-router";
 
-//TO DO: Add a settings page and link the settings icon to it
-//TO DO: Add a back button to header based on navigation state
-
 export const CustomHeader = ({ page }) => {
   const theme = useTheme();
   const router = useRouter();

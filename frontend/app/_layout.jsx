@@ -100,6 +100,7 @@ export default function RootLayout() {
               name="screens/survey/preferences2"
               options={{
                 header: () => <CustomHeader page="survey" />,
+                headerShown: false
               }}
             />
             {/* <Stack.Screen
@@ -122,6 +123,13 @@ export default function RootLayout() {
               name="closet/outfitsHistory/tripOutfits"
               options={{
                 header: () => <CustomHeader page="TripOutfitDetail" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/profile"
+              options={{
+                headerShown: false,
+                header: () => <CustomHeader page="Profile" />,
               }}
             />
           </Stack>
