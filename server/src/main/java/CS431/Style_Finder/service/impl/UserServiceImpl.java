@@ -6,7 +6,6 @@ import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.UserService;
-import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

@@ -1,11 +1,6 @@
 package CS431.Style_Finder.model;
 
-import CS431.Style_Finder.model.enums.LengthType;
-import CS431.Style_Finder.model.enums.Fit;
-import CS431.Style_Finder.model.enums.Formality;
-import CS431.Style_Finder.model.enums.ItemType;
-import CS431.Style_Finder.model.enums.Season;
-import CS431.Style_Finder.model.enums.PatternType;
+import CS431.Style_Finder.model.enums.*;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -32,26 +27,23 @@ public class Item {
     private ItemType type;
 
     @Column(name = "color")
-    private String color;
+    private String color; // Specific hex/name for UI
 
-    // New column for the algorithm
     @Enumerated(EnumType.STRING)
     @Column(name = "pattern")
     private PatternType pattern;
-    
-    // @Column(name = "pattern")
-    // private String pattern;
-  
-    // New column for the algorithm
-    @Column(name = "color_category")
-    private String colorCategory;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "color_category")
+    private ColorCategory colorCategory; // Standardized for Algorithm
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "length")
     private LengthType length;
 
-    // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
+    @Enumerated(EnumType.STRING)
     @Column(name = "material")
-    private Integer material;
+    private MaterialType material; // Changed from Integer
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season_wear")
@@ -65,7 +57,6 @@ public class Item {
     @Column(name = "fit")
     private Fit fit;
 
-    // New column for the algorithm
     @Column(name = "bulk")
     private double bulk;
 
@@ -80,6 +71,50 @@ public class Item {
         if (timesWorn == null) timesWorn = 0;
     }
 
-    // New method for the algorithm
-    public double getWarmthScore() { return bulk * 10.0; }
+    public double getWarmthScore() {
+        // Base warmth is primarily determined by the item's physical thickness (bulk)
+        double score = bulk * 10.0;
+
+        // Null safety check
+        if (material == null) return score;
+
+        // Apply material-specific thermal modifiers
+        switch (material) {
+            // Highly Insulating (Winter/Cold Weather)
+            case WOOL:
+            case FLEECE:
+                score += 5.0; // Maximum warmth retention
+                break;
+            case ACRYLIC: // Common synthetic wool substitute
+            case LEATHER: // Excellent windbreaker and heat trapper
+                score += 3.0;
+                break;
+
+            // Highly Breathable (Summer/Hot Weather)
+            case LINEN:
+            case HEMP:
+                score -= 4.0; // Maximum breathability, actively cools
+                break;
+            case SILK:
+            case RAYON:
+            case LYOCELL:
+            case MODAL:
+                score -= 2.0; // Lightweight, breathable cellulose/natural fibers
+                break;
+
+            // Neutral / Standard Synthetics (Warmth relies almost entirely on bulk)
+            case COTTON:
+            case POLYESTER:
+            case NYLON:
+            case SPANDEX:
+            case ACETATE:
+            default:
+                score += 0.0; // No inherent thermal bias
+                break;
+        }
+
+        // Defensive programming: A piece of clothing cannot have "negative" warmth.
+        // The absolute coldest an item can be is 0.0 (provides zero insulation).
+        return Math.max(0.0, score);
+    }
 }

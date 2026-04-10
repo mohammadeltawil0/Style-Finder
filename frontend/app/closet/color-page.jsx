@@ -211,7 +211,6 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                           style={{
                             color: theme.colors.text,
                             fontSize: theme.sizes.h3,
-                            color: theme.colors.text,
                             fontFamily: theme.fonts.bold,
                           }}
                         >

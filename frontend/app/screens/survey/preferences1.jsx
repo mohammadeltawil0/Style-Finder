@@ -30,7 +30,7 @@ export default function Preferences1() {
         const userId = Number(storedUserId);
         if (!Number.isInteger(userId) || userId <= 0) {
           console.warn("Invalid stored userId:", storedUserId);
-          return;``
+          return;
         }
 
         const response = await apiClient.get(`/api/preferences/${userId}`);
@@ -74,7 +74,7 @@ export default function Preferences1() {
         }));
 
       } catch (error) {
-        console.error("Error loading preferences:", error);
+        console.error("Error loading preferences (User might be new):", error?.message);
       }
     };
 

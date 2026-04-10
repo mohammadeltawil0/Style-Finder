@@ -25,15 +25,16 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto createItem(ItemDto dto) {
-        User user = userRepository.findById(dto.getUserId())
+        User user = userRepository.findByUserId(dto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
         Item saved = itemRepository.save(itemMapper.toEntity(dto, user));
+
         return itemMapper.toDto(saved);
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId)
+    public ItemDto getItemsByItemId(Long itemId) {
+        Item item = itemRepository.findByItemId(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         return itemMapper.toDto(item);
     }

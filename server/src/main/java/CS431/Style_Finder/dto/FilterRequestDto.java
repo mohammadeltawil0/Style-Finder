@@ -6,7 +6,8 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FilterRequestDTO {
+public class FilterRequestDto {
     private String location;
     private String event;
+    private boolean memory;
 }

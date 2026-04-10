@@ -19,15 +19,16 @@ public class ItemController {
     // POST /api/items
     // Body: { "userId":1, "type":"TOP", "color":"black", "formality":"CASUAL",
     //         "seasonWear":"SUMMER", "fit":"SLIM", "material":2 }
-    @PostMapping
+    @PostMapping("/add")
     public ResponseEntity<ItemDto> createItem(@RequestBody ItemDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(dto));
+        ResponseEntity<ItemDto> temp = ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(dto));
+        return temp;
     }
 
     // GET /api/items/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable Long id) {
-        return ResponseEntity.ok(itemService.getItemById(id));
+    public ResponseEntity<ItemDto> getItemsByItemId(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.getItemsByItemId(id));
     }
 
     // GET /api/items/user/{userId}

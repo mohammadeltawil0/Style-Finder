@@ -1,303 +1,249 @@
-import { useState } from "react";
-import { View, Switch, TextInput,TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, StyleSheet,Image, Alert } from "react-native";
-import { ThemedText, ThemedView } from "../../components";
-import { OutfitToggle } from "../../components/outfit-toggle";
+import React, { useState, useEffect } from 'react';
+// IMPORT SWITCH
+import { View, Text, Alert, StyleSheet, FlatList, TouchableOpacity,
+  Modal, ActivityIndicator, ScrollView, Pressable, Switch } from 'react-native';
+import { apiClient } from "../../scripts/apiClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import Entypo from "@expo/vector-icons/Entypo";
+import { ThemedText } from "../../components";
+import * as Location from 'expo-location';
 
-export default function Recommendations() {
-  const theme = useTheme();
-  const router = useRouter();
+const formatEnum = (str) => {
+  if (!str) return "";
+  let cleanStr = str.replace(/_OR_/g, " / ").replace(/_/g, " ");
+  return cleanStr.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+};
 
-  // Constraints for this screen 
-  const [isRegularOutfit, setIsRegularOutfit] = useState(true);
-  const [weatherEnabled, setWeatherEnabled] = useState(true);
-  const [location, setLocation] = useState(""); 
-  const [formality, setFormality] = useState(""); 
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [eventType, setEventType] = useState(""); 
+const FORMALITY_OPTIONS = ["CASUAL", "FORMAL", "WORK_OR_SMART", "PARTY_OR_NIGHT_OUT", "VERSATILE"];
 
-  // more constraints for additional constraints 
-  const [topFit, setTopFit] = useState([]);
-  const [topLength, setTopLength] = useState([]);
-  const [bottomFit, setBottomFit] = useState([]);
-  const [bottomLength, setBottomLength] = useState([]);
-  const [fullBody, setFullBody] = useState(false);
-  const [fullBodyLength, setFullBodyLength] = useState([]);
-  const [outerwear, setOuterwear] = useState(false);
-  const [outerFit, setOuterFit] = useState([]);
-  const [patterns, setPatterns] = useState(false);
-  const [color, setColor] = useState("");
-  const [extraConstraints, setConstraints] = useState(null);
+// --- OUTFIT DETAILS MODAL ---
+const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
+  const [items, setItems] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Gets data for additional contranits 
-  useFocusEffect(
-    React.useCallback(() => {
-      const loadSavedConstraints = async () => {
-        const saved = await AsyncStorage.getItem("recommendationConstraints");
-        if (saved) {
-          const parsed = JSON.parse(saved);
-
-          // Back to Previous State 
-          setLocation(parsed.location || "");
-          setFormality(parsed.formality || "");
-          setEventType(parsed.eventType || "");
-          setWeatherEnabled(parsed.weatherEnabled === true || parsed.weatherEnabled === "true");
-          setConstraints(parsed);
-
-          // Update additonal contriants 
-          setTopFit(parsed.topFit || []);
-          setTopLength(parsed.topLength || []);
-          setBottomFit(parsed.bottomFit || []);
-          setBottomLength(parsed.bottomLength || []);
-          setFullBody(parsed.fullBody || false);
-          setFullBodyLength(parsed.fullBodyLength || []);
-          setOuterwear(parsed.outerwear || false);
-          setOuterFit(parsed.outerFit || []);
-          setPatterns(parsed.patterns || false);
-          setColor(parsed.color || "");
-        }
-      };
-      loadSavedConstraints();
-    }, [])
-  );
-
-  // Define 3 formailiy thats it. Avoid spelling
-  const formalityOptions = ["Casual", "Business Casual", "Formal"];
-  
-  // Pre-Define Location 
-  /*
-    TODO: Note will/and have to change based off how we will utlites weather API. 
-    If we want city, state, country may we free API to fetch, 
-      but i am affriad we may miss few and with DB and Stuff would be nightware 
-
-    else we just asssume our user knows how to spell 
-
-    ASK GROUP, but for beta we can just have this 
-  */
-  const predefinedLocations = [
-    { city: "New York", state: "NY", country: "USA" },
-    { city: "New Brunswick", state: "NJ", country: "USA" },
-    { city: "Piscataway", state: "NJ", country: "USA" },
-    { city: "Jersey City", state: "NJ", country: "USA" },
-    { city: "Los Angeles", state: "CA", country: "USA" },
-    { city: "Chicago", state: "IL", country: "USA" },
-    { city: "Houston", state: "TX", country: "USA" },
-    { city: "Miami", state: "FL", country: "USA" },
-  ];
-  // Helper to filter list ;}
-  const filteredLocations = predefinedLocations.filter(locate =>
-    `${locate.city}, ${locate.state}, ${locate.country}`.toLowerCase().includes(location.toLowerCase())
-  );
-
-  // Outfit toogle : Regular or Trip 
-  const handleToggleOutfit = async (value) => {
-    setIsRegularOutfit(value);
-    await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
-  };
-
-  // Call when additional constriants is click send current state of data 
-  const handleAdditionalConstraints = () => {
-    router.push({
-      pathname: "/screens/AdditionalConstraints", 
-      params: {
-        constraints: JSON.stringify(extraConstraints || {}),
-        location,
-        formality,
-        eventType,
-        weatherEnabled
+  useEffect(() => {
+    const fetchOutfitItems = async () => {
+      if (!outfit || !outfit.itemIds) return;
+      try {
+        setIsLoading(true);
+        const itemPromises = outfit.itemIds.map(id => apiClient.get(`/api/items/${id}`));
+        const responses = await Promise.all(itemPromises);
+        let fetchedItems = responses.map(res => res.data);
+        const typeOrder = { "OVER": 1, "OUTERWEAR": 1, "TOP": 2, "FULL_BODY": 3, "BOTTOM": 4 };
+        fetchedItems.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
+        setItems(fetchedItems);
+      } catch (error) {
+        console.error("Failed to load items:", error);
+      } finally {
+        setIsLoading(false);
       }
-    });
-  };
-
-  /*
-    Also: location have city, state, country - agian whatever weather API use will have to change or using 
-      text sepreation by comma can we use before sending json backend. 
-    
-      formality , eventType, color  -  text
-      topFit, topLength, bottomFit, bottomLength, fullBodyLength , outerFit - array of text []
-      weatherEnabled, outerwear, patterns
-
-      I had to change the API call to different screen which is in OutfitswaitingScreen, to maintain the flow input -> wait -> result 
-  */
-  const handleGenerateOutfit = async () =>{
-    if(!location || !formality){
-       Alert.alert("Location and Formality are required input");
-    }
-    console.log("Generate handle here") 
-    const data = {
-      location, formality,
-      eventType, weatherEnabled, 
-      topFit, topLength, bottomFit, 
-      bottomLength, fullBody,fullBodyLength,outerwear, outerFit, patterns,color
     };
-    console.log("Generate outfit with:", data);
-    resetAllConstraints();
+    if (visible) fetchOutfitItems();
+  }, [visible, outfit]);
 
-    await AsyncStorage.setItem("pendingOutfitRequest", JSON.stringify(data));
-    router.push("/screens/OutfitswaitingScreen");
-
-  };
-
-  // Reset everything helper once generate click
-  const resetAllConstraints = async () => {
-    await AsyncStorage.removeItem("recommendationConstraints");
-
-    setLocation("");
-    setFormality("");
-    setEventType("");
-    setWeatherEnabled(true);
-    setIsRegularOutfit(true);
-  };
   return (
-    <ThemedView gradient={false} style={{ flex: 1 }}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: "center", paddingBottom: 40 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-          {/* Button toggle for Regular Outfit + Trip Outfit */}
-          <OutfitToggle isRegularOutfit={isRegularOutfit} toggleOutfit={handleToggleOutfit} />
-          
-          {/* Header */}
-          <View style={{ flexDirection: "row", width: "100%", marginTop: 10, marginLeft: 20, marginRight: 20 }}>
-            <View style={{ width: "70%" }}>
-              <ThemedText style={{ fontSize: theme.sizes.h1, fontFamily: theme.fonts.bold, margin: 30 }}>
-                Let's find some outfits! 
-              </ThemedText>
-            </View>
-            <View style={{ width: "20%", alignItems: "center", justifyContent: "center" }}>
-              <Image source={require("../../assets/images/logo.png")}
-                style={{ width: 80, height: 80 }}
-                resizeMode="cover"
-              />
-            </View>
+      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
+          <View style={styles.chevronView}>
+            <Pressable onPress={onClose}><Entypo name="chevron-down" size={30} color={theme.colors.text} /></Pressable>
           </View>
 
-          <View style={{ width:"80%" }}>
-            {isRegularOutfit ? (
-              <View>
-                {/* location Input */}
-                <View style={{ flexDirection: "row", marginTop: 10, width: "80%" }}>
-                  <View>
-                    <ThemedText style={{ fontSize: theme.sizes.h3, marginTop:25, fontFamily: theme.fonts.bold }}>Location: </ThemedText>
-                  </View>
-                  <View style={styles.InputView}>
-                    <TextInput placeholder="City, State, Country" value={location}
-                      onChangeText={text => {
-                        setLocation(text); 
-                        setShowDropdown(text.length > 0);
-                      }}
-                      style={[styles.input, {width: "150%"}]}
-                    />
-                    {showDropdown && filteredLocations.length > 0 && (
-                      <ScrollView style={styles.fillterList}>
-                        {filteredLocations.map((locate, index) => (
-                          <ThemedText key={index} style={{ padding: 8, borderBottomWidth: 1, borderColor: "#eee" }}
-                            onPress={() => {  setLocation(`${locate.city}, ${locate.state}, ${locate.country}`); setShowDropdown(false); }}
-                          >
-                            {locate.city}, {locate.state}, {locate.country}
-                          </ThemedText>
-                        ))}
-                      </ScrollView>
-                    )}
-                  </View>
-                </View>
+          {isLoading ? (
+              <ActivityIndicator size="large" color={theme.colors.text} />
+          ) : (
+              <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+                <ThemedText style={styles.modalTitle}>Outfit Details</ThemedText>
+                {items.map((item, index) => (
+                    <View key={index} style={[styles.responseContainer, { backgroundColor: theme.colors.card }]}>
+                      <View style={{ flex: 1 }}>
+                        <ThemedText style={{ fontWeight: 'bold', fontSize: 18 }}>{formatEnum(item.type)}</ThemedText>
+                        <ThemedText style={{ fontSize: 14, marginBottom: 10 }}>
+                          A {item.color?.toLowerCase()} {formatEnum(item.fit)} fit {formatEnum(item.type).toLowerCase()}.
+                        </ThemedText>
 
-                {/* Formality Input */}
-                <View style={{ marginTop: 40, width: "90%" }}>
-                  <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 20, fontFamily: theme.fonts.bold }}>Formality:</ThemedText>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-                    {formalityOptions.map(option => (
-                      <ThemedText key={option}
-                        onPress={() => {
-                          setFormality(option);
-                          if (option !== "Formal") setEventType("");
-                        }}
-                        style={{
-                          paddingVertical: 8, paddingHorizontal: 15,
-                          borderRadius: 8, borderWidth: 1,
-                          borderColor: formality === option ? "#000" : "#ccc",
-                          backgroundColor: formality === option ? "#e5d3b3" : "#f0f0f0",
-                          textAlign: "center",
-                        }}
-                      >
-                        {option}
-                      </ThemedText>
-                    ))}
-                  </View>
-
-                  {/* if Formal then give input for event */}
-                  {formality === "Formal" && (
-                    <View style={{ flexDirection: "row", marginTop: 10, marginLeft: 30, width: "90%" }}>
-                      <View>
-                        <ThemedText style={{ fontSize: theme.sizes.h3, marginTop: 25, fontFamily: theme.fonts.bold }}>Event Type: </ThemedText>
-                      </View>
-                      <View style={styles.InputView}>
-                        <TextInput
-                          placeholder="Type event"
-                          value={eventType}
-                          onChangeText={text => setEventType(text)}
-                          style={styles.input}
-                        />
+                        {/* Image Placeholder for visualization */}
+                        <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown }]} />
                       </View>
                     </View>
-                  )}
-                </View>
-
-                {/* additional constraints */}
-                <View style={{ marginTop: 40, width: "90%" }}>
-                  <TouchableOpacity onPress={handleAdditionalConstraints} activeOpacity={0.7} style={styles.additionalContraints} >
-                    <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}> Additional Constraints </ThemedText>
+                ))}
+                <View style={styles.modalActions}>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#b49480' }]} onPress={() => onAction('SAVE')}>
+                    <Text style={styles.actionBtnText}>Save Outfit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#e2d7cd' }]} onPress={() => onAction('EDIT_SAVE')}>
+                    <Text style={[styles.actionBtnText, { color: '#000' }]}>Edit & Save</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#ff4444' }]} onPress={() => onAction('REJECT')}>
+                    <Text style={styles.actionBtnText}>Reject</Text>
                   </TouchableOpacity>
                 </View>
+              </ScrollView>
+          )}
+        </View>
+      </Modal>
+  );
+};
 
-                {/* Consider Weather */}
-                <View style={{ flexDirection: "row", width: "80%", marginTop: 30, alignItems: "center", justifyContent: "space-between", marginLeft: 25 }}>
-                  <ThemedText style={{ fontSize: theme.sizes.h3 }}>Consider Weather:</ThemedText>
-                  <Switch value={weatherEnabled} onValueChange={(value) => setWeatherEnabled(value)} trackColor={{ false: "#ccc", true: "#d39f44" }} thumbColor={weatherEnabled ? "#fff" : "#f4f3f4"} />
-                </View>
-                
-                {/* Generate Outfit */}
-                <View style={{ marginTop: 40, width: "90%" }}>
-                  <TouchableOpacity onPress={handleGenerateOutfit} activeOpacity={0.7} style={styles.additionalContraints} >
-                    <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica'}}> Generate Outfit </ThemedText>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ) : (
-               <View>
-                <ThemedText> Welcome Trip Planning Outfits </ThemedText>
-              </View>
-            )}
+// --- MAIN SCREEN ---
+export default function SuggestionHub() {
+  const theme = useTheme();
+  const [suggestions, setSuggestions] = useState([]);
+  const [eventStr, setEventStr] = useState('CASUAL');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [useMemory, setUseMemory] = useState(false);
+  const [selectedOutfit, setSelectedOutfit] = useState(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const getUserId = async () => {
+    try {
+      const storedIdString = await AsyncStorage.getItem('userId');
+      if (storedIdString !== null) return parseInt(storedIdString, 10);
+    } catch (error) {
+      console.error("Storage error", error);
+    }
+    return null;
+  };
+
+  const fetchSuggestions = async () => {
+    try {
+      setIsGenerating(true);
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location is required for weather-based outfits.');
+        setIsGenerating(false);
+        return;
+      }
+      let location = await Location.getCurrentPositionAsync({});
+      const locationCoords = `${location.coords.latitude},${location.coords.longitude}`;
+
+      const userId = await getUserId();
+      const res = await apiClient.post(`/api/v1/suggestions/hub/${userId}`, {
+        location: locationCoords,
+        event: eventStr,
+        useMemory: useMemory
+      });
+
+      setSuggestions(res.data?.slice(0, 10) || []);
+    } catch (error) {
+      Alert.alert("Error", "Generation failed.");
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  const handleAction = async (actionType, editedItemIds = null) => {
+    if (!selectedOutfit) return;
+
+    try {
+      await apiClient.post(`/api/v1/suggestions/feedback`, {
+        userId: await getUserId(),
+        suggestionId: selectedOutfit.suggestionId,
+        originalItemIds: selectedOutfit.itemIds,
+        finalItemIds: editedItemIds || selectedOutfit.itemIds,
+        action: actionType,
+        contextTemp: 72,
+        contextOccasion: eventStr || "Casual"
+      });
+
+      // Remove the acted-upon outfit from the grid
+      setSuggestions(prev =>
+          prev.filter(outfit => outfit.suggestionId !== selectedOutfit.suggestionId));
+      setIsModalVisible(false);
+      setSelectedOutfit(null);
+
+    } catch (error) {
+      console.error("Error processing feedback:", error);
+      Alert.alert("Error", "Failed to process your choice.");
+    }
+  };
+
+  // Calculate dynamic button text
+  const buttonText = isGenerating
+      ? "Processing..."
+      : (useMemory ? "Recall Outfits" : "Generate 10 New Outfits");
+
+  return (
+      <View style={styles.container}>
+        <View style={styles.controlsContainer}>
+          <ThemedText style={{ marginBottom: 10, fontWeight: 'bold' }}>Select Occasion:</ThemedText>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 15 }}>
+            {FORMALITY_OPTIONS.map((opt) => (
+                <TouchableOpacity
+                    key={opt}
+                    onPress={() => setEventStr(opt)}
+                    style={[styles.chip, { backgroundColor: eventStr === opt ? theme.colors.tabIconSelected : theme.colors.card }]}
+                >
+                  <Text style={{ color: eventStr === opt ? '#fff' : theme.colors.text }}>{formatEnum(opt)}</Text>
+                </TouchableOpacity>
+            ))}
+          </ScrollView>
+          <View style={styles.toggleRow}>
+            <ThemedText style={{ fontWeight: '500' }}>Recall past outfits?</ThemedText>
+            <Switch
+                trackColor={{ false: "#767577", true: theme.colors.tabIconSelected }}
+                thumbColor={"#f4f3f4"}
+                onValueChange={setUseMemory}
+                value={useMemory}
+            />
           </View>
+          <TouchableOpacity
+              style={[styles.generateBtn, { backgroundColor: theme.colors.tabIconSelected }]}
+              onPress={fetchSuggestions}
+              disabled={isGenerating}
+          >
+            {isGenerating ? <ActivityIndicator color="#fff" /> : <Text style={styles.generateBtnText}>{buttonText}</Text>}
+          </TouchableOpacity>
+        </View>
+        <FlatList
+            data={suggestions}
+            keyExtractor={(item) => item.suggestionId}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+            renderItem={({ item, index }) => (
+                <TouchableOpacity style={[styles.outfitCard, { backgroundColor: theme.colors.lightBrown }]} onPress={() => { setSelectedOutfit(item); setIsModalVisible(true); }}>
+                  <View style={styles.cardImagePlaceholder}><ThemedText>Outfit {index + 1}</ThemedText></View>
+                  <View style={[styles.cardFooter, { backgroundColor: theme.colors.card }]}><ThemedText>Score: {item.score?.toFixed(1)}</ThemedText></View>
+                </TouchableOpacity>
+            )}
+        />
 
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+        {/* Restored: Passing the handleAction method successfully */}
+        <OutfitDetailsModal
+            visible={isModalVisible}
+            outfit={selectedOutfit}
+            onClose={() => setIsModalVisible(false)}
+            onAction={handleAction}
+            theme={theme}
+        />
+      </View>
   );
 }
 
 const styles = StyleSheet.create({
-  input: {
-    backgroundColor: "#cac4c495",
-    borderWidth: 1,
-    padding: 7,
-    borderColor: "#cac4c4b9",
+  container: { flex: 1, padding: 20 },
+  controlsContainer: { marginBottom: 20, padding: 15, backgroundColor: '#f5f5f5', borderRadius: 10 },
+  generateBtn: { padding: 15, borderRadius: 10, alignItems: 'center' },
+  generateBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
+  chip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: '#ddd' },
+  outfitCard: { flex: 1, borderRadius: 10, marginBottom: 20, maxWidth: '48%', overflow: 'hidden' },
+  cardImagePlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center' },
+  cardFooter: { padding: 10 },
+  modalContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
+  chevronView: { alignItems: "flex-end", marginBottom: 10 },
+  modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
+  responseContainer: { padding: 15, borderRadius: 10, marginBottom: 15 },
+  itemImagePlaceholder: { height: 180, borderRadius: 10, marginTop: 5 },
+  modalActions: { marginTop: 20, gap: 10 },
+  actionBtn: { padding: 15, borderRadius: 10, alignItems: 'center' },
+  actionBtnText: { color: '#fff', fontWeight: 'bold' },
+  toggleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+    paddingHorizontal: 5,
   },
-  additionalContraints: {
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#ccc",
-    alignItems: "center",
-    marginTop: 10,
-    paddingVertical: 10, 
-  },
-  fillterList: {
-    maxHeight: 120, 
-    borderWidth: 1, 
-    borderColor: "#ccc",
-    borderRadius: 5, 
-    width: "150%" 
-  }, 
-  InputView: { flexDirection: "column", width: "55%", marginTop: 20 }
 });

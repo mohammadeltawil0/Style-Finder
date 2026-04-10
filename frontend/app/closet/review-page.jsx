@@ -1,55 +1,21 @@
 import { useState } from "react";
 import {
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  useWindowDimensions,
-  View,
+    Image, Platform,
+    Pressable,
+    ScrollView,
+    StyleSheet,
+    useWindowDimensions,
+    View,
 } from "react-native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import { theme } from "../../constants";
 import { Ionicons } from "@expo/vector-icons";
 
-const sanitize = (type, str) => {
-  if (typeof str !== "string") return "";
-
-  //pattern
-  if (type === "pattern") {
-    return str.replace(/-/g, "/");
-  }
-
-  //formality
-  if (type === "formality") {
-    if (str === "Party-Night") {
-      return "Party/Night Out";
-    } else {
-      //active/sport and work/smart
-      return str.replace(/-/g, "/");
-    }
-  }
-
-  //material
-  if (type === "material") {
-    if (str === "Leather-Faux-Leather") {
-      return "Leather/Faux Leather";
-    } else {
-      return str.replace(/-/g, "/");
-    }
-  }
-
-  if (type === "length") {
-    if (str === "Knee-Length-Bermuda") {
-      return "Knee Length/Bermuda";
-    } else if (str === "Full-Length-Maxi") {
-      return "Maxi/Full Length";
-    } else {
-      return str.replace(/-/g, "/");
-    }
-  }
-
-  // works for
-  return str.replace(/-/g, " ");
+const sanitize = (str) => {
+    if (typeof str !== "string" || !str) return "";
+    let cleanStr = str.replace(/_OR_/g, " / ");
+    cleanStr = cleanStr.replace(/_/g, " ");
+    return cleanStr.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 };
 
 export default function ReviewPage({
@@ -85,36 +51,18 @@ export default function ReviewPage({
   });
 
   //Converting for UX: pattern, formality, material, season, length
-  const convertedPattern = pattern ? sanitize("pattern", pattern) : null;
-  const convertedFormality = formality
-    ? sanitize("formality", formality)
-    : null;
-  // const convertedMaterial = material ? sanitize("material", material) : null;
-  const materialMap = {
-    1: "Cotton",
-    2: "Linen/Hemp",
-    3: "Wool/Fleece",
-    4: "Silk/Satin",
-    5: "Leather/Faux Leather",
-    6: "Synthetics",
-    7: "Other"
-  };
-  const convertedMaterial = material ? materialMap[material] : null;
-  const convertedSeason = season ? sanitize("season", season) : null;
-  const convertedLength = length ? sanitize("length", length) : null;
+    const convertedItemType = sanitize(itemType);
+    const convertedPattern = sanitize(pattern);
+    const convertedFormality = sanitize(formality);
+    const convertedMaterial = sanitize(material);
+    const convertedSeason = sanitize(season);
+    const convertedLength = sanitize(length);
 
-  // Convert enum/int fit states to actual categories for review page display
-  const convertedFit =
-    fit < 0.5
-    ? "Skinny"
-    : fit < 1.5
-    ? "Regular"
-    : "Oversized";
-
-  const convertedBulk = bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
+    // Convert Sliders for UI Display
+    const convertedFit = fit < 0.5 ? "Slim" : fit < 1.5 ? "Regular" : "Loose / Oversized";
 
   // Temporary Debugging for Converted Variables
-  console.log(`Converted Fit: ${convertedFit}, Converted Bulk: ${convertedBulk}, 
+  console.log(`Converted Fit: ${convertedFit}, Bulk: ${bulk}, 
     Converted Pattern: ${convertedPattern}, Converted Formality: ${convertedFormality}, Converted Material: ${convertedMaterial}, 
     Converted Season: ${convertedSeason}, Converted Length: ${convertedLength}`);
 
@@ -794,7 +742,7 @@ export default function ReviewPage({
                         },
                       ]}
                     >
-                      {convertedBulk}
+                      {bulk}
                     </ThemedText>
                   </View>
                   <View
