@@ -25,8 +25,8 @@ export default function Preferences2() {
 
   const toggleMulti = (key, value) => {
     setAnswers((prev) => {
-      const exists = prev[key].includes(value);
-      return { ...prev, [key]: exists ? prev[key].filter((v) => v !== value)  : [...prev[key], value], };
+      const exists = (prev[key] || []).includes(value);
+      return { ...prev, [key]: exists ? prev[key].filter((v) => v !== value)  : [...(prev[key] || []), value], };
     });
   };
 
@@ -73,7 +73,7 @@ export default function Preferences2() {
     Alert.alert("Preferences saved!");
     setTimeout(() => {
       console.log("Successfully saved");
-      router.replace("/(tabs)"); //TODO: change navigation
+      router.replace("/(tabs)"); 
     }, 300);
     
   } catch (error) {

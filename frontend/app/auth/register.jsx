@@ -6,6 +6,7 @@ import {Alert, View, Text, TextInput, ScrollView,TouchableOpacity,
   KeyboardAvoidingView, Platform, StyleSheet} from "react-native";
 import {apiClient} from "../../scripts/apiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 
@@ -47,7 +48,7 @@ function LiveTyping({ text }) {
 }
 
 export default function Register() {
-  const router = useRouter(); // TODO: once sign up done should take to home page !!
+  const router = useRouter(); // updated to take user to the survey 
   const { colors } = useTheme();
   const [firstName, setName] = useState(""); 
   const [email, setEmail] = useState("");
@@ -105,7 +106,8 @@ export default function Register() {
 
       // If we reach this line, the backend has accepted the signup request
       Alert.alert("Success", "Account Created Successfully!");
-      router.replace("/auth/logIn");
+      await AsyncStorage.setItem("userId", response.data.userId.toString());
+      router.replace("/screens/survey/preferences1"); //reroute to survey
 
     } catch (error) {
       console.error("Error during sign up:", error);
