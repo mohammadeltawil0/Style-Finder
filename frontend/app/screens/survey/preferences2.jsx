@@ -44,43 +44,66 @@ export default function Preferences2() {
     });
 
   const router = useRouter();
+  /* method to make all survey questions mandatory */
+  
+  // const validateAnswers = () => {
+  //   if (!answers.fit) return "Please select a fit preference.";
+
+  //   if (!answers.items || answers.items.length === 0)
+  //     return "Please select at least one item you wear.";
+
+  //   if (!answers.avoidItems || answers.avoidItems.length === 0)
+  //     return "Please select at least one item to avoid.";
+
+  //   if (!answers.colorsWear || answers.colorsWear.length === 0)
+  //     return "Please select colors you wear.";
+
+  //   if (!answers.colorsAvoid || answers.colorsAvoid.length === 0)
+  //     return "Please select colors you avoid.";
+
+  //   if (!answers.tripPriority)
+  //     return "Please select a trip priority.";
+  //   return null; 
+  // };
   const handleSave = async () => {
-  try {
-    const storedUserId = await AsyncStorage.getItem("userId");
+    //method call for validateAnswers()
+    // const errorMessage = validateAnswers();
+    // if (errorMessage) {
+    //   Alert.alert("Missing Information", errorMessage);
+    //   return; //stop submission
+    // }
+    try {
+      const storedUserId = await AsyncStorage.getItem("userId");
 
-    const userId = Number(storedUserId);
-    if (!Number.isInteger(userId) || userId <= 0) {
-      Alert.alert("Error", "Please log in again before saving preferences.");
-      return;
+      const userId = Number(storedUserId);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        Alert.alert("Error", "Please log in again before saving preferences.");
+        return;
+      }
+      const payload = {
+        userId,
+        comfort: answers.comfort,
+        occasion: answers.occasion,
+        weather: answers.weather,
+        style: answers.style,
+        preferFit: answers.fit,
+        items: answers.items,
+        avoidItems: answers.avoidItems,
+        colorsWear: answers.colorsWear,
+        colorsAvoid: answers.colorsAvoid,
+        tripPriority: answers.tripPriority,
+      };
+      await apiClient.post("/api/preferences", payload);
+      Alert.alert("Preferences saved!");
+      setTimeout(() => {
+        console.log("Successfully saved");
+        router.replace("/(tabs)"); 
+      }, 300);
+    } catch (error) {
+      console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
+      Alert.alert("Error", "Failed to save preferences");
     }
-
-    const payload = {
-      userId,
-      comfort: answers.comfort,
-      occasion: answers.occasion,
-      weather: answers.weather,
-      style: answers.style,
-      preferFit: answers.fit,
-      items: answers.items,
-      avoidItems: answers.avoidItems,
-      colorsWear: answers.colorsWear,
-      colorsAvoid: answers.colorsAvoid,
-      tripPriority: answers.tripPriority,
-    };
-
-    await apiClient.post("/api/preferences", payload);
-
-    Alert.alert("Preferences saved!");
-    setTimeout(() => {
-      console.log("Successfully saved");
-      router.replace("/(tabs)"); 
-    }, 300);
-    
-  } catch (error) {
-    console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
-    Alert.alert("Error", "Failed to save preferences");
-  }
-};
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
