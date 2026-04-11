@@ -87,17 +87,17 @@ export default function Preferences2() {
 
       await apiClient.post("/api/preferences", payload);
 
-      showSuccessToast();
-      setTimeout(() => {
-        console.log("Successfully saved");
-        router.replace("/(tabs)"); //TODO: change navigation
-      }, 300);
-
-    } catch (error) {
-      console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
-      showErrorToast("Failed to save preferences");
-    }
-  };
+    // Alert.alert("Preferences saved!");
+    setTimeout(() => {
+      console.log("Successfully saved");
+      router.replace("/(tabs)"); 
+    }, 300);
+    
+  } catch (error) {
+    console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
+    // Alert.alert("Error", "Failed to save preferences");
+  }
+};
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

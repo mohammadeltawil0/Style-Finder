@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View, TextInput, TouchableOpacity,
-  KeyboardAvoidingView, Platform, StyleSheet, Alert
+  KeyboardAvoidingView, Platform, StyleSheet
 } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
 import Toast from 'react-native-toast-message';
@@ -40,22 +40,20 @@ export default function Login() {
 
       let hasPreferences = false;
 
-      // Check if user has preferences to determine where to navigate after login
-      try {
-        const prefResponse = await apiClient.get(`/api/preferences/${data.userId}`);
-        if (prefResponse.data) {
-          hasPreferences = true;
+      const prefResponse = await apiClient
+      .get(`/api/preferences/${data.userId}`)
+      .then(res => res)
+      .catch(err => {
+        if (err.response?.status === 404) {
+          return null; 
         }
-      } catch (err) {
-        if(err.response?.status === 404){
-          //not an error, only occuring in the console because user has no preferences
-          console.log("No preferences found. Redirected to survey");
-          hasPreferences = false;
-        } else {
-          throw err;
-        }
-      }
+        throw err; 
+      });
 
+      if (prefResponse && prefResponse.data) {
+        hasPreferences = true;
+      }
+      
       resetAnswers();
       await AsyncStorage.setItem("username", data.username);  // ← moved here
       await AsyncStorage.setItem("userId", data.userId.toString()); // ← moved here
