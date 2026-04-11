@@ -73,8 +73,12 @@ export default function Preferences1() {
           tripPriority: data.tripPriority || "",
         }));
 
-      } catch (error) {
-        console.error("Error loading preferences:", error);
+      } catch (err) {
+        if (err.response?.status === 404) {
+        console.log("No existing preferences (new user)");
+        } else {
+          console.error("Error loading preferences:", err);
+        } 
       }
     };
 

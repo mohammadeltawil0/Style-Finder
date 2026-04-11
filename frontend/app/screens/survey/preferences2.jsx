@@ -73,7 +73,7 @@ export default function Preferences2() {
     Alert.alert("Preferences saved!");
     setTimeout(() => {
       console.log("Successfully saved");
-      router.replace("/auth/logIn"); //may change to reroute to home page instead of log in
+      router.replace("/(tabs)"); 
     }, 300);
     
   } catch (error) {

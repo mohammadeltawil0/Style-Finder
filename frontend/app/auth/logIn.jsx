@@ -34,20 +34,21 @@ export default function Login() {
       await AsyncStorage.setItem("username", data.username);
       await AsyncStorage.setItem("userId", data.userId.toString());
       let hasPreferences = false;
-      try {
-        const prefResponse = await apiClient.get(`/api/preferences/${data.userId}`);
-        if (prefResponse.data){
-          hasPreferences = true;
+
+      const prefResponse = await apiClient
+      .get(`/api/preferences/${data.userId}`)
+      .then(res => res)
+      .catch(err => {
+        if (err.response?.status === 404) {
+          return null; 
         }
-      } catch (err) {
-        if(err.response?.status === 404){
-          //not an error, only occuring in the console because user has no preferences
-          console.log("No preferences found. Redirected to survey");
-          hasPreferences = false;
-        } else {
-          throw err;
-        }
+        throw err; 
+      });
+
+      if (prefResponse && prefResponse.data) {
+        hasPreferences = true;
       }
+      
       resetAnswers();
       if(hasPreferences){
         router.replace("/(tabs)"); //for returniing user
