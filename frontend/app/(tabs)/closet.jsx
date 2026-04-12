@@ -31,6 +31,7 @@ export default function ClosetScreen() {
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [currItemId, setCurrItemId] = useState(null); // state to hold the id of the item that user wants to edit when they click on the three dots; this is used to pass to the edit item modal so that we know which item user is editing
   const [mode, setMode] = useState("regular"); // outfit toggle: regular/trip
+  const [userId, setUserId] = useState(null);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -47,24 +48,37 @@ export default function ClosetScreen() {
   // }, []);
 
   const fetchItems = async () => {
-    const storedUserId = await AsyncStorage.getItem("userId");
-    if (!storedUserId) return [];
-    const userId = Number(storedUserId);
     if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
     return response.data;
   };
 
+  useEffect(() => {
+    const loadUserId = async () => {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const parsedUserId = Number(storedUserId);
+
+      if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+        setUserId(parsedUserId);
+      }
+    };
+
+    loadUserId();
+  }, []);
+
   // replace useFocusEffect loadData with:
   const { data: items = [], isLoading, refetch } = useQuery({
-    queryKey: ['items'],
+    queryKey: ['items', userId],
     queryFn: fetchItems,
+    enabled: !!userId,
   });
 
   useFocusEffect(
     useCallback(() => {
-      refetch();
-    }, [refetch])
+      if (userId) {
+        refetch();
+      }
+    }, [refetch, userId])
   );
 
   const outfits = [
