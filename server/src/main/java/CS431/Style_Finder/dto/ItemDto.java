@@ -20,7 +20,7 @@ public class ItemDto {
     private String color;
     private PatternType pattern;
     private LengthType length;
-    private Integer material;
+    private String material;
     private Double bulk;
     private Season seasonWear;
     private Formality formality;

@@ -10,10 +10,12 @@ import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.User;
 
 import CS431.Style_Finder.repository.ItemRepository;
+import CS431.Style_Finder.repository.OutfitItemRepository;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
+    private final OutfitItemRepository outfitItemRepository;
     private final UserRepository userRepository;
     private final ItemMapper itemMapper;
 
@@ -82,9 +85,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public void deleteItem(Long itemId) {
         itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
+
+        // Remove dependent rows in join table to satisfy FK constraint before deleting the item.
+        outfitItemRepository.deleteByItem_ItemId(itemId);
         itemRepository.deleteById(itemId);
     }
 

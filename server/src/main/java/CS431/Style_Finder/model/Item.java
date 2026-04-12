@@ -50,9 +50,9 @@ public class Item {
     @Column(name = "length")
     private LengthType length;
 
-    // Fabric warmth: 1 = thin/light, 5 = warm (wool, etc.)
+    // Stored as text in DB for compatibility with existing rows.
     @Column(name = "material")
-    private Integer material;
+    private String material;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "season_wear")
