@@ -87,7 +87,6 @@ export default function Preferences2() {
 
       await apiClient.post("/api/preferences", payload);
 
-    // Alert.alert("Preferences saved!");
     setTimeout(() => {
       console.log("Successfully saved");
       router.replace("/(tabs)"); 
@@ -95,7 +94,6 @@ export default function Preferences2() {
     
   } catch (error) {
     console.error("Failed to save preferences:", error?.response?.data || error?.message || error);
-    // Alert.alert("Error", "Failed to save preferences");
   }
 };
 

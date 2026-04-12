@@ -121,7 +121,13 @@ export default function Register() {
       });
 
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully.' });
-      await AsyncStorage.setItem("userId", response.data.userId.toString());
+
+      await AsyncStorage.multiSet([
+        ["userId", String(response.data.userId)],
+        ["username", response.data.username || username],
+        ["profileImageUrl", response.data.profileImageUrl || ""],
+      ]);
+
       router.replace("/screens/survey/preferences1"); //reroute to survey
 
     } catch (error) {

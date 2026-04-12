@@ -16,7 +16,7 @@ const OPTIONS = {
 
 export default function Preferences1() {
   const router = useRouter();
-  const { answers, setAnswers } = useSurvey();
+  const { answers, setAnswers, resetAnswers } = useSurvey();
   //saves preferences from previous sessions
   useEffect(() => {
     const loadPreferences = async () => {
@@ -27,7 +27,8 @@ export default function Preferences1() {
         const userId = Number(storedUserId);
         if (!Number.isInteger(userId) || userId <= 0) {
           console.warn("Invalid stored userId:", storedUserId);
-          return;``
+          resetAnswers();
+          return;
         }
 
         const response = await apiClient.get(`/api/preferences/${userId}`);
@@ -72,7 +73,8 @@ export default function Preferences1() {
 
       } catch (err) {
         if (err.response?.status === 404) {
-        console.log("No existing preferences (new user)");
+          console.log("No existing preferences (new user)");
+          resetAnswers();
         } else {
           console.error("Error loading preferences:", err);
         } 
