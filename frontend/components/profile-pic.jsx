@@ -1,14 +1,27 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
 import { Image, TouchableOpacity, View } from "react-native";
-import { useTheme } from "@react-navigation/native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useQuery } from "@tanstack/react-query";
 
-export default function ProfilePic({ username, style, containerStyle }) {
+export default function ProfilePic({ username, style, containerStyle, imageUrl, onPress }) {
     const router = useRouter();
-    const [profilePic, setProfilePic] = useState(
+    const [profilePic] = useState(
         require("../assets/images/placeholder.png")
     );
-    const theme = useTheme();
+
+    const { data: cachedProfileImageUrl = "" } = useQuery({
+        queryKey: ["profileImageUrl"],
+        queryFn: async () => {
+            const savedImageUrl = await AsyncStorage.getItem("profileImageUrl");
+            return savedImageUrl || "";
+        },
+        staleTime: 0,
+    });
+
+    const resolvedImageUrl = imageUrl || cachedProfileImageUrl;
+    const source = resolvedImageUrl ? { uri: resolvedImageUrl } : profilePic;
+    const handlePress = onPress || (() => router.push("/settings/Profile"));
 
     return (
         <View
@@ -23,9 +36,9 @@ export default function ProfilePic({ username, style, containerStyle }) {
                 containerStyle,
             ]}
         >
-            <TouchableOpacity onPress={() => router.push("/settings/Profile")}>
+            <TouchableOpacity onPress={handlePress}>
                 <Image
-                    source={profilePic}
+                    source={source}
                     style={[
                         {
                             borderRadius: 10,

@@ -13,7 +13,7 @@ function Profile() {
   const [username, setUsername] = useState("");
 
   const handleLogout = async () => {
-    await AsyncStorage.multiRemove(["username", "userId"]);
+    await AsyncStorage.multiRemove(["username", "userId", "profileImageUrl"]);
     router.replace("/auth/logIn");
   };
 
@@ -112,7 +112,7 @@ function Profile() {
               <ThemedText
                 style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}
               >
-                Preferences Survey
+                Preference Survey
               </ThemedText>
             </TouchableOpacity>
           </View>

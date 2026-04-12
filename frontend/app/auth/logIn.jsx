@@ -33,6 +33,7 @@ export default function Login() {
            Alert.alert("Login worked");
            await AsyncStorage.setItem("username", data.username);
            await AsyncStorage.setItem("userId", data.userId.toString());
+           await AsyncStorage.setItem("profileImageUrl", data.profileImageUrl || "");
 
            router.replace("/(tabs)");
 

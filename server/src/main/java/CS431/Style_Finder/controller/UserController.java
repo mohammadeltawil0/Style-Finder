@@ -42,6 +42,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers());
     }
 
+    // GET /api/users/exists?username=...
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> usernameExists(@RequestParam String username) {
+        return ResponseEntity.ok(userService.usernameExists(username));
+    }
+
 
 
     // PUT /api/users/{id}

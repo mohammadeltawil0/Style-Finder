@@ -120,7 +120,7 @@ export const CustomHeader = ({ page }) => {
           {page === "Profile" && (
             <>
               <TouchableOpacity onPress={() => router.back()}>
-                <FontAwesome name="chevron-left" size={18} color={theme.colors.text} />
+                <FontAwesome name="chevron-left" size={20} color={theme.colors.text} />
               </TouchableOpacity>
               <ThemedText
                 style={{
@@ -216,13 +216,13 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Preference Survey
+                PREFERENCE SURVEY
               </ThemedText>
             </>
           )}
           {page === "EditProfile" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity onPress={() => router.replace("/(tabs)")}>
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -242,7 +242,7 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "UpdatePassword" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity onPress={() => router.replace("/settings/Profile")}>
                 <Ionicons
                   name="arrow-back"
                   size={24}
