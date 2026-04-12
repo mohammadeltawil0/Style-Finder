@@ -1,12 +1,21 @@
-import { Image, View } from "react-native";
+import { TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
+import ProfilePic from "../../components/profile-pic";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+import { useRouter } from "expo-router";
+
 function Profile() {
   const theme = useTheme();
+  const router = useRouter();
   const [username, setUsername] = useState("");
+
+  const handleLogout = async () => {
+    await AsyncStorage.multiRemove(["username", "userId"]);
+    router.replace("/auth/logIn");
+  };
 
   useEffect(() => {
     const loadUsername = async () => {
@@ -24,65 +33,98 @@ function Profile() {
       gradient
       style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
     >
-      <View className="header" style={{ alignSelf: "flex-start" }}>
-        <ThemedText
-          style={{
-            fontSize: theme.sizes.h1,
-            fontFamily: theme.fonts.bold,
-            color: theme.colors.text,
-          }}
-        >
-          Manage Account
-        </ThemedText>
-      </View>
       <View
         className="content"
-        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+        style={{
+          flex: 1,
+          width: "80%",
+          paddingHorizontal: 20,
+          paddingVertical: 30,
+          alignItems: "stretch",
+          gap: 40,
+        }}
       >
-        <Image
-          source={require("../../assets/images/placeholder.png")}
-          style={{
-            borderRadius: 10,
-            width: 200,
-            height: 200,
-            marginBottom: 20,
-            fontFamily: theme.fonts.bold,
-            color: theme.colors.text,
-          }}
-          resizeMode="cover"
-        />
-        <ThemedText
-          style={{
-            fontSize: theme.sizes.h2,
-            color: theme.colors.h2,
-            fontFamily: theme.fonts.bold,
-          }}
-        >
-          {username}
-        </ThemedText>
-        <View className="profile-options-1">
+        <View className="profile-and-name" style={{ alignItems: "center", gap: 12 }}>
+          <View style={{ position: "relative" }}>
+            <ProfilePic username={username} style={{
+              height: 200, width: 200,
+            }} containerStyle={{
+              backgroundColor: "transparent",
+              padding: 0,
+              borderRadius: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 8 },
+              shadowOpacity: 0.25,
+              shadowRadius: 10,
+              elevation: 12
+            }} />
+          </View>
           <ThemedText
-            style={{ fontSize: theme.sizes.h3, color: theme.colors.text }}
+            style={{
+              fontSize: theme.sizes.h2,
+              color: theme.colors.text,
+              fontFamily: theme.fonts.bold,
+            }}
           >
-            EDIT PROFILE
-          </ThemedText>
-          <ThemedText
-            style={{ fontSize: theme.sizes.h3, color: theme.colors.text }}
-          >
-            CHANGE PASSWORD
+            {username}
           </ThemedText>
         </View>
-        <View className="profile-options-2">
-          <ThemedText
-            style={{ fontSize: theme.sizes.h3, color: theme.colors.text }}
-          >
-            PREFERENCES SURVEY
-          </ThemedText>
-          <ThemedText
-            style={{ fontSize: theme.sizes.h3, color: theme.colors.text }}
-          >
-            LOG OUT
-          </ThemedText>
+
+        <View className="profile-options-1" style={{
+          flexDirection: "column",
+          backgroundColor: theme.colors.background, gap: 2, borderRadius: 10, shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.3,
+          shadowRadius: 3.5,
+          elevation: 5,
+          width: "100%",
+        }}>
+          <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+            <TouchableOpacity onPress={() => router.push("/settings/EditProfile")}>
+              <ThemedText
+                style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}
+              >
+                Edit Profile
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+          <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+            <TouchableOpacity onPress={() => router.push("/settings/UpdatePassword")}>
+              <ThemedText
+                style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}
+              >
+                Update Password
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </View>
+        <View className="profile-options-2" style={{
+          flexDirection: "column",
+          backgroundColor: theme.colors.background, gap: 2, borderRadius: 10, shadowColor: "#000",
+          shadowOffset: { width: 0, height: 5 },
+          shadowOpacity: 0.3,
+          shadowRadius: 3.5,
+          elevation: 5,
+          width: "100%",
+        }}>
+          <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
+            <TouchableOpacity onPress={() => router.push("/screens/survey/preferences1")}>
+              <ThemedText
+                style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}
+              >
+                Preferences Survey
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+          <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
+            <TouchableOpacity onPress={handleLogout}>
+              <ThemedText
+                style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}
+              >
+                Log Out
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </ThemedView>

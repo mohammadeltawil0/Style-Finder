@@ -4,25 +4,28 @@ import { useRouter } from "expo-router";
 import { TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "./themed-text";
-import { Logo } from "./ui/logo";
-import { usePathname } from "expo-router";
+import ProfilePic from "./profile-pic";
+import { FontAwesome } from '@expo/vector-icons';
 
 export const CustomHeader = ({ page }) => {
   const theme = useTheme();
   const router = useRouter();
 
   const hideSettingsIcon =
-    page === "settings" ||
+    page === "Profile" ||
     page === "logIn" ||
     page === "register" ||
-    page === "add-item";
+    page === "add-item" ||
+    page === "survey" ||
+    page === "EditProfile" ||
+    page === "UpdatePassword";
 
 
   return (
-    <SafeAreaView style={{ flex: 0, backgroundColor: theme.colors.card }}>
+    <SafeAreaView style={{ flex: 0, backgroundColor: page === "Profile" || page === "EditProfile" || page === "UpdatePassword" ? theme.colors.background : theme.colors.card }}>
       <View
         style={{
-          backgroundColor: theme.colors.card,
+          backgroundColor: page === "Profile" || page === "EditProfile" || page === "UpdatePassword" ? theme.colors.background : theme.colors.card,
           alignItems: "center",
           flexDirection: "row",
           justifyContent: "space-between",
@@ -39,8 +42,6 @@ export const CustomHeader = ({ page }) => {
         >
           {page === "home" && (
             <>
-              <Logo />
-              {/* unless we want logo to persist for all tabs */}
               <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
@@ -94,26 +95,6 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </View>
           )}
-          {page === "settings" && (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons
-                name="arrow-back"
-                size={24}
-                color={theme.colors.text}
-              />
-            </TouchableOpacity>
-          )}
-          {page === "settings" && (
-            <ThemedText
-              style={{
-                fontSize: theme.sizes.h2,
-                fontFamily: theme.fonts.bold,
-                color: theme.colors.text,
-              }}
-            >
-              SETTINGS
-            </ThemedText>
-          )}
           {page === "logIn" && (
             <ThemedText
               style={{
@@ -136,30 +117,47 @@ export const CustomHeader = ({ page }) => {
               SIGN UP
             </ThemedText>
           )}
+          {page === "Profile" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <FontAwesome name="chevron-left" size={18} color={theme.colors.text} />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                  marginLeft: 10
+                }}
+              >
+                MANAGE ACCOUNT
+              </ThemedText>
+            </>
+          )}
           {page === "AdditionalConstraints" && (
             <>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  GENERATE OUTFITS
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                GENERATE OUTFITS
+              </ThemedText>
             </>
           )}
           {page === "OutfitswaitingScreen" && (
             <>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Generating Outfits...
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Generating Outfits...
+              </ThemedText>
             </>
           )}
           {page === "RegularOutfitDetail" && (
@@ -172,14 +170,14 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Regular Outfit Details
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Regular Outfit Details
+              </ThemedText>
             </>
           )}
           {page === "TripOutfitDetail" && (
@@ -192,14 +190,14 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Trip Outfit Details
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Trip Outfit Details
+              </ThemedText>
             </>
           )}
           {page === "survey" && (
@@ -212,26 +210,62 @@ export const CustomHeader = ({ page }) => {
                 />
               </TouchableOpacity>
               <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h2,
-                    fontFamily: theme.fonts.bold,
-                    color: theme.colors.text,
-                  }}
-                >
-                  Preference Survey
-                </ThemedText>
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Preference Survey
+              </ThemedText>
             </>
           )}
-
+          {page === "EditProfile" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                EDIT ACCOUNT
+              </ThemedText>
+            </>
+          )}
+          {page === "UpdatePassword" && (
+            <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Back
+              </ThemedText>
+            </>
+          )}
         </View>
-
         {!hideSettingsIcon && (
-          <TouchableOpacity onPress={() => router.push("/screens/settings")}>
-            <Ionicons
-              name="settings-sharp"
-              size={24}
-              color={theme.colors.text}
-            />
+          <TouchableOpacity onPress={() => router.push("/settings/Profile")}>
+            <ProfilePic style={{
+              borderColor: theme.colors.text,
+            }} />
           </TouchableOpacity>
         )}
       </View>

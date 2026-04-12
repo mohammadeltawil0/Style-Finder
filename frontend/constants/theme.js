@@ -30,7 +30,7 @@ export const theme = {
     ...DefaultTheme.colors,
     background: "#EDEDE9", 
     card: "#D5BDAF",       
-    border: "#B4907B",  // to be changed
+    border: "#B4907B", 
     lightBrown: "#E3D5CA",
     text: "#4A3A33",
     // text: "#000000",

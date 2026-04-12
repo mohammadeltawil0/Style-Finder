@@ -100,7 +100,6 @@ export default function RootLayout() {
               name="screens/survey/preferences2"
               options={{
                 header: () => <CustomHeader page="survey" />,
-                headerShown: false
               }}
             />
             {/* <Stack.Screen
@@ -126,13 +125,24 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="settings/profile"
+              name="settings/Profile"
               options={{
-                headerShown: false,
                 header: () => <CustomHeader page="Profile" />,
               }}
             />
-          </Stack>
+            <Stack.Screen
+              name="settings/EditProfile"
+              options={{
+                header: () => <CustomHeader page="EditProfile" />,
+              }}
+            />
+             <Stack.Screen
+              name="settings/UpdatePassword"
+              options={{
+                header: () => <CustomHeader page="UpdatePassword" />,
+              }}
+            />
+          </Stack>          
           <StatusBar style="auto" />
           <ThemedToast />
         </SurveyProvider>
