@@ -1,6 +1,6 @@
 import { TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
-import ProfilePic from "../../components/profile-pic";
+// import ProfilePic from "../../components/profile-pic";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
