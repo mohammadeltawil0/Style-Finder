@@ -7,6 +7,114 @@ import { Ionicons } from "@expo/vector-icons";
 import { apiClient } from "../../scripts/apiClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+const sanitize = (type, str) => {
+    if (typeof str !== "string") return "";
+
+    const titleCaseIfAllCaps = (value) => {
+        if (!value) return value;
+        const hasLetters = /[a-z]/i.test(value);
+        if (!hasLetters || value !== value.toUpperCase()) return value;
+
+        const lowered = value.toLowerCase();
+        return lowered.replace(/\b\w/g, (char) => char.toUpperCase());
+    };
+
+    if (type === "pattern") {
+        if (str === "GEOMETRIC_OR_ABSTRACT") {
+            return "Geometric/Abstract";
+        } else if (str === "PLAID_OR_FLANNEL") {
+            return "Plaid/Flannel";
+        } else {
+            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+        }
+    }
+
+    if (type === "formality") {
+        if (str === "PARTY_OR_NIGHT_OUT") {
+            return "Party/Night Out";
+        } else if (str === "ACTIVE_OR_SPORT") {
+            return "Active/Sport";
+        } else if (str === "WORK_OR_SMART") {
+            return "Work/Smart";
+        } else {
+            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+        }
+    }
+
+    if (type === "material") {
+        if (str === "Leather-Faux-Leather") {
+            return "Leather/Faux Leather";
+        } else {
+            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+        }
+    }
+
+    if (type === "length") {
+        if (str === "KNEE_LENGTH_OR_BERMUDA") {
+            return "Knee Length/Bermuda";
+        } else if (str === "MAXI_OR_FULL_LENGTH") {
+            return "Maxi/Full Length";
+        } else if (str === "MIDI_OR_CAPRI") {
+            return "Midi/Capri";
+        } else {
+            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+        }
+    }
+
+    return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+};
+
+const MATERIAL_LABELS = {
+    1: "Cotton",
+    2: "Linen/Hemp",
+    3: "Wool/Fleece",
+    4: "Silk/Satin",
+    5: "Leather/Faux Leather",
+    6: "Synthetics",
+    7: "Other",
+};
+
+const materialToLabel = (value) => {
+    if (value === null || value === undefined || value === "") return "Not specified";
+    if (typeof value === "number") return MATERIAL_LABELS[value] || "Not specified";
+
+    const raw = String(value).trim();
+    if (!raw) return "Not specified";
+
+    const asNumber = Number(raw);
+    if (!Number.isNaN(asNumber) && MATERIAL_LABELS[asNumber]) return MATERIAL_LABELS[asNumber];
+
+    const upper = raw.toUpperCase();
+    const enumMap = {
+        COTTON: 1,
+        LINEN_HEMP: 2,
+        WOOL_FLEECE: 3,
+        SILK_SATIN: 4,
+        LEATHER_FAUX_LEATHER: 5,
+        SYNTHETICS: 6,
+        OTHER: 7,
+    };
+
+    if (enumMap[upper]) return MATERIAL_LABELS[enumMap[upper]];
+
+    const key = raw.toLowerCase().replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
+    const labelMap = {
+        cotton: 1,
+        "linen/hemp": 2,
+        "linen hemp": 2,
+        "wool/fleece": 3,
+        "wool fleece": 3,
+        "silk/satin": 4,
+        "silk satin": 4,
+        "leather/faux leather": 5,
+        "leather faux leather": 5,
+        synthetics: 6,
+        other: 7,
+    };
+
+    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : sanitize("material", raw);
+};
+
 // TO DO: edit item logic
 export default function EditItemsModal({ item, setModalVisible }) {
     const [uri, setUri] = useState(null);
@@ -36,35 +144,140 @@ export default function EditItemsModal({ item, setModalVisible }) {
         return 1;
     };
 
+    const normalizeCategory = (value) => {
+        if (!value) return "TOP";
+        const map = {
+            Top: "TOP",
+            Bottom: "BOTTOM",
+            Dress: "DRESS",
+            Jacket: "JACKET",
+            Accessory: "ACCESSORY",
+            Shoes: "SHOES",
+        };
+        return map[value] || value;
+    };
+
+    const normalizeEvent = (value) => {
+        if (!value) return "CASUAL";
+        const map = {
+            casual: "CASUAL",
+            "business-casual": "BUSINESS_CASUAL",
+            formal: "FORMAL",
+            active: "ACTIVE_OR_SPORT",
+            "Active/Sport": "ACTIVE_OR_SPORT",
+            "Work/Smart": "WORK_OR_SMART",
+            "Party/Night Out": "PARTY_OR_NIGHT_OUT",
+        };
+        return map[value] || value;
+    };
+
+    const normalizeSeason = (value) => {
+        if (!value) return null;
+        const map = {
+            Winter: "WINTER",
+            Spring: "SPRING",
+            Summer: "SUMMER",
+            Fall: "FALL",
+            "All Seasons": "ALL_SEASONS",
+        };
+        return map[value] || value;
+    };
+
+    const normalizeLength = (value) => {
+        if (!value) return null;
+        const map = {
+            "knee-length": "KNEE_LENGTH_OR_BERMUDA",
+            "midi-length": "MIDI_OR_CAPRI",
+            shorts: "ABOVE_KNEE",
+            cropped: "ABOVE_KNEE",
+        };
+        return map[value] || value;
+    };
+
+    const normalizePattern = (value) => {
+        if (!value) return "SOLID";
+        const map = {
+            "solid-unicolor": "SOLID",
+            striped: "STRIPED",
+            checkered: "PLAID_OR_FLANNEL",
+            patterned: "GEOMETRIC_OR_ABSTRACT",
+            "tie-dye": "GRAPHIC",
+            other: "OTHER",
+            Solid: "SOLID",
+            Striped: "STRIPED",
+            Plaid: "PLAID_OR_FLANNEL",
+            Floral: "FLORAL",
+            Graphic: "GRAPHIC",
+            Geometric: "GEOMETRIC_OR_ABSTRACT",
+        };
+        return map[value] || value;
+    };
+
+    const normalizeMaterial = (value) => {
+        if (value === null || value === undefined || value === "") return null;
+        if (typeof value === "number") return value;
+
+        const asNumber = Number(value);
+        if (!Number.isNaN(asNumber) && asNumber >= 1 && asNumber <= 7) return asNumber;
+
+        const upper = String(value).toUpperCase();
+        const enumMap = {
+            COTTON: 1,
+            LINEN_HEMP: 2,
+            WOOL_FLEECE: 3,
+            SILK_SATIN: 4,
+            LEATHER_FAUX_LEATHER: 5,
+            SYNTHETICS: 6,
+            OTHER: 7,
+        };
+        if (enumMap[upper]) return enumMap[upper];
+
+        const map = {
+            cotton: 1,
+            "linen/hemp": 2,
+            "wool/fleece": 3,
+            "silk/satin": 4,
+            "leather/faux leather": 5,
+            synthetics: 6,
+            other: 7,
+        };
+        const key = String(value).toLowerCase();
+        return map[key] || value;
+    };
+
+    const normalizeBulk = (value) => {
+        if (value === null || value === undefined || value === "") return null;
+        if (typeof value === "number") return value;
+        const map = {
+            Thin: 0,
+            Regular: 1,
+            Thick: 2,
+        };
+        return map[value] ?? value;
+    };
+
     useEffect(() => {
         if (!item) return;
 
         setUri(item.imageUrl || item.uri || null);
-        setCategory(item.type || item.category || "Top");
-        setPattern(item.pattern || "solid-unicolor");
+        setCategory(normalizeCategory(item.type || item.category));
+        setPattern(normalizePattern(item.pattern));
         setColor(item.color || null);
-        setMaterial(item.material ?? "cotton");
-        setEvent(item.formality || item.event || "casual");
+        setMaterial(normalizeMaterial(item.material));
+        setEvent(normalizeEvent(item.formality || item.event));
         setFit(fitToSliderValue(item.fit));
-        setSeason(item.seasonWear || item.season || null);
-        setLength(item.length || null);
-        setBulk(typeof item.bulk === "number" ? item.bulk : null);
+        setSeason(normalizeSeason(item.seasonWear || item.season));
+        setLength(normalizeLength(item.length));
+        setBulk(normalizeBulk(item.bulk));
     }, [item]);
 
     let convertedFit = 0;
-    let convertedBulk = 0;
 
     fit >= 0 && fit < 0.5
         ? (convertedFit = 0)
         : fit >= 0.5 && fit < 1.5
             ? (convertedFit = 1)
             : (convertedFit = 2);
-
-    bulk >= 0 && bulk <= 0.5
-        ? (convertedBulk = 0)
-        : bulk >= 0.51 && bulk < 1.49
-            ? (convertedBulk = 1)
-            : (convertedBulk = 2);
 
     const deleteItemMutation = useMutation({
         mutationFn: async (itemId) => {
@@ -90,6 +303,27 @@ export default function EditItemsModal({ item, setModalVisible }) {
 
         console.log("Deleting item id:", resolvedItemId);
         deleteItemMutation.mutate(resolvedItemId);
+    };
+
+    const displayValue = (value, type = null) => {
+        if (value === null || value === undefined || value === "") return "Not specified";
+        if (type === "pattern") return sanitize("pattern", value);
+        if (type === "formality") return sanitize("formality", value);
+        if (type === "material") {
+            return materialToLabel(value);
+        }
+        if (type === "bulk") {
+            const bulkMap = {
+                0: "Thin",
+                1: "Regular",
+                2: "Thick",
+            };
+            return typeof value === "number" ? bulkMap[value] || "Not specified" : String(value);
+        }
+        if (type === "length") return sanitize("length", value);
+        if (type === "category") return sanitize("category", value);
+        if (type === "season") return sanitize("season", value);
+        return String(value).replace(/[_-]/g, " ");
     };
 
     return (
@@ -197,7 +431,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {category}
+                                {displayValue(category, "category")}
                             </ThemedText>
                         </View>
                         <View
@@ -251,7 +485,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {pattern}
+                                {displayValue(pattern, "pattern")}
                             </ThemedText>
                         </View>
                         {!color && (
@@ -320,7 +554,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                             margin: 0,
                                         }}
                                     >
-                                        {color}
+                                        {displayValue(color)}
                                     </ThemedText>
                                 </View>
                             </View>
@@ -372,7 +606,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {event}
+                                {displayValue(event, "formality")}
                             </ThemedText>
                         </View>
                         <View
@@ -422,7 +656,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {material}
+                                {displayValue(material, "material")}
                             </ThemedText>
                         </View>
                         <View
@@ -472,7 +706,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {convertedFit}
+                                {displayValue(convertedFit === 0 ? "Skinny" : convertedFit === 1 ? "Regular" : "Oversized")}
                             </ThemedText>
                         </View>
                         <View
@@ -524,7 +758,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                         },
                                     ]}
                                 >
-                                    {season}
+                                    {displayValue(season, "season")}
                                 </ThemedText>
                             </View>
                             <View
@@ -616,7 +850,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                         },
                                     ]}
                                 >
-                                    {length}
+                                    {displayValue(length, "length")}
                                 </ThemedText>
                             </View>
                             <View
@@ -671,7 +905,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                         </View>
                     )}
-                    {bulk ? (
+                    {bulk !== null && bulk !== undefined ? (
                         <View
                             style={[
                                 styles.responseContainer,
@@ -708,7 +942,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                         },
                                     ]}
                                 >
-                                    {convertedBulk}
+                                    {displayValue(bulk, "bulk")}
                                 </ThemedText>
                             </View>
                             <View
