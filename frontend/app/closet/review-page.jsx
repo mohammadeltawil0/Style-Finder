@@ -14,18 +14,38 @@ import { Ionicons } from "@expo/vector-icons";
 const sanitize = (type, str) => {
   if (typeof str !== "string") return "";
 
+  const titleCaseIfAllCaps = (value) => {
+    if (!value) return value;
+    const hasLetters = /[a-z]/i.test(value);
+    if (!hasLetters || value !== value.toUpperCase()) return value;
+
+    const lowered = value.toLowerCase();
+    return lowered.replace(/\b\w/g, (char) => char.toUpperCase());
+  };
+
   //pattern
   if (type === "pattern") {
-    return str.replace(/-/g, "/");
+    if (str === "GEOMETRIC_OR_ABSTRACT") {
+      return "Geometric/Abstract";
+    } else if (str === "PLAID_OR_FLANNEL") {
+      return "Plaid/Flannel";
+    } else {
+      //active/sport and work/smart
+      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+    }
   }
 
   //formality
   if (type === "formality") {
-    if (str === "Party-Night") {
+    if (str === "PARTY_OR_NIGHT_OUT") {
       return "Party/Night Out";
-    } else {
+    } else if (str === "ACTIVE_OR_SPORT") {
+      return "Active/Sport";
+    } else if (str === "WORK_OR_SMART") {
+      return "Work/Smart";
+    } else{
       //active/sport and work/smart
-      return str.replace(/-/g, "/");
+      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
     }
   }
 
@@ -34,26 +54,30 @@ const sanitize = (type, str) => {
     if (str === "Leather-Faux-Leather") {
       return "Leather/Faux Leather";
     } else {
-      return str.replace(/-/g, "/");
+      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
     }
   }
 
   if (type === "length") {
-    if (str === "Knee-Length-Bermuda") {
+    if (str === "KNEE_LENGTH_OR_BERMUDA") {
       return "Knee Length/Bermuda";
-    } else if (str === "Full-Length-Maxi") {
+    } else if (str === "MAXI_OR_FULL_LENGTH") {
       return "Maxi/Full Length";
+    } else if (str === "MIDI_OR_CAPRI") {
+      return "Midi/Capri";
     } else {
-      return str.replace(/-/g, "/");
+      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
     }
   }
 
   // works for
-  return str.replace(/-/g, " ");
+  return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
 };
 
 export default function ReviewPage({
   setPage,
+  goBack,
+  editField,
   uri,
   formality,
   pattern,
@@ -90,6 +114,7 @@ export default function ReviewPage({
   const convertedFormality = formality
     ? sanitize("formality", formality)
     : null;
+  const convertedItemType = itemType ? sanitize("itemType", itemType) : null;
   // const convertedMaterial = material ? sanitize("material", material) : null;
   const materialMap = {
     1: "Cotton",
@@ -107,10 +132,10 @@ export default function ReviewPage({
   // Convert enum/int fit states to actual categories for review page display
   const convertedFit =
     fit < 0.5
-    ? "Skinny"
-    : fit < 1.5
-    ? "Regular"
-    : "Oversized";
+      ? "Skinny"
+      : fit < 1.5
+        ? "Regular"
+        : "Oversized";
 
   const convertedBulk = bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
 
@@ -184,7 +209,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(1)}
+                      onPress={() => editField(1)}
                     />
                   </View>
                   <Image
@@ -237,7 +262,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(1)}
+                      onPress={() => editField(1)}
                     />
                   </View>
                 </View>
@@ -278,7 +303,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                    {itemType}
+                    {convertedItemType}
                   </ThemedText>
                 </View>
                 <View
@@ -289,7 +314,7 @@ export default function ReviewPage({
                     name="create"
                     size={20}
                     color={theme.colors.text}
-                    onPress={() => setPage(2)}
+                    onPress={() => editField(2)}
                   />
                 </View>
               </View>
@@ -341,7 +366,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(3)}
+                      onPress={() => editField(3)}
                     />
                   </View>
                 )}
@@ -411,7 +436,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(2)}
+                      onPress={() => editField(3)}
                     />
                   </View>
                 </View>
@@ -463,7 +488,7 @@ export default function ReviewPage({
                     name="create"
                     size={20}
                     color={theme.colors.text}
-                    onPress={() => setPage(4)}
+                    onPress={() => editField(4)}
                   />
                 </View>
               </View>
@@ -514,7 +539,7 @@ export default function ReviewPage({
                     name="create"
                     size={20}
                     color={theme.colors.text}
-                    onPress={() => setPage(5)}
+                    onPress={() => editField(5)}
                   />
                 </View>
               </View>
@@ -565,7 +590,7 @@ export default function ReviewPage({
                     name="create"
                     size={20}
                     color={theme.colors.text}
-                    onPress={() => setPage(6)}
+                    onPress={() => editField(6)}
                   />
                 </View>
               </View>
@@ -618,7 +643,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(7)}
+                      onPress={() => editField(7)}
                     />
                   </View>
                 </View>
@@ -659,7 +684,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(7)}
+                      onPress={() => editField(7)}
                     />
                   </View>
                 </View>
@@ -712,7 +737,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(8)}
+                      onPress={() => editField(8)}
                     />
                   </View>
                 </View>
@@ -753,7 +778,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(8)}
+                      onPress={() => editField(8)}
                     />
                   </View>
                 </View>
@@ -806,7 +831,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(2)}
+                      onPress={() => editField(9)}
                     />
                   </View>
                 </View>
@@ -847,7 +872,7 @@ export default function ReviewPage({
                       name="create"
                       size={20}
                       color={theme.colors.text}
-                      onPress={() => setPage(9)}
+                      onPress={() => editField(9)}
                     />
                   </View>
                 </View>
@@ -859,7 +884,7 @@ export default function ReviewPage({
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(9)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
@@ -966,3 +991,12 @@ const styles = {
     alignSelf: "flex-start",
   },
 };
+
+
+
+
+
+
+
+
+

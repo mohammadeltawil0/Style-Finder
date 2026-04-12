@@ -65,7 +65,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     },
     {
       id: "GEOMETRIC_OR_ABSTRACT",
-      label: "Geometric / Abstract",
+      label: "Geometric/Abstract",
       emoji: "🔷",
       subheader: "Polka dots or repeating abstract shapes",
     },
@@ -235,7 +235,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
       </ScrollView>
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(2)}
+          onPress={() => goBack()}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,

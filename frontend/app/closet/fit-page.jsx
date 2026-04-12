@@ -9,7 +9,7 @@ import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import Slider from "@react-native-community/slider";
 
-export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
+export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri }) {
   const theme = useTheme();
 
   const { width } = useWindowDimensions();
@@ -131,7 +131,7 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(5)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
