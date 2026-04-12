@@ -1,6 +1,7 @@
 package CS431.Style_Finder.model;
 
 import CS431.Style_Finder.model.enums.*;
+import CS431.Style_Finder.model.converter.MaterialTypeConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -41,7 +42,7 @@ public class Item {
     @Column(name = "length")
     private LengthType length;
 
-    @Enumerated(EnumType.STRING)
+    @Convert(converter = MaterialTypeConverter.class)
     @Column(name = "material")
     private MaterialType material; // Changed from Integer
 
@@ -58,7 +59,7 @@ public class Item {
     private Fit fit;
 
     @Column(name = "bulk")
-    private double bulk;
+    private Double bulk;
 
     @Column(name = "times_worn")
     private Integer timesWorn;
@@ -69,11 +70,16 @@ public class Item {
     @PrePersist
     protected void onCreate() {
         if (timesWorn == null) timesWorn = 0;
+        if (bulk == null) bulk = 0.0;
+    }
+
+    public Double getBulk() {
+        return bulk == null ? 0.0 : bulk;
     }
 
     public double getWarmthScore() {
         // Base warmth is primarily determined by the item's physical thickness (bulk)
-        double score = bulk * 10.0;
+        double score = getBulk() * 10.0;
 
         // Null safety check
         if (material == null) return score;

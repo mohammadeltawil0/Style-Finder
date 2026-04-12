@@ -4,11 +4,13 @@ import CS431.Style_Finder.dto.OutfitSuggestionDto;
 import CS431.Style_Finder.mapper.OutfitMapper;
 import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.OutfitCase;
+import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.model.UserWeights;
 import CS431.Style_Finder.model.enums.ColorCategory;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitCaseRepository;
+import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.repository.UserWeightsRepository;
 import CS431.Style_Finder.service.AlgorithmService;
 import CS431.Style_Finder.service.WeatherService;
@@ -23,6 +25,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     private final OutfitCaseRepository cbrDb;
     private final ItemRepository wardrobeDb;
     private final UserWeightsRepository weightsDb;
+    private final UserRepository userDb;
     private final WeatherService weatherService;
     private final OutfitMapper mapper;
 
@@ -30,8 +33,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     // Method to generate a list of outfits based on user weights, weather conditions, and occasion.
     public List<OutfitSuggestionDto> generateSuggestionHub(Long userId, String location, String event, boolean useMemory) {
         List<OutfitSuggestionDto> hub = new ArrayList<>();
-        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(userId).
-                orElseThrow(() -> new RuntimeException("User weights not found."));
+        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(userId)
+            .orElseGet(() -> createDefaultWeights(userId));
 
         WeatherService.WeatherContext weather = weatherService.getWeatherForLocation(location);
         String occasion = (event != null && !event.isEmpty()) ? event : "Casual";
@@ -63,6 +66,16 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             }
         }
         return hub;
+    }
+
+    private UserWeights createDefaultWeights(Long userId) {
+        User user = userDb.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        UserWeights newWeights = new UserWeights();
+        newWeights.setUser(user);
+        user.setUserWeights(newWeights);
+        return weightsDb.save(newWeights);
     }
 
     private List<OutfitSuggestionDto> runParametricFallback(List<Item> closet, UserWeights vw, int targetTemp, String occasion, int limit) {
