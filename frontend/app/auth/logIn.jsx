@@ -208,7 +208,7 @@ export default function Login() {
           Forgot Password? {" "}
           <TouchableOpacity onPress={() => setShowReset(true)}>
             <ThemedText style={{fontSize: 13, fontFamily: theme.fonts.semiBold, textDecorationLine: "underline", }} >
-              Reset Here
+              RESET HERE
             </ThemedText>
           </TouchableOpacity>
         </ThemedText>
