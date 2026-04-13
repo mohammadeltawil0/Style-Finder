@@ -13,4 +13,5 @@ public interface UserService {
     UserDto login(String username, String password);
     Boolean duplicateUsername(String username);
     UserDto getUserByUsername(String username);
+    boolean usernameExists(String username);
 }

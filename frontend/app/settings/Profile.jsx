@@ -1,16 +1,15 @@
 import { TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
-// import ProfilePic from "../../components/profile-pic";
+import ProfilePic from "../../components/profile-pic";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSurvey } from "../../context/SurveyContext";
-
 import { useRouter } from "expo-router";
 
 function Profile() {
   const theme = useTheme();
-  const router = useRouter();
+  const router = useRouter();  
   const { resetAnswers } = useSurvey();
   const [username, setUsername] = useState("");
 
