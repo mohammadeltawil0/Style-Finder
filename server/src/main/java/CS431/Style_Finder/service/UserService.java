@@ -12,4 +12,5 @@ public interface UserService {
     void deleteUser(Long userId);
     UserDto login(String username, String password);
     Boolean duplicateUsername(String username);
+    UserDto getUserByUsername(String username);
 }
