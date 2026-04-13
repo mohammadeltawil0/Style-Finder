@@ -4,7 +4,7 @@ import axios from 'axios';
 // 1. Verify the URL loaded correctly (Debugging)
 // const API_URL = "https://api.stylefinder.tech";
 // const API_URL = "http://localhost:8080";
-const API_URL = "http://{Your-IP-Address}:8080"; // Use your machine's local IP address for Android emulator
+const API_URL = "http://192.168.68.105:8080"; // Use your machine's local IP address for Android emulator
 console.log("Connecting to Backend at:", API_URL);
 
 // 2. Create a global Axios instance

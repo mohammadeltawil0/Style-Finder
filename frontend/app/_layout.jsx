@@ -142,6 +142,19 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="UpdatePassword" />,
               }}
             />
+            <Stack.Screen
+              name="settings/adminFolder/adminSettings"
+              options={{
+                header: () => <CustomHeader page="adminSettings" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminEditProfile"
+              options={{
+                header: () => <CustomHeader page="adminEditProfile" />,
+              }}
+            />
+
           </Stack>          
           <StatusBar style="auto" />
           <ThemedToast />

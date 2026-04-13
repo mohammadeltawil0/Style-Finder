@@ -18,7 +18,9 @@ export const CustomHeader = ({ page }) => {
     page === "add-item" ||
     page === "survey" ||
     page === "EditProfile" ||
-    page === "UpdatePassword";
+    page === "UpdatePassword" ||
+    page === "adminSettings" ||     
+    page === "adminEditProfile";
 
 
   return (
@@ -135,6 +137,26 @@ export const CustomHeader = ({ page }) => {
                 }}
               >
                 MANAGE ACCOUNT
+              </ThemedText>
+            </>
+          )}
+          {page === "adminSettings" && (
+          <>
+              <TouchableOpacity onPress={() => router.back()}>
+                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, marginLeft: 10 }}>
+                MANAGE ACCOUNT
+              </ThemedText>
+            </>
+          )}
+          {page === "adminEditProfile" && (
+            <>
+              <TouchableOpacity onPress={() => router.replace("/screens/settings/admin/adminSettings")}>
+                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+              <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text }}>
+                EDIT ACCOUNT
               </ThemedText>
             </>
           )}
