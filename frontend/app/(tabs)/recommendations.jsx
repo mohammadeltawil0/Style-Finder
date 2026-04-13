@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // IMPORT SWITCH
 import { View, Text, Alert, StyleSheet, FlatList, TouchableOpacity,
-  Modal, ActivityIndicator, ScrollView, Pressable, Switch } from 'react-native';
+  Modal, ActivityIndicator, ScrollView, Pressable, Switch, Image } from 'react-native';
 import { apiClient } from "../../scripts/apiClient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
@@ -16,6 +16,22 @@ const formatEnum = (str) => {
 };
 
 const FORMALITY_OPTIONS = ["CASUAL", "FORMAL", "WORK_OR_SMART", "PARTY_OR_NIGHT_OUT", "VERSATILE"];
+
+const getCoverImageUrl = async (outfit) => {
+  if (!outfit) return null;
+  if (outfit.imageUrl) return outfit.imageUrl;
+
+  const firstItemId = outfit?.itemIds?.[0];
+  if (!firstItemId) return null;
+
+  try {
+    const itemResponse = await apiClient.get(`/api/items/${firstItemId}`);
+    return itemResponse.data?.imageUrl || null;
+  } catch (error) {
+    console.error("Failed to load outfit image:", error);
+    return null;
+  }
+};
 
 // --- OUTFIT DETAILS MODAL ---
 const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
@@ -62,8 +78,15 @@ const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
                           A {item.color?.toLowerCase()} {formatEnum(item.fit)} fit {formatEnum(item.type).toLowerCase()}.
                         </ThemedText>
 
-                        {/* Image Placeholder for visualization */}
-                        <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown }]} />
+                        {item.imageUrl ? (
+                          <Image
+                            source={{ uri: item.imageUrl }}
+                            style={styles.itemImagePlaceholder}
+                            resizeMode="cover"
+                          />
+                        ) : (
+                          <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown }]} />
+                        )}
                       </View>
                     </View>
                 ))}
@@ -94,6 +117,7 @@ export default function SuggestionHub() {
   const [useMemory, setUseMemory] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [coverImages, setCoverImages] = useState({});
 
   const getUserId = async () => {
     try {
@@ -125,7 +149,17 @@ export default function SuggestionHub() {
         useMemory: useMemory
       });
 
-      setSuggestions(res.data?.slice(0, 10) || []);
+      const nextSuggestions = res.data?.slice(0, 10) || [];
+      setSuggestions(nextSuggestions);
+
+      const nextCoverImages = {};
+      await Promise.all(nextSuggestions.map(async (suggestion) => {
+        const resolvedCoverImage = await getCoverImageUrl(suggestion);
+        if (resolvedCoverImage) {
+          nextCoverImages[suggestion.suggestionId] = resolvedCoverImage;
+        }
+      }));
+      setCoverImages(nextCoverImages);
     } catch (error) {
       Alert.alert("Error", "Generation failed.");
     } finally {
@@ -204,7 +238,15 @@ export default function SuggestionHub() {
             columnWrapperStyle={{ justifyContent: "space-between" }}
             renderItem={({ item, index }) => (
                 <TouchableOpacity style={[styles.outfitCard, { backgroundColor: theme.colors.lightBrown }]} onPress={() => { setSelectedOutfit(item); setIsModalVisible(true); }}>
-                  <View style={styles.cardImagePlaceholder}><ThemedText>Outfit {index + 1}</ThemedText></View>
+                  {coverImages[item.suggestionId] ? (
+                    <Image
+                      source={{ uri: coverImages[item.suggestionId] }}
+                      style={styles.cardImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.cardImagePlaceholder}><ThemedText>Outfit {index + 1}</ThemedText></View>
+                  )}
                   <View style={[styles.cardFooter, { backgroundColor: theme.colors.card }]}><ThemedText>Score: {item.score?.toFixed(1)}</ThemedText></View>
                 </TouchableOpacity>
             )}
@@ -229,12 +271,14 @@ const styles = StyleSheet.create({
   generateBtnText: { color: '#fff', fontWeight: 'bold', fontSize: 16 },
   chip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, marginRight: 10, borderWidth: 1, borderColor: '#ddd' },
   outfitCard: { flex: 1, borderRadius: 10, marginBottom: 20, maxWidth: '48%', overflow: 'hidden' },
+  cardImage: { height: 120, width: '100%' },
   cardImagePlaceholder: { height: 120, justifyContent: 'center', alignItems: 'center' },
   cardFooter: { padding: 10 },
   modalContainer: { flex: 1, paddingHorizontal: 20, paddingTop: 20 },
   chevronView: { alignItems: "flex-end", marginBottom: 10 },
   modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
   responseContainer: { padding: 15, borderRadius: 10, marginBottom: 15 },
+  itemImage: { height: 180, borderRadius: 10, marginTop: 5 },
   itemImagePlaceholder: { height: 180, borderRadius: 10, marginTop: 5 },
   modalActions: { marginTop: 20, gap: 10 },
   actionBtn: { padding: 15, borderRadius: 10, alignItems: 'center' },
