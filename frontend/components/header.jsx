@@ -120,7 +120,11 @@ export const CustomHeader = ({ page }) => {
           {page === "Profile" && (
             <>
               <TouchableOpacity onPress={() => router.back()}>
-                <FontAwesome name="chevron-left" size={20} color={theme.colors.text} />
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
               </TouchableOpacity>
               <ThemedText
                 style={{
