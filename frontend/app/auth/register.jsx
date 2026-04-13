@@ -50,6 +50,25 @@ function LiveTyping({ text }) {
   );
 }
 
+function PasswordRules({ password }) {
+  const rules = [
+    { label: "At least 6 characters", pass: password.length >= 6 },
+    { label: "One special character (@, #, $, &)", pass: /[@#$&]/.test(password) },
+    { label: "One number", pass: /[0-9]/.test(password) },
+  ];
+  
+  return (
+    <View style={{ backgroundColor: "#ffffff", borderRadius: 10, borderWidth: 1, borderColor: "#ddd", padding: 10, marginBottom: 15 }}>
+      {rules.map((rule, i) => (
+        <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 3 }}>
+          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: rule.pass ? "#43a047" : "#e53935" }} />
+          <Text style={{ fontSize: 13, color: rule.pass ? "#2e7d32" : "#c62828" }}>{rule.label}</Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function Register() {
   const router = useRouter(); // updated to take user to the survey 
   const { colors } = useTheme();
@@ -67,6 +86,7 @@ export default function Register() {
     return emailRegex.test(email);
   };
 
+  
   // if returns true, we want to fail the sign up process and show error toast that username is taken
   const duplicateUsernameCheck = async (username) => {
       console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
@@ -96,6 +116,17 @@ export default function Register() {
 
     if (password !== confirmPassword) {
       Toast.show({ type: 'error', text1: 'Password Mismatch', text2: 'Passwords do not match.' });
+      return;
+    }
+
+    const passwordRules = [
+    password.length >= 6,
+      /[@#$&]/.test(password),
+      /[0-9]/.test(password),
+    ];
+
+    if (!passwordRules.every(Boolean)) {
+      Toast.show({ type: 'error', text1: 'Weak Password', text2: 'Password must meet all requirements.' });
       return;
     }
 
@@ -151,13 +182,9 @@ export default function Register() {
 
   return (
     <ThemedView gradient={true} style={{ flex: 1, alignItems: "center", justifyContent: "center" }} >
-      <KeyboardAvoidingView style={{ flex: 1, justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} >
+      <KeyboardAvoidingView style={{ flex: 1 , justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
+        <ScrollView contentContainerStyle={{ flexGrow: 1 , justifyContent: "center", alignItems: "center", padding: 16, }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-        <ScrollView
-          contentContainerStyle={{ flexGrow: 1, justifyContent: "center", alignItems: "center", padding: 16, }}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
           <LiveTyping text="Let's get started!" />
           <ThemedText style={{ fontSize: 20, marginBottom: 40 }}> Sign-up To Plan For Outfits</ThemedText>
 
@@ -198,6 +225,7 @@ export default function Register() {
               autoCorrect={false}
               textContentType="none"
             />
+            <PasswordRules password={password} />
             <TextInput
               placeholder="Confirm Password"
               placeholderTextColor={theme.colors.lightText}
