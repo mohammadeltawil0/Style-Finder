@@ -6,5 +6,6 @@ public enum Formality {
     WORK_OR_SMART,
     PARTY_OR_NIGHT_OUT,
     FORMAL,
-    ACTIVE_OR_SPORT
+    ACTIVE_OR_SPORT, 
+    BUSINESS_CASUAL // temporarily added to resolve 400 error when testing
 }

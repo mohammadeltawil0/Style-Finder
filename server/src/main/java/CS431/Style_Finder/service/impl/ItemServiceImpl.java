@@ -8,6 +8,7 @@ import CS431.Style_Finder.exception.ItemCreationException;
 import CS431.Style_Finder.mapper.ItemMapper;
 import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.User;
+import CS431.Style_Finder.model.enums.ItemType;
 
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitItemRepository;
@@ -101,5 +102,25 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         item.setTimesWorn(item.getTimesWorn() == null ? 1 : item.getTimesWorn() + 1);
         itemRepository.save(item);
+    }
+
+    @Override
+    public List<ItemDto> searchItems(String search, ItemType type, Long userId) {
+        return itemRepository.findAll().stream()
+        .filter(item -> userId == null || item.getUser().getUserId().equals(userId))
+        .filter(item -> type == null || item.getType() == type)
+        .filter(item -> {
+            if (search == null || search.isBlank()) return true;
+
+            String text = (
+                item.getType() + " " +
+                item.getColor() + " " +
+                item.getSeasonWear() + " " +
+                item.getFormality()
+            ).toLowerCase();
+            return text.contains(search.toLowerCase());
+        })
+        .map(itemMapper::toDto)
+        .toList();
     }
 }
