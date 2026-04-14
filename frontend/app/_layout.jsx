@@ -124,7 +124,25 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="TripOutfitDetail" />,
               }}
             />
-          </Stack>
+            <Stack.Screen
+              name="settings/Profile"
+              options={{
+                header: () => <CustomHeader page="Profile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/EditProfile"
+              options={{
+                header: () => <CustomHeader page="EditProfile" />,
+              }}
+            />
+             <Stack.Screen
+              name="settings/UpdatePassword"
+              options={{
+                header: () => <CustomHeader page="UpdatePassword" />,
+              }}
+            />
+          </Stack>          
           <StatusBar style="auto" />
           <ThemedToast />
         </SurveyProvider>

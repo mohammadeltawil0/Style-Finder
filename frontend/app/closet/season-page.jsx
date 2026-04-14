@@ -27,7 +27,7 @@ export default function SeasonPage({ season, setSeason, setPage, goBack, uri}) {
       id: "SPRING",
       label: "Spring",
       emoji: "🌷",
-      subheader: "Light and breezy outfits",
+      subheader: "Light but cozy outfits",
     },
     {
       id: "SUMMER",

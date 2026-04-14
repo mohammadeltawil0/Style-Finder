@@ -36,11 +36,25 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserById(id));
     }
 
+    // GET /api/users/by-username?username={username}
+    @GetMapping("/by-username")
+    public ResponseEntity<UserDto> getUserByUsername(@RequestParam String username) {
+        return ResponseEntity.ok(userService.getUserByUsername(username));
+    }
+
     // GET /api/users
     @GetMapping
     public ResponseEntity<List<UserDto>> getAllUsers() {
         return ResponseEntity.ok(userService.getAllUsers());
     }
+
+    // GET /api/users/exists?username=...
+    @GetMapping("/exists")
+    public ResponseEntity<Boolean> usernameExists(@RequestParam String username) {
+        return ResponseEntity.ok(userService.usernameExists(username));
+    }
+
+
 
     // PUT /api/users/{id}
     @PutMapping("/{id}")
