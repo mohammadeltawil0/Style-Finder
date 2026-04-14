@@ -10,9 +10,13 @@ import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.UserService;
+import CS431.Style_Finder.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.beans.factory.annotation.Autowired;
+import CS431.Style_Finder.dto.auth.LoginResponseDto;
 
 
 import java.util.List;
@@ -24,6 +28,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserDto createUser(UserDto dto) {
@@ -44,7 +49,9 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            User saved = userRepository.save(userMapper.toEntity(dto));
+            User user = userMapper.toEntity(dto);
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            User saved = userRepository.save(user);
             return userMapper.toDto(saved);
         } catch (Exception e) {
             throw new UserCreationException("Failed to create user", e);
@@ -97,7 +104,7 @@ public class UserServiceImpl implements UserService {
             }
 
             if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-                user.setPassword(dto.getPassword());
+                user.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
             if (dto.getProfileImageUrl() != null) {
@@ -121,18 +128,22 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
-    public UserDto login(String username, String password) {
+    private final JwtUtil jwtUtil;
+    public LoginResponseDto login(String username, String password) {
+
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new InvalidCredentialsException());
 
-        if (!user.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new InvalidCredentialsException();
         }
 
-        return UserDto.builder()
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .build();
+        String token = jwtUtil.generateToken(user.getUsername());
+        System.out.println("USERNAME: " + username);
+        System.out.println("PASSWORD: " + password);
+        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+
+        return new LoginResponseDto(user.getUserId(), token);
     }
 
     @Override

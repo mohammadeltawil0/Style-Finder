@@ -11,5 +11,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginResponseDto {
     private Long userId;
-    private String username;
+    private String token;
+    //private String username;
 }

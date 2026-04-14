@@ -1,6 +1,7 @@
 package CS431.Style_Finder.controller;
 
 import CS431.Style_Finder.dto.UserDto;
+import CS431.Style_Finder.dto.auth.LoginResponseDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -99,15 +100,16 @@ class UserControllerTest {
         request.setUsername("stella");
         request.setPassword("password");
 
-        UserDto user = new UserDto();
-        user.setUsername("stella");
+        LoginResponseDto mockResponse = new LoginResponseDto(1L, "fake-jwt-token");
 
-        when(userService.login("stella", "password")).thenReturn(user);
+        when(userService.login("stella", "password"))
+                .thenReturn(mockResponse);
 
-        ResponseEntity<?> response = userController.login(request);
+        ResponseEntity<LoginResponseDto> response = userController.login(request);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals("stella", ((UserDto) response.getBody()).getUsername());
+        assertEquals(1L, response.getBody().getUserId());
+        assertEquals("fake-jwt-token", response.getBody().getToken());
     }
 
     //Login failure
