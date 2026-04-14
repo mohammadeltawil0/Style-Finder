@@ -4,7 +4,7 @@ import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, TextInput, Text, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
-import { apiClient } from "../../scripts/apiClient";
+import { apiClient, describeApiError } from "../../scripts/apiClient";
 import Toast from 'react-native-toast-message';
 import { useSurvey } from "context/SurveyContext";
 
@@ -71,10 +71,14 @@ export default function Login() {
       setResetUsername("");
       setNewPassword("");
     } catch (error) {
-      const status = error.response?.status;
+      const details = describeApiError(error);
+      const status = details.status;
+
+      console.error("Reset password failed:", details);
+
       Toast.show({ type: 'error',
         text1: 'Reset Failed',
-        text2: status === 404 ? 'Username not found.' : 'Something went wrong.',
+        text2: status === 404 ? 'Username not found.' : details.message,
       });
     } finally {
       setResetLoading(false);
@@ -90,35 +94,54 @@ export default function Login() {
       });
       return;
     }
+    let loginData;
+
     try {
       console.log("Sending login request...");
       const response = await apiClient.post("/api/users/login", {
-        username: username,
-        password: password,
+        username,
+        password,
       });
 
-      const data = response.data;
-      console.log("Login successful:", data);
+      loginData = response.data;
+      console.log("Login successful:", loginData);
+    } catch (error) {
+      const details = describeApiError(error);
+      const status = details.status;
 
-      let hasPreferences = false;
+      console.error("Login request failed:", details);
 
-      const prefResponse = await apiClient
-      .get(`/api/preferences/${data.userId}`)
-      .then(res => res)
-      .catch(err => {
-        if (err.response?.status === 404) {
-          return null; 
-        }
-        throw err; 
+      const messages = {
+        401: 'Invalid username or password.',
+        500: details.message || 'Server error. Please try again later.',
+      };
+
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: messages[status] || details.message || 'Something went wrong.',
       });
+      return;
+    }
 
-      if (prefResponse && prefResponse.data) {
-        hasPreferences = true;
+    let hasPreferences = false;
+    try {
+      const prefResponse = await apiClient.get(`/api/preferences/${loginData.userId}`);
+      hasPreferences = Boolean(prefResponse?.data);
+    } catch (error) {
+      const details = describeApiError(error);
+
+      if (details.status !== 404) {
+        console.error("Preferences check failed after login:", details);
       }
-      
+
+      hasPreferences = false;
+    }
+
+    try {
       resetAnswers();
-      await AsyncStorage.setItem("username", data.username);  // ← moved here
-      await AsyncStorage.setItem("userId", data.userId.toString()); // ← moved here
+      await AsyncStorage.setItem("username", loginData.username);
+      await AsyncStorage.setItem("userId", String(loginData.userId));
 
       Toast.show({
         type: 'success',
@@ -127,24 +150,16 @@ export default function Login() {
       });
 
       if (hasPreferences) {
-        router.replace("/(tabs)"); //for returniing user
+        router.replace("/(tabs)");
       } else {
-        router.replace("/screens/survey/preferences1"); //new user
+        router.replace("/screens/survey/preferences1");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-
-      const status = error.response?.status;
-
-      const messages = {
-        401: 'Invalid username or password.',
-        500: 'Server error. Please try again later.', //TO DO: idk if this implemented in backend
-      };
-
+      console.error("Post-login client step failed:", error);
       Toast.show({
         type: 'error',
-        text1: 'Login Failed',
-        text2: messages[status] || 'Something went wrong.',
+        text1: 'Login Partially Completed',
+        text2: 'Signed in, but app setup failed. Please retry.',
       });
     }
   }

@@ -129,7 +129,10 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException();
         }
 
-        return userMapper.toDto(user);
+        return UserDto.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .build();
     }
 
     @Override

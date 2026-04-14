@@ -83,7 +83,7 @@ function EditProfile() {
             mediaTypes: ["images"],
             allowsEditing: true,
             aspect: [1, 1],
-            quality: 1,
+            quality: 0.4,
         });
 
         if (!result.canceled) {
@@ -95,7 +95,21 @@ function EditProfile() {
         const base64 = await FileSystem.readAsStringAsync(uri, {
             encoding: "base64",
         });
-        return `data:image/jpeg;base64,${base64}`;
+
+        const extensionMatch = uri.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+        const extension = extensionMatch?.[1]?.toLowerCase();
+        const mimeTypeMap = {
+            jpg: "image/jpeg",
+            jpeg: "image/jpeg",
+            png: "image/png",
+            webp: "image/webp",
+            gif: "image/gif",
+            heic: "image/heic",
+            heif: "image/heif",
+        };
+        const mimeType = mimeTypeMap[extension] || "image/jpeg";
+
+        return `data:${mimeType};base64,${base64}`;
     };
 
     const updateUserProfile = async ({ payload }) => {
