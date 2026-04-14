@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import { Image, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect } from "expo-router";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "../scripts/apiClient";
 
 const MAX_DATA_URI_LENGTH = 250000;
 
 export default function ProfilePic({ username, style, containerStyle, imageUrl, onPress }) {
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [profilePic] = useState(
         require("../assets/images/placeholder.png")
     );
@@ -34,19 +37,45 @@ export default function ProfilePic({ username, style, containerStyle, imageUrl, 
         queryFn: async () => {
             const savedImageUrl = await AsyncStorage.getItem("profileImageUrl");
 
-            if (!savedImageUrl) {
+            if (savedImageUrl && isSupportedImageSource(savedImageUrl)) {
+                return savedImageUrl;
+            }
+
+            if (savedImageUrl && !isSupportedImageSource(savedImageUrl)) {
+                await AsyncStorage.setItem("profileImageUrl", "");
+            }
+
+            const storedUserId = await AsyncStorage.getItem("userId");
+            const parsedUserId = Number(storedUserId);
+
+            if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) {
                 return "";
             }
 
-            if (!isSupportedImageSource(savedImageUrl)) {
+            try {
+                const response = await apiClient.get(`/api/users/${parsedUserId}`);
+                const remoteImageUrl = response?.data?.profileImageUrl || "";
+
+                if (isSupportedImageSource(remoteImageUrl)) {
+                    await AsyncStorage.setItem("profileImageUrl", remoteImageUrl);
+                    return remoteImageUrl;
+                }
+
                 await AsyncStorage.setItem("profileImageUrl", "");
                 return "";
+            } catch (error) {
+                console.error("Failed to fetch profile image:", error?.response?.data || error?.message || error);
+                return "";
             }
-
-            return savedImageUrl;
         },
-        staleTime: 0,
+        staleTime: 30000,
     });
+
+    useFocusEffect(
+        useCallback(() => {
+            queryClient.invalidateQueries({ queryKey: ["profileImageUrl"] });
+        }, [queryClient])
+    );
 
     const resolvedImageUrl = imageUrl || cachedProfileImageUrl;
     const source = isSupportedImageSource(resolvedImageUrl)

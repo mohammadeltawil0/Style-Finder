@@ -266,11 +266,12 @@ export const CustomHeader = ({ page }) => {
           )}
         </View>
         {!hideSettingsIcon && (
-          <TouchableOpacity onPress={() => router.push("/settings/Profile")}>
-            <ProfilePic style={{
+          <ProfilePic
+            onPress={() => router.push("/settings/Profile")}
+            style={{
               borderColor: theme.colors.text,
-            }} />
-          </TouchableOpacity>
+            }}
+          />
         )}
       </View>
     </SafeAreaView>

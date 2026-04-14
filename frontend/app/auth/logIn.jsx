@@ -143,6 +143,14 @@ export default function Login() {
       await AsyncStorage.setItem("username", loginData.username);
       await AsyncStorage.setItem("userId", String(loginData.userId));
 
+      try {
+        const userResponse = await apiClient.get(`/api/users/${loginData.userId}`);
+        await AsyncStorage.setItem("profileImageUrl", userResponse?.data?.profileImageUrl || "");
+      } catch (error) {
+        const details = describeApiError(error);
+        console.error("Failed to hydrate profile image after login:", details);
+      }
+
       Toast.show({
         type: 'success',
         text1: 'Welcome back!',
