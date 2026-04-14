@@ -6,62 +6,35 @@ import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { apiClient } from "../../scripts/apiClient";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
+import EditModal from "./edit-modal";
+import Toast from "react-native-toast-message";
+import AntDesign from "@expo/vector-icons/AntDesign";
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
 
-const sanitize = (type, str) => {
-    if (typeof str !== "string") return "";
+const titleCaseFromEnum = (value) => {
+    if (value === null || value === undefined || value === "") return "Not specified";
 
-    const titleCaseIfAllCaps = (value) => {
-        if (!value) return value;
-        const hasLetters = /[a-z]/i.test(value);
-        if (!hasLetters || value !== value.toUpperCase()) return value;
-
-        const lowered = value.toLowerCase();
-        return lowered.replace(/\b\w/g, (char) => char.toUpperCase());
+    const raw = String(value);
+    const specialMap = {
+        PLAID_OR_FLANNEL: "Plaid/Flannel",
+        GEOMETRIC_OR_ABSTRACT: "Geometric/Abstract",
+        PARTY_OR_NIGHT_OUT: "Party/Night Out",
+        ACTIVE_OR_SPORT: "Active/Sport",
+        WORK_OR_SMART: "Work/Smart",
+        KNEE_LENGTH_OR_BERMUDA: "Knee Length/Bermuda",
+        MAXI_OR_FULL_LENGTH: "Maxi/Full Length",
+        MIDI_OR_CAPRI: "Midi/Capri",
+        ALL_SEASONS: "All Seasons",
     };
 
-    if (type === "pattern") {
-        if (str === "GEOMETRIC_OR_ABSTRACT") {
-            return "Geometric/Abstract";
-        } else if (str === "PLAID_OR_FLANNEL") {
-            return "Plaid/Flannel";
-        } else {
-            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-        }
-    }
+    if (specialMap[raw]) return specialMap[raw];
 
-    if (type === "formality") {
-        if (str === "PARTY_OR_NIGHT_OUT") {
-            return "Party/Night Out";
-        } else if (str === "ACTIVE_OR_SPORT") {
-            return "Active/Sport";
-        } else if (str === "WORK_OR_SMART") {
-            return "Work/Smart";
-        } else {
-            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-        }
-    }
-
-    if (type === "material") {
-        if (str === "Leather-Faux-Leather") {
-            return "Leather/Faux Leather";
-        } else {
-            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-        }
-    }
-
-    if (type === "length") {
-        if (str === "KNEE_LENGTH_OR_BERMUDA") {
-            return "Knee Length/Bermuda";
-        } else if (str === "MAXI_OR_FULL_LENGTH") {
-            return "Maxi/Full Length";
-        } else if (str === "MIDI_OR_CAPRI") {
-            return "Midi/Capri";
-        } else {
-            return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-        }
-    }
-
-    return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+    return raw
+        .replace(/[_-]/g, " ")
+        .toLowerCase()
+        .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
 const MATERIAL_LABELS = {
@@ -112,14 +85,14 @@ const materialToLabel = (value) => {
         other: 7,
     };
 
-    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : sanitize("material", raw);
+    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
 };
 
 // TO DO: edit item logic
 export default function EditItemsModal({ item, setModalVisible }) {
     const [uri, setUri] = useState(null);
-    const [category, setCategory] = useState("Top");
-    const [pattern, setPattern] = useState("solid-unicolor");
+    const [category, setCategory] = useState("TOP");
+    const [pattern, setPattern] = useState("SOLID");
     const [color, setColor] = useState("red");
     const [material, setMaterial] = useState("cotton");
     const [event, setEvent] = useState("casual");
@@ -127,7 +100,16 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [season, setSeason] = useState(null);
     const [length, setLength] = useState(null);
     const [bulk, setBulk] = useState(null);
+    const [imageDataForSave, setImageDataForSave] = useState(null);
     const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
+    const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
+    const [isPatternModalVisible, setIsPatternModalVisible] = useState(false);
+    const [isFormalityModalVisible, setIsFormalityModalVisible] = useState(false);
+    const [isMaterialModalVisible, setIsMaterialModalVisible] = useState(false);
+    const [isFitModalVisible, setIsFitModalVisible] = useState(false);
+    const [isSeasonModalVisible, setIsSeasonModalVisible] = useState(false);
+    const [isLengthModalVisible, setIsLengthModalVisible] = useState(false);
+    const [isBulkModalVisible, setIsBulkModalVisible] = useState(false);
 
     const theme = useTheme();
     const queryClient = useQueryClient();
@@ -141,6 +123,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
         if (value === "SLIM") return 0;
         if (value === "REGULAR") return 1;
         if (value === "LOOSE") return 2;
+        if (value === "OVERSIZED") return 2;
         return 1;
     };
 
@@ -149,10 +132,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
         const map = {
             Top: "TOP",
             Bottom: "BOTTOM",
-            Dress: "DRESS",
-            Jacket: "JACKET",
-            Accessory: "ACCESSORY",
-            Shoes: "SHOES",
+            Outerwear: "OUTERWEAR",
+            "Full Body": "FULL_BODY"
         };
         return map[value] || value;
     };
@@ -260,6 +241,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
         if (!item) return;
 
         setUri(item.imageUrl || item.uri || null);
+        setImageDataForSave(item.imageUrl || item.uri || null);
         setCategory(normalizeCategory(item.type || item.category));
         setPattern(normalizePattern(item.pattern));
         setColor(item.color || null);
@@ -279,6 +261,80 @@ export default function EditItemsModal({ item, setModalVisible }) {
             ? (convertedFit = 1)
             : (convertedFit = 2);
 
+    const CATEGORY_OPTIONS = [
+        { label: "Top", value: "TOP" },
+        { label: "Bottom", value: "BOTTOM" },
+        { label: "Full Body", value: "FULL_BODY" },
+        { label: "Outerwear", value: "OUTERWEAR" },
+    ];
+
+    const PATTERN_OPTIONS = [
+        { label: "Solid", value: "SOLID" },
+        { label: "Striped", value: "STRIPED" },
+        { label: "Plaid/Flannel", value: "PLAID_OR_FLANNEL" },
+        { label: "Floral", value: "FLORAL" },
+        { label: "Graphic", value: "GRAPHIC" },
+        { label: "Geometric/Abstract", value: "GEOMETRIC_OR_ABSTRACT" },
+    ];
+
+    const FORMALITY_OPTIONS = [
+        { label: "Versatile", value: "VERSATILE" },
+        { label: "Casual", value: "CASUAL" },
+        { label: "Work/Smart", value: "WORK_OR_SMART" },
+        { label: "Party/Night Out", value: "PARTY_OR_NIGHT_OUT" },
+        { label: "Formal", value: "FORMAL" },
+        { label: "Active/Sport", value: "ACTIVE_OR_SPORT" },
+        { label: "Business Casual", value: "BUSINESS_CASUAL" },
+    ];
+
+    const MATERIAL_OPTIONS = [
+        { label: "Cotton", value: 1 },
+        { label: "Linen/Hemp", value: 2 },
+        { label: "Wool/Fleece", value: 3 },
+        { label: "Silk/Satin", value: 4 },
+        { label: "Leather/Faux Leather", value: 5 },
+        { label: "Synthetics", value: 6 },
+        { label: "Other", value: 7 },
+    ];
+
+    const FIT_OPTIONS = [
+        { label: "Slim", value: "SLIM" },
+        { label: "Regular", value: "REGULAR" },
+        { label: "Loose", value: "LOOSE" },
+        { label: "Oversized", value: "OVERSIZED" },
+    ];
+
+    const SEASON_OPTIONS = [
+        { label: "Spring", value: "SPRING" },
+        { label: "Summer", value: "SUMMER" },
+        { label: "Fall", value: "FALL" },
+        { label: "Winter", value: "WINTER" },
+        { label: "All Seasons", value: "ALL_SEASONS" },
+    ];
+
+    const LENGTH_OPTIONS = [
+        { label: "Sleeveless", value: "SLEEVELESS" },
+        { label: "Cap", value: "CAP" },
+        { label: "Short Sleeve", value: "SHORT_SLEEVE" },
+        { label: "Three Quarter", value: "THREE_QUARTER" },
+        { label: "Long Sleeve", value: "LONG_SLEEVE" },
+        { label: "Above Knee", value: "ABOVE_KNEE" },
+        { label: "Knee Length/Bermuda", value: "KNEE_LENGTH_OR_BERMUDA" },
+        { label: "Midi/Capri", value: "MIDI_OR_CAPRI" },
+        { label: "Maxi/Full Length", value: "MAXI_OR_FULL_LENGTH" },
+    ];
+
+    const BULK_OPTIONS = [
+        { label: "Thin", value: 0 },
+        { label: "Regular", value: 1 },
+        { label: "Thick", value: 2 },
+    ];
+
+    const getOptionLabel = (options, value) => {
+        if (value === null || value === undefined || value === "") return "Not specified";
+        return options.find((option) => option.value === value)?.label || titleCaseFromEnum(value);
+    };
+
     const deleteItemMutation = useMutation({
         mutationFn: async (itemId) => {
             await apiClient.delete(`/api/items/${itemId}`);
@@ -286,11 +342,93 @@ export default function EditItemsModal({ item, setModalVisible }) {
         onSuccess: async () => {
             // Keep query keys aligned with ClosetScreen useQuery(['items', userId]).
             await queryClient.invalidateQueries({ queryKey: ["items"] });
+            Toast.show({
+                type: "success",
+                text1: "Item deleted",
+                text2: "The item was removed successfully.",
+            });
             setIsDeleteModalVisible(false);
             setModalVisible(false);
         },
         onError: (error) => {
             console.error("Failed to delete item:", error);
+            Toast.show({
+                type: "error",
+                text1: "Delete failed",
+                text2: "We could not delete this item. Please try again.",
+            });
+        },
+    });
+
+    const updateItemMutation = useMutation({
+        mutationFn: async (changes) => {
+            const itemId = item?.itemId ?? item?.id;
+
+            if (!itemId) {
+                throw new Error("Missing item id for update.");
+            }
+
+            const payload = {
+                userId: item?.userId,
+                type: changes?.type ?? category,
+                color,
+                pattern: changes?.pattern ?? pattern,
+                length: changes?.length ?? length,
+                material: changes?.material ?? material,
+                bulk: changes?.bulk ?? bulk,
+                seasonWear: changes?.seasonWear ?? season,
+                formality: changes?.formality ?? event,
+                fit:
+                    changes?.fit ??
+                    (convertedFit === 0 ? "SLIM" : convertedFit === 1 ? "REGULAR" : "LOOSE"),
+                imageUrl: changes?.imageUrl ?? imageDataForSave,
+            };
+
+            const response = await apiClient.put(`/api/items/${itemId}`, payload);
+            return response.data;
+        },
+        onSuccess: async (updatedItem) => {
+            if (updatedItem?.type) {
+                setCategory(updatedItem.type);
+            }
+            if (updatedItem?.pattern) {
+                setPattern(updatedItem.pattern);
+            }
+            if (updatedItem?.formality) {
+                setEvent(updatedItem.formality);
+            }
+            if (updatedItem?.material !== null && updatedItem?.material !== undefined) {
+                setMaterial(normalizeMaterial(updatedItem.material));
+            }
+            if (updatedItem?.fit) {
+                setFit(fitToSliderValue(updatedItem.fit));
+            }
+            if (updatedItem?.seasonWear || updatedItem?.season) {
+                setSeason(normalizeSeason(updatedItem.seasonWear || updatedItem.season));
+            }
+            if (updatedItem?.length) {
+                setLength(normalizeLength(updatedItem.length));
+            }
+            if (updatedItem?.bulk !== null && updatedItem?.bulk !== undefined) {
+                setBulk(normalizeBulk(updatedItem.bulk));
+            }
+            if (updatedItem?.imageUrl) {
+                setImageDataForSave(updatedItem.imageUrl);
+            }
+            await queryClient.invalidateQueries({ queryKey: ["items"] });
+            Toast.show({
+                type: "success",
+                text1: "Item updated",
+                text2: "Your changes were saved.",
+            });
+        },
+        onError: (error) => {
+            console.error("Failed to update item category:", error);
+            Toast.show({
+                type: "error",
+                text1: "Update failed",
+                text2: "We could not save your changes. Please try again.",
+            });
         },
     });
 
@@ -305,10 +443,61 @@ export default function EditItemsModal({ item, setModalVisible }) {
         deleteItemMutation.mutate(resolvedItemId);
     };
 
+    const convertToBase64 = async (localUri) => {
+        const base64 = await FileSystem.readAsStringAsync(localUri, {
+            encoding: "base64",
+        });
+        return `data:image/jpeg;base64,${base64}`;
+    };
+
+    const pickImage = async () => {
+        if (updateItemMutation.isPending) return;
+
+        // 1. Request permission
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (status !== "granted") {
+            Toast.show({
+                type: "error",
+                text1: "Permission required",
+                text2: "Allow photo access to update this item image.",
+            });
+            return;
+        }
+
+        // 2. Launch the library
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ["images"],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+
+        // 3. Handle the result
+        if (result.canceled || !result.assets?.length) return;
+
+        const pickedUri = result.assets[0].uri;
+        setUri(pickedUri);
+
+        try {
+            const imageData = await convertToBase64(pickedUri);
+            setImageDataForSave(imageData);
+            updateItemMutation.mutate({ imageUrl: imageData });
+        } catch (error) {
+            console.error("Failed to process selected image:", error);
+            Toast.show({
+                type: "error",
+                text1: "Image update failed",
+                text2: "Could not process this image. Please try another one.",
+            });
+        }
+    };
+
     const displayValue = (value, type = null) => {
         if (value === null || value === undefined || value === "") return "Not specified";
-        if (type === "pattern") return sanitize("pattern", value);
-        if (type === "formality") return sanitize("formality", value);
+        if (type === "category") return getOptionLabel(CATEGORY_OPTIONS, value);
+        if (type === "pattern") return getOptionLabel(PATTERN_OPTIONS, value);
+        if (type === "formality") return titleCaseFromEnum(value);
         if (type === "material") {
             return materialToLabel(value);
         }
@@ -320,24 +509,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
             };
             return typeof value === "number" ? bulkMap[value] || "Not specified" : String(value);
         }
-        if (type === "length") return sanitize("length", value);
-        if (type === "category") return sanitize("category", value);
-        if (type === "season") return sanitize("season", value);
-        return String(value).replace(/[_-]/g, " ");
+        if (type === "length") return titleCaseFromEnum(value);
+        if (type === "season") return titleCaseFromEnum(value);
+        return titleCaseFromEnum(value);
     };
 
     return (
         <>
             <View
-                style={[
-                    styles.container,
-                    {
-                        backgroundColor: theme.colors.background,
-                    },
-                ]}
+                style={{ backgroundColor: theme.colors.background, paddingBottom: 30 }}
             >
                 <ScrollView
                     contentContainerStyle={{
+                        paddingHorizontal: 30,
                         flexGrow: 1,
                         alignItems: "stretch",
                         width: "100%",
@@ -346,14 +530,24 @@ export default function EditItemsModal({ item, setModalVisible }) {
                     <View className="chevronView" style={styles.chevronView}>
                         <Pressable
                             onPress={() => setModalVisible(false)}
-                            style={{ width: 30, height: 30 }}
+                            style={[styles.topActionButton,
+                                // { backgroundColor: theme.colors.card }
+                            ]}
                         >
                             <Entypo name="chevron-left" size={30} color="black" />
                         </Pressable>
+                        <Pressable
+                            style={[styles.topActionButton,
+                            { backgroundColor: theme.colors.tabIconSelected }
+                            ]}
+                            onPress={() => setIsDeleteModalVisible(true)}>
+                            <FontAwesome6 name="trash" size={24} color={theme.colors.text} />
+                        </Pressable>
                     </View>
                     {!hasImageUrl ? (
-                        <View
-                            className="imageContainer"
+                        <TouchableOpacity
+                            onPress={pickImage}
+                            disabled={updateItemMutation.isPending}
                             style={[
                                 styles.imageContainer,
                                 {
@@ -368,9 +562,22 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             <ThemedText style={{ textAlign: "center" }}>
                                 No image found for this item.
                             </ThemedText>
-                        </View>
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    right: 6,
+                                    top: 6,
+                                    borderRadius: 12,
+                                    padding: 4,
+                                }}
+                            >
+                                <AntDesign name="edit" size={20} color={theme.colors.text} />
+                            </View>
+                        </TouchableOpacity>
                     ) : (
-                        <View
+                        <TouchableOpacity
+                            onPress={pickImage}
+                            disabled={updateItemMutation.isPending}
                             className="imageContainer"
                             style={[
                                 styles.imageContainer,
@@ -386,16 +593,20 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 style={{ width: "100%", height: "100%" }}
                                 resizeMode="cover"
                             />
-                        </View>
+                            <View
+                                style={{
+                                    position: "absolute",
+                                    right: 6,
+                                    top: 6,
+                                    borderRadius: 12,
+                                    padding: 4,
+                                    backgroundColor: "rgba(255,255,255,0.5)",
+                                }}
+                            >
+                                <AntDesign name="edit" size={20} color={theme.colors.text} />
+                            </View>
+                        </TouchableOpacity>
                     )}
-                    <TouchableOpacity
-                        style={[styles.deleteBtn, { backgroundColor: theme.colors.tabIconSelected }]}
-                        onPress={() => setIsDeleteModalVisible(true)}
-                    >
-                        <ThemedText style={{ color: theme.colors.text, fontFamily: theme.fonts.bold }}>
-                            Delete Item
-                        </ThemedText>
-                    </TouchableOpacity>
                     <View
                         style={[
                             styles.responseContainer,
@@ -442,11 +653,17 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 justifyContent: "center",
                             }}
                         >
-                            <Ionicons
-                                name="create"
-                                size={20}
-                                color={theme.colors.text}
-                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsCategoryModalVisible(true);
+                                }}
+                            >
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
                     <View
@@ -488,18 +705,22 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 {displayValue(pattern, "pattern")}
                             </ThemedText>
                         </View>
-                        {!color && (
-                            <View
-                                className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                        <View
+                            className="editContainer"
+                            style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
+                        >
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsPatternModalVisible(true);
+                                }}
                             >
                                 <Ionicons
                                     name="create"
                                     size={20}
                                     color={theme.colors.text}
                                 />
-                            </View>
-                        )}
+                            </TouchableOpacity>
+                        </View>
                     </View>
                     {color && (
                         <View
@@ -560,7 +781,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
                                 <Ionicons
                                     name="create"
@@ -611,13 +832,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         </View>
                         <View
                             className="editContainer"
-                            style={{ flexGrow: 1, alignItems: "flex-end" }}
+                            style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                         >
-                            <Ionicons
-                                name="create"
-                                size={20}
-                                color={theme.colors.text}
-                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsFormalityModalVisible(true);
+                                }}
+                            >
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
                     <View
@@ -661,13 +888,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         </View>
                         <View
                             className="editContainer"
-                            style={{ flexGrow: 1, alignItems: "flex-end" }}
+                            style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                         >
-                            <Ionicons
-                                name="create"
-                                size={20}
-                                color={theme.colors.text}
-                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsMaterialModalVisible(true);
+                                }}
+                            >
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
                     <View
@@ -706,18 +939,27 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                {displayValue(convertedFit === 0 ? "Skinny" : convertedFit === 1 ? "Regular" : "Oversized")}
+                                {getOptionLabel(
+                                    FIT_OPTIONS,
+                                    convertedFit === 0 ? "SLIM" : convertedFit === 1 ? "REGULAR" : "LOOSE",
+                                )}
                             </ThemedText>
                         </View>
                         <View
                             className="editContainer"
-                            style={{ flexGrow: 1, alignItems: "flex-end" }}
+                            style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                         >
-                            <Ionicons
-                                name="create"
-                                size={20}
-                                color={theme.colors.text}
-                            />
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setIsFitModalVisible(true);
+                                }}
+                            >
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
+                            </TouchableOpacity>
                         </View>
                     </View>
                     {/* OPTIONAL PARAMETERS */}
@@ -763,13 +1005,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsSeasonModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     ) : (
@@ -803,13 +1051,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsSeasonModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     )}
@@ -855,13 +1109,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsLengthModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     ) : (
@@ -895,13 +1155,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsLengthModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     )}
@@ -947,13 +1213,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsBulkModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     ) : (
@@ -987,18 +1259,128 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </View>
                             <View
                                 className="editContainer"
-                                style={{ flexGrow: 1, alignItems: "flex-end" }}
+                                style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        setIsBulkModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     )}
                 </ScrollView>
             </View>
+
+            <EditModal
+                modalVisible={isCategoryModalVisible}
+                setModalVisible={setIsCategoryModalVisible}
+                value={category}
+                onSelect={(nextCategory) => {
+                    setCategory(nextCategory);
+                    updateItemMutation.mutate({ type: nextCategory });
+                }}
+                options={CATEGORY_OPTIONS}
+                title="Edit Category"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isPatternModalVisible}
+                setModalVisible={setIsPatternModalVisible}
+                value={pattern}
+                onSelect={(nextPattern) => {
+                    setPattern(nextPattern);
+                    updateItemMutation.mutate({ pattern: nextPattern });
+                }}
+                options={PATTERN_OPTIONS}
+                title="Edit Pattern"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isFormalityModalVisible}
+                setModalVisible={setIsFormalityModalVisible}
+                value={event}
+                onSelect={(nextFormality) => {
+                    setEvent(nextFormality);
+                    updateItemMutation.mutate({ formality: nextFormality });
+                }}
+                options={FORMALITY_OPTIONS}
+                title="Edit Formality"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isMaterialModalVisible}
+                setModalVisible={setIsMaterialModalVisible}
+                value={material}
+                onSelect={(nextMaterial) => {
+                    setMaterial(nextMaterial);
+                    updateItemMutation.mutate({ material: nextMaterial });
+                }}
+                options={MATERIAL_OPTIONS}
+                title="Edit Material"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isFitModalVisible}
+                setModalVisible={setIsFitModalVisible}
+                value={convertedFit === 0 ? "SLIM" : convertedFit === 1 ? "REGULAR" : "LOOSE"}
+                onSelect={(nextFit) => {
+                    setFit(fitToSliderValue(nextFit));
+                    updateItemMutation.mutate({ fit: nextFit });
+                }}
+                options={FIT_OPTIONS}
+                title="Edit Fit"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isSeasonModalVisible}
+                setModalVisible={setIsSeasonModalVisible}
+                value={season}
+                onSelect={(nextSeason) => {
+                    setSeason(nextSeason);
+                    updateItemMutation.mutate({ seasonWear: nextSeason });
+                }}
+                options={SEASON_OPTIONS}
+                title="Edit Season"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isLengthModalVisible}
+                setModalVisible={setIsLengthModalVisible}
+                value={length}
+                onSelect={(nextLength) => {
+                    setLength(nextLength);
+                    updateItemMutation.mutate({ length: nextLength });
+                }}
+                options={LENGTH_OPTIONS}
+                title="Edit Length"
+                isSaving={updateItemMutation.isPending}
+            />
+
+            <EditModal
+                modalVisible={isBulkModalVisible}
+                setModalVisible={setIsBulkModalVisible}
+                value={bulk}
+                onSelect={(nextBulk) => {
+                    setBulk(nextBulk);
+                    updateItemMutation.mutate({ bulk: nextBulk });
+                }}
+                options={BULK_OPTIONS}
+                title="Edit Bulk"
+                isSaving={updateItemMutation.isPending}
+            />
 
             <Modal
                 visible={isDeleteModalVisible}
@@ -1012,9 +1394,10 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             fontSize: theme.sizes.h2,
                             fontWeight: "700",
                             marginBottom: 8,
+                            fontFamily: theme.fonts.bold,
                         }}>Delete this item?</ThemedText>
                         <ThemedText style={styles.confirmText}>
-                            This action cannot be undone. This will also remove this item from any outfits it's included in, and will thus, remove the outfit as well.
+                            This action cannot be undone. This will remove this item from any outfits it's included in, and will remove outfit as well.
                         </ThemedText>
 
                         <View style={styles.confirmActions}>
@@ -1060,9 +1443,18 @@ const styles = {
         paddingVertical: 20
     },
     chevronView: {
-        justifyContent: "flex-start",
+        justifyContent: "space-between",
+        alignItems: "center",
         paddingVertical: 20,
         width: "100%",
+        flexDirection: "row",
+    },
+    topActionButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 10,
+        alignItems: "center",
+        justifyContent: "center",
     },
     imageContainer: {
         height: 200,
@@ -1120,3 +1512,4 @@ const styles = {
         justifyContent: "center",
     }
 };
+

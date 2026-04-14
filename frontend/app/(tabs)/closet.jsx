@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Feather from "@expo/vector-icons/Feather";
 import {
+  ActivityIndicator,
   Pressable,
   View,
   StyleSheet,
@@ -22,7 +23,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ScrollView } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -50,7 +51,11 @@ export default function ClosetScreen() {
   const fetchItems = async () => {
     if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
-    return response.data;
+    return [...response.data].sort((a, b) => {
+      const aId = Number(a?.itemId ?? a?.id ?? 0);
+      const bId = Number(b?.itemId ?? b?.id ?? 0);
+      return bId - aId;
+    });
   };
 
   useEffect(() => {
@@ -67,7 +72,13 @@ export default function ClosetScreen() {
   }, []);
 
   // replace useFocusEffect loadData with:
-  const { data: items = [], isLoading, refetch } = useQuery({
+  const {
+    data: items = [],
+    isLoading: isItemsLoading,
+    isError: isItemsError,
+    error: itemsError,
+    refetch,
+  } = useQuery({
     queryKey: ['items', userId],
     queryFn: fetchItems,
     enabled: !!userId,
@@ -231,16 +242,17 @@ export default function ClosetScreen() {
   });
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
-      <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
+      {!editItemsModalVisible && (
+        <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
+      )}
       <View style={{ flex: 1, width: "100%", alignItems: "center", position: "relative" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
             item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-          // maybe add a close modal here
           />
         ) : (
-          <View>
+          <View style={{ flex: 1, width: "100%" }}>
             <SearchBar
               value={searchText}
               onChangeText={(text) => setSearchText(text)}
@@ -248,6 +260,48 @@ export default function ClosetScreen() {
             />
             {isItems ? (
               <>
+                {isItemsLoading ? (
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <ActivityIndicator
+                      size="large"
+                      color={theme.colors.tabIconSelected}
+                    />
+                    <ThemedText>Loading your items...</ThemedText>
+                  </View>
+                ) : isItemsError ? (
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
+                    <ThemedText style={{ textAlign: "center" }}>
+                      {itemsError?.message || "Could not load items. Please try again."}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => refetch()}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
+                    >
+                      <ThemedText>Retry</ThemedText>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
                 <View
                   className="item-categories"
                   style={{
@@ -332,6 +386,8 @@ export default function ClosetScreen() {
                 >
                   <Ionicons name="add-sharp" size={40} color="black" />
                 </Pressable>
+                  </>
+                )}
               </>
             ) : (
               // else outfit history
