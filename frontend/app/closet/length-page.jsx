@@ -12,6 +12,7 @@ export default function LengthPage({
   length,
   setLength,
   setPage,
+  goBack,
   uri,
 }) {
   const theme = useTheme();
@@ -191,7 +192,7 @@ export default function LengthPage({
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(7)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
@@ -209,7 +210,7 @@ export default function LengthPage({
             padding: 10,
             width: "35%",
           }}
-          onPress={() => setPage(9)}
+          onPress={() => setPage()}
         >
           <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
         </Pressable>

@@ -1,6 +1,7 @@
 package CS431.Style_Finder.controller;
 
 import CS431.Style_Finder.dto.UserDto;
+import CS431.Style_Finder.dto.auth.LoginResponseDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -25,9 +26,16 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(@RequestBody LoginRequestDto request) {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
         UserDto user = userService.login(request.getUsername(), request.getPassword());
-        return ResponseEntity.ok(user);
+
+        LoginResponseDto response = new LoginResponseDto(
+                user.getUserId(),
+                user.getUsername(),
+            user.getRole() != null ? user.getRole().name() : null
+        );
+
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/users/{id}

@@ -17,7 +17,11 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 
 export default function AddItemScreen() {
-  const [page, setPage] = useState(1);
+  const [navigation, setNavigation] = useState({
+    currentPage: 1,
+    nextPage: 2,
+    previousPage: null,
+  });
   const [uri, setUri] = useState(null);
   const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
@@ -29,9 +33,55 @@ export default function AddItemScreen() {
   const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
+  const [editing, setEditing] = useState(false); // track if user is editing an existing item or adding new
 
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  // Navigation helpers
+  const goToPage = (pageNum, fromPage = null) => {
+    setNavigation({
+      currentPage: pageNum,
+      nextPage: pageNum + 1,
+      previousPage: fromPage !== null ? fromPage : navigation.currentPage,
+    });
+  };
+
+  const goNext = () => {
+    // If editing, go back to review and stop editing
+    if (editing) {
+      setNavigation({
+        currentPage: 10,
+        nextPage: 11,
+        previousPage: 9,
+      });
+      setEditing(false);
+      return;
+    }
+
+    setNavigation((prev) => ({
+      currentPage: prev.nextPage,
+      nextPage: prev.nextPage + 1,
+      previousPage: prev.currentPage,
+    }));
+  };
+
+  console.log("goNext navigation state:", navigation);
+
+  const goBack = () => {
+    setNavigation((prev) => ({
+      currentPage: prev.previousPage,
+      nextPage: prev.currentPage,
+      previousPage: prev.previousPage > 1 ? prev.previousPage - 1 : null,
+    }));
+  };
+
+  console.log("goBack navigation state:", navigation);
+  // Helper to navigate to edit a specific field from review
+  const editField = (fieldPageNum) => {
+    setEditing(true); // Enable editing mode
+    goToPage(fieldPageNum, 10); // 10 is review page, will come back here after edit
+  };
 
   // Convert states to match backend
   //1. Convert fit
@@ -163,12 +213,13 @@ export default function AddItemScreen() {
   return (
     <>
       {/* First Page: camera */}
-      {page === 1 && <CameraPage setUri={setUri} setPage={setPage} uri={uri} />}
+      {navigation.currentPage === 1 && <CameraPage setUri={setUri} setPage={goNext} uri={uri} />}
 
       {/* Second Page: Item Type */}
-      {page === 2 && (
+      {navigation.currentPage === 2 && (
         <CategoryPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           setItemType={setItemType}
           uri={uri}
@@ -176,9 +227,10 @@ export default function AddItemScreen() {
       )}
 
       {/* Third Page: Color */}
-      {page === 3 && (
+      {navigation.currentPage === 3 && (
         <ColorPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           color={color}
           setColor={setColor}
           pattern={pattern}
@@ -190,9 +242,10 @@ export default function AddItemScreen() {
       )}
 
       {/* Fourth Page: Formality */}
-      {page === 4 && (
+      {navigation.currentPage === 4 && (
         <EventPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           formality={formality}
           setFormality={setFormality}
           uri={uri}
@@ -200,18 +253,20 @@ export default function AddItemScreen() {
       )}
 
       {/* Fifth Page: Material  */}
-      {page === 5 && (
+      {navigation.currentPage === 5 && (
         <MaterialPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           material={material}
           setMaterial={setMaterial}
           uri={uri}
         />
       )}
       {/* Sixth Page: Fit */}
-      {page === 6 && (
+      {navigation.currentPage === 6 && (
         <FitPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           fit={fit}
           setFit={setFit}
@@ -220,9 +275,10 @@ export default function AddItemScreen() {
       )}
 
       {/* OPTIONAL PARAMETERS: Season */}
-      {page === 7 && (
+      {navigation.currentPage === 7 && (
         <SeasonPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           season={season}
           setSeason={setSeason}
           uri={uri}
@@ -230,9 +286,10 @@ export default function AddItemScreen() {
       )}
 
       {/* OPTIONAL PARAMETERS: Length */}
-      {page === 8 && (
+      {navigation.currentPage === 8 && (
         <LengthPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           length={length}
           setLength={setLength}
@@ -241,9 +298,10 @@ export default function AddItemScreen() {
       )}
 
       {/* OPTIONAL PARAMETERS: Bulk */}
-      {page === 9 && (
+      {navigation.currentPage === 9 && (
         <BulkPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           bulk={bulk}
           setBulk={setBulk}
           uri={uri}
@@ -251,9 +309,11 @@ export default function AddItemScreen() {
       )}
 
       {/* Eleventh Page: Review */}
-      {page === 10 && (
+      {navigation.currentPage === 10 && (
         <ReviewPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
+          editField={editField}
           uri={uri}
           formality={formality}
           pattern={pattern}

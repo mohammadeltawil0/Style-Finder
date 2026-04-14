@@ -4,7 +4,7 @@ import { useTheme } from "@react-navigation/native";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { View, TextInput, Text, TouchableOpacity, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
-import { apiClient } from "../../scripts/apiClient";
+import { apiClient, describeApiError } from "../../scripts/apiClient";
 import Toast from 'react-native-toast-message';
 import { useSurvey } from "context/SurveyContext";
 
@@ -39,6 +39,9 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+
   const handleResetPassword = async () => {
     if (!resetUsername || !newPassword) {
       Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill in all fields.' });
@@ -71,10 +74,14 @@ export default function Login() {
       setResetUsername("");
       setNewPassword("");
     } catch (error) {
-      const status = error.response?.status;
+      const details = describeApiError(error);
+      const status = details.status;
+
+      console.error("Reset password failed:", details);
+
       Toast.show({ type: 'error',
         text1: 'Reset Failed',
-        text2: status === 404 ? 'Username not found.' : 'Something went wrong.',
+        text2: status === 404 ? 'Username not found.' : details.message,
       });
     } finally {
       setResetLoading(false);
@@ -82,6 +89,8 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
+
     if (!username || !password) {
       Toast.show({
         type: 'error',
@@ -90,35 +99,71 @@ export default function Login() {
       });
       return;
     }
+    let loginData;
+
     try {
       console.log("Sending login request...");
       const response = await apiClient.post("/api/users/login", {
-        username: username,
-        password: password,
+        username,
+        password,
       });
 
-      const data = response.data;
-      console.log("Login successful:", data);
+      loginData = response.data;
+      console.log("Login successful:", loginData);
+    } catch (error) {
+      const details = describeApiError(error);
+      const status = details.status;
 
-      let hasPreferences = false;
+      console.error("Login request failed:", details);
 
-      const prefResponse = await apiClient
-      .get(`/api/preferences/${data.userId}`)
-      .then(res => res)
-      .catch(err => {
-        if (err.response?.status === 404) {
-          return null; 
-        }
-        throw err; 
+      const messages = {
+        401: 'Invalid username or password.',
+        500: details.message || 'Server error. Please try again later.',
+      };
+
+      Toast.show({
+        type: 'error',
+        text1: 'Login Failed',
+        text2: messages[status] || details.message || 'Something went wrong.',
       });
+      return;
+    }
 
-      if (prefResponse && prefResponse.data) {
-        hasPreferences = true;
+    let hasPreferences = false;
+    try {
+      const prefResponse = await apiClient.get(`/api/preferences/${loginData.userId}`);
+      hasPreferences = Boolean(prefResponse?.data);
+    } catch (error) {
+      const details = describeApiError(error);
+
+      if (details.status !== 404) {
+        console.error("Preferences check failed after login:", details);
       }
-      
+
+      hasPreferences = false;
+    }
+
+    try {
       resetAnswers();
-      await AsyncStorage.setItem("username", data.username);  // ← moved here
-      await AsyncStorage.setItem("userId", data.userId.toString()); // ← moved here
+      await AsyncStorage.setItem("username", loginData.username);
+      await AsyncStorage.setItem("userId", String(loginData.userId));
+      let resolvedRole = loginData.role || "";
+      await AsyncStorage.setItem("profileImageUrl", loginData.profileImageUrl || "");
+      
+
+      try {
+        const userResponse = await apiClient.get(`/api/users/${loginData.userId}`);
+        await AsyncStorage.setItem("profileImageUrl", userResponse?.data?.profileImageUrl || "");
+        if (!resolvedRole && userResponse?.data?.role) {
+          resolvedRole = userResponse.data.role;
+        }
+      } catch (error) {
+        const details = describeApiError(error);
+        console.error("Failed to hydrate profile image after login:", details);
+      }
+
+      await AsyncStorage.setItem("role", resolvedRole || "USER");
+
 
       Toast.show({
         type: 'success',
@@ -126,26 +171,22 @@ export default function Login() {
         text2: 'You have successfully logged in.',
       });
 
-      if (hasPreferences) {
+      if (resolvedRole === "ADMIN") {
+        router.replace("/settings/adminFolder/adminLanding");
+      } else if (hasPreferences) {
         router.replace("/(tabs)"); //for returniing user
       } else {
-        router.replace("/screens/survey/preferences1"); //new user
+        router.replace("/screens/survey/preferences1");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-
-      const status = error.response?.status;
-
-      const messages = {
-        401: 'Invalid username or password.',
-        500: 'Server error. Please try again later.', //TO DO: idk if this implemented in backend
-      };
-
+      console.error("Post-login client step failed:", error);
       Toast.show({
         type: 'error',
-        text1: 'Login Failed',
-        text2: messages[status] || 'Something went wrong.',
+        text1: 'Login Partially Completed',
+        text2: 'Signed in, but app setup failed. Please retry.',
       });
+    }finally {
+      setIsLoggingIn(false); 
     }
   }
 

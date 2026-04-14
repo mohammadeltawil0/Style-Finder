@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, formality, setFormality, uri}) {
+export default function EventPage({ setPage, goBack, formality, setFormality, uri }) {
   const theme = useTheme();
   const eventOptions = [
     {
@@ -162,7 +162,7 @@ export default function EventPage({ setPage, formality, setFormality, uri}) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(3)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
