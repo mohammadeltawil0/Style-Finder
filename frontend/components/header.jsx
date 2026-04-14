@@ -6,6 +6,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ThemedText } from "./themed-text";
 import ProfilePic from "./profile-pic";
 import { FontAwesome } from '@expo/vector-icons';
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export const CustomHeader = ({ page }) => {
   const theme = useTheme();
@@ -19,9 +21,20 @@ export const CustomHeader = ({ page }) => {
     page === "survey" ||
     page === "EditProfile" ||
     page === "UpdatePassword" ||
-    page === "adminSettings" ||     
+    page === "adminSettings" || 
+    page === "AdminPortal" ||
+    page === "AdminChangePassword"||
+    page == "adminwelcomepage" ||
     page === "adminEditProfile";
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    const checkRole = async () => {
+      const role = await AsyncStorage.getItem("role");
+      setIsAdmin(role === "ADMIN");
+    };
+    checkRole();
+  }, []);
 
   return (
     <SafeAreaView style={{ flex: 0, backgroundColor: page === "Profile" || page === "EditProfile" || page === "UpdatePassword" ? theme.colors.background : theme.colors.card }}>
@@ -140,25 +153,46 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
+          {page === "AdminPortal" && (
+            <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, }} >
+              ADMIN PORTAL
+            </ThemedText>
+          )}
           {page === "adminSettings" && (
-          <>
-              <TouchableOpacity onPress={() => router.back()}>
+            <>
+              <TouchableOpacity onPress={() => router.replace("/settings/adminFolder/adminUsers")}>
                 <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
               </TouchableOpacity>
-              <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, marginLeft: 10 }}>
-                MANAGE ACCOUNT
+              <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, }} >
+                ADMIN SETTINGS
               </ThemedText>
             </>
+            
           )}
           {page === "adminEditProfile" && (
             <>
-              <TouchableOpacity onPress={() => router.replace("/screens/settings/admin/adminSettings")}>
+              <TouchableOpacity onPress={() => router.replace("/settings/adminFolder/adminSettings")}>
                 <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
               </TouchableOpacity>
               <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text }}>
                 EDIT ACCOUNT
               </ThemedText>
             </>
+          )}
+          {page === "AdminChangePassword" && (
+            <>
+            <TouchableOpacity onPress={() => router.replace("/settings/adminFolder/adminSettings")}>
+                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, }} >
+              CHANGE PASSWORD
+            </ThemedText>
+            </>
+          )}
+          {page === "adminwelcomepage" && (
+            <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, }} >
+              ADMIN WELCOME PAGE
+            </ThemedText>
           )}
           {page === "AdditionalConstraints" && (
             <>
@@ -288,10 +322,12 @@ export const CustomHeader = ({ page }) => {
           )}
         </View>
         {!hideSettingsIcon && (
-          <TouchableOpacity onPress={() => router.push("/settings/Profile")}>
-            <ProfilePic style={{
-              borderColor: theme.colors.text,
-            }} />
+          <TouchableOpacity onPress={() => 
+            isAdmin 
+              ? router.push("/screens/settings/admin/adminSettings") 
+              : router.push("/settings/Profile")
+          }>
+            <ProfilePic style={{ borderColor: theme.colors.text }} />
           </TouchableOpacity>
         )}
       </View>

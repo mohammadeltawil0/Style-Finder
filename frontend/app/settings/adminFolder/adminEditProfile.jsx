@@ -1,5 +1,4 @@
-import { Alert, TextInput, TouchableOpacity, View } from "react-native";
-import { ThemedText, ThemedView } from "../../../components";
+import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";import { ThemedText, ThemedView } from "../../../components";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -16,9 +15,11 @@ function AdminEditProfile() {
   const theme = useTheme();
   const router = useRouter();
   const queryClient = useQueryClient();
+
   const [username, setUsername] = useState("");
   const [editedUsername, setEditedUsername] = useState("");
   const [originalUsername, setOriginalUsername] = useState("");
+
   const [name, setName] = useState("");
   const [originalName, setOriginalName] = useState("");
   const [email, setEmail] = useState("");
@@ -170,9 +171,19 @@ function AdminEditProfile() {
   }, []);
 
   return (
-    <ThemedView gradient style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-      <View style={{ flex: 1, width: "80%", paddingHorizontal: 20, paddingVertical: 30, alignItems: "stretch", gap: 30 }}>
-
+    <ThemedView gradient style={{ flex: 1 }}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={{ flex: 1, paddingVertical: 30, gap: 30 , marginLeft: 15, width:"90%"}}>
+          
         <View style={{ alignItems: "center", gap: 12 }}>
           <View style={{ position: "relative" }}>
             <ProfilePic username={username} imageUrl={profileImageUrl} onPress={pickProfileImage}
@@ -234,6 +245,8 @@ function AdminEditProfile() {
         </TouchableOpacity>
 
       </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
     </ThemedView>
   );
 }

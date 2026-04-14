@@ -28,14 +28,18 @@ export default function AdminLanding() {
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
   logoCircle: {
-    width: 160, height: 160, borderRadius: 80,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
     backgroundColor: "#D4B8A8",
-    justifyContent: "center", alignItems: "center", marginBottom: 32,
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 32,
+    overflow: "hidden",
   },
   logoImage: {
-    width: 160, height: 160, borderRadius: 80,alignItems: "center", justifyContent: "center",
-    backgroundColor: "#D4B8A8",
-    justifyContent: "center", alignItems: "center", marginBottom: 32,
+    width: 160,
+    height: 160,
   },
   welcome: { fontSize: 32, fontWeight: "bold", textAlign: "center", letterSpacing: 1 },
 });

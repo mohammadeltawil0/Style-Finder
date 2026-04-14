@@ -154,6 +154,24 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="adminEditProfile" />,
               }}
             />
+            <Stack.Screen
+              name="settings/adminFolder/adminUsers"
+              options={{
+                header: () => <CustomHeader page="AdminPortal" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUpdatePassword"
+              options={{
+                header: () => <CustomHeader page="AdminChangePassword" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminLanding"
+              options={{
+                header: () => <CustomHeader page="adminwelcomepage" />,
+              }}
+            />
 
           </Stack>          
           <StatusBar style="auto" />

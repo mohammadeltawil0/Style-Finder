@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View, Text, TextInput, FlatList,
   TouchableOpacity, Image, StyleSheet
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
@@ -21,24 +21,26 @@ export default function AdminUsers() {
 
 
   useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                const storedUsername = await AsyncStorage.getItem("username");
-                if (storedUsername) {
-                    setUsername(storedUsername);
-                }
-            } catch (error) {
-                console.error("Error loading user data:", error);
-            }
-        };
+    const loadUserData = async () => {
+      try {
+        const storedUsername = await AsyncStorage.getItem("username");
+        if (storedUsername) {
+          setUsername(storedUsername);
+        }
+      } catch (error) {
+        console.error("Error loading user data:", error);
+      }
+    };
 
-        loadUserData();
-    }, []);
-
-  useEffect(() => {
-    fetchUsers();
-    loadAdminImage();
+    loadUserData();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchUsers();
+      loadAdminImage();
+    }, [])
+  );
 
   const loadAdminImage = async () => {
     const img = await AsyncStorage.getItem("profileImageUrl");
@@ -67,7 +69,7 @@ export default function AdminUsers() {
     <TouchableOpacity
       style={styles.row}
       onPress={() => router.push({
-        pathname: "/screens/settings/admin/adminUserDetail",
+        pathname: "/settings/adminFolder/adminUserDetail",
         params: { userId: item.userId }
       })}
     >

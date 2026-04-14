@@ -14,7 +14,7 @@ public class UserMapper {
                 .username(user.getUsername())
                 .email(user.getEmail())
                 .password(user.getPassword())
-            .profileImageUrl(user.getProfileImageUrl())
+                .profileImageUrl(user.getProfileImageUrl())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .build();
