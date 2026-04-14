@@ -190,19 +190,26 @@ function EditProfile() {
             email.trim() !== originalEmail.trim() ||
             profileImageUrl !== originalProfileImageUrl;
 
+        const trimmedName = name.trim();
         const trimmedUsername = editedUsername.trim();
+        const trimmedEmail = email.trim();
+
+        if (trimmedName === "") {
+            Toast.show({ type: "error", text1: "Name required", text2: "Please enter your name." });
+            return;
+        }
 
         if (trimmedUsername === "") {
             Toast.show({ type: "error", text1: "Username required", text2: "Please enter a username." });
             return;
         }
 
-        if (email.trim() === "") {
+        if (trimmedEmail === "") {
             Toast.show({ type: "error", text1: "Email required", text2: "Please enter an email address." });
             return;
         }
 
-        if (!isValidEmail(email.trim())) {
+        if (!isValidEmail(trimmedEmail)) {
             Toast.show({
                 type: "error",
                 text1: "Invalid email",
@@ -224,9 +231,9 @@ function EditProfile() {
         }
 
         const payload = {
-            firstName: name,
-            username: editedUsername,
-            email,
+            firstName: trimmedName,
+            username: trimmedUsername,
+            email: trimmedEmail,
             profileImageUrl: profileImageData,
         };
 

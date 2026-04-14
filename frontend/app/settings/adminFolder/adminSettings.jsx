@@ -79,13 +79,6 @@ function AdminSettings() {
           shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.3,
           shadowRadius: 3.5, elevation: 5, width: "100%",
         }}>
-          <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}>
-            <TouchableOpacity onPress={() => router.push("/settings/adminFolder/adminUsers")}>
-              <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>
-                Manage Users
-              </ThemedText>
-            </TouchableOpacity>
-          </View>
           <View style={{ backgroundColor: theme.colors.lightBrown, padding: 15, borderBottomLeftRadius: 10, borderBottomRightRadius: 10 }}>
             <TouchableOpacity onPress={handleLogout}>
               <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>

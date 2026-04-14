@@ -25,7 +25,8 @@ export const CustomHeader = ({ page }) => {
     page === "AdminPortal" ||
     page === "AdminChangePassword"||
     page == "adminwelcomepage" ||
-    page === "adminEditProfile";
+    page === "adminEditProfile" ||
+    page === "adminUserDetail";
 
   const [isAdmin, setIsAdmin] = useState(false);
   useEffect(() => {
@@ -193,6 +194,25 @@ export const CustomHeader = ({ page }) => {
             <ThemedText style={{ fontSize: theme.sizes.h2, fontFamily: theme.fonts.bold, color: theme.colors.text, }} >
               ADMIN WELCOME PAGE
             </ThemedText>
+          )}
+          {page === "adminUserDetail" && (
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
+                <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h3,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Back
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           )}
           {page === "AdditionalConstraints" && (
             <>

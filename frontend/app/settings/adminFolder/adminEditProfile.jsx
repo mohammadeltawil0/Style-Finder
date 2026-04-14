@@ -1,4 +1,5 @@
-import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";import { ThemedText, ThemedView } from "../../../components";
+import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import { ThemedText, ThemedView } from "../../../components";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -10,6 +11,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
+
+const MAX_PROFILE_IMAGE_DATA_URI_LENGTH = 2000000;
 
 function AdminEditProfile() {
   const theme = useTheme();
@@ -59,14 +62,28 @@ function AdminEditProfile() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 1,
+      mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.4,
     });
     if (!result.canceled) setProfileImageUrl(result.assets[0].uri);
   };
 
   const convertToBase64 = async (uri) => {
     const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
-    return `data:image/jpeg;base64,${base64}`;
+
+    const extensionMatch = uri.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
+    const extension = extensionMatch?.[1]?.toLowerCase();
+    const mimeTypeMap = {
+      jpg: "image/jpeg",
+      jpeg: "image/jpeg",
+      png: "image/png",
+      webp: "image/webp",
+      gif: "image/gif",
+      heic: "image/heic",
+      heif: "image/heif",
+    };
+    const mimeType = mimeTypeMap[extension] || "image/jpeg";
+
+    return `data:${mimeType};base64,${base64}`;
   };
 
   const updateUserProfile = async ({ payload }) => {
@@ -123,17 +140,26 @@ function AdminEditProfile() {
       email.trim() !== originalEmail.trim() ||
       profileImageUrl !== originalProfileImageUrl;
 
-    if (editedUsername.trim() === "") {
-      Toast.show({ type: "error", text1: "Username required" }); return;
+    const trimmedName = name.trim();
+    const trimmedUsername = editedUsername.trim();
+    const trimmedEmail = email.trim();
+
+    if (trimmedName === "") {
+      Toast.show({ type: "error", text1: "Name required", text2: "Please enter your name." });
+      return;
     }
-    if (email.trim() === "") {
-      Toast.show({ type: "error", text1: "Email required" }); return;
+
+    if (trimmedUsername === "") {
+      Toast.show({ type: "error", text1: "Username required", text2: "Please enter your new username." }); return;
     }
-    if (!isValidEmail(email.trim())) {
+    if (trimmedEmail === "") {
+      Toast.show({ type: "error", text1: "Email required", text2: "Please enter your email." }); return;
+    }
+    if (!isValidEmail(trimmedEmail)) {
       Toast.show({ type: "error", text1: "Invalid email", text2: "Please use a valid domain." }); return;
     }
     if (usernameAvailabilityQuery.data) {
-      Toast.show({ type: "error", text1: "Username already exists" }); return;
+      Toast.show({ type: "error", text1: "Username already exists", text2: "Please choose a different username." }); return;
     }
 
     let profileImageData = profileImageUrl || null;
@@ -141,7 +167,16 @@ function AdminEditProfile() {
       profileImageData = await convertToBase64(profileImageUrl);
     }
 
-    mutate({ payload: { firstName: name, username: editedUsername, email, profileImageUrl: profileImageData }, hasChanges });
+    if (profileImageData?.startsWith("data:image") && profileImageData.length > MAX_PROFILE_IMAGE_DATA_URI_LENGTH) {
+      Toast.show({
+        type: "error",
+        text1: "Image too large",
+        text2: "Please select a smaller image.",
+      });
+      return;
+    }
+
+    mutate({ payload: { firstName: trimmedName, username: trimmedUsername, email: trimmedEmail, profileImageUrl: profileImageData }, hasChanges });
   };
 
   useEffect(() => {
@@ -163,6 +198,8 @@ function AdminEditProfile() {
         setOriginalEmail(user.email || "");
         setProfileImageUrl(user.profileImageUrl || "");
         setOriginalProfileImageUrl(user.profileImageUrl || "");
+        await AsyncStorage.setItem("profileImageUrl", user.profileImageUrl || "");
+        queryClient.setQueryData(["profileImageUrl"], user.profileImageUrl || "");
       } catch (error) {
         console.error("Failed to load admin profile:", error?.response?.data || error?.message);
       }

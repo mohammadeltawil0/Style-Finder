@@ -15,6 +15,7 @@ export default function AdminUsers() {
   const { colors } = useTheme();
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [search, setSearch] = useState("");
   const [adminImage, setAdminImage] = useState("");
   const [username, setUsername] = useState("");
@@ -48,12 +49,32 @@ export default function AdminUsers() {
   };
 
   const fetchUsers = async () => {
+    setIsLoadingUsers(true);
     try {
+      const [storedUserId, storedUsername] = await Promise.all([
+        AsyncStorage.getItem("userId"),
+        AsyncStorage.getItem("username"),
+      ]);
+      const parsedCurrentUserId = Number(storedUserId);
+      const currentUsername = (storedUsername || "").toLowerCase();
+
       const res = await apiClient.get("/api/admin/users");
-      setUsers(res.data);
-      setFiltered(res.data);
+      const visibleUsers = (res.data || []).filter((u) => {
+        const isCurrentUser =
+          (Number.isInteger(parsedCurrentUserId) && u.userId === parsedCurrentUserId) ||
+          (u.username || "").toLowerCase() === currentUsername;
+        const isAdminRole = (u.role || "").toUpperCase() === "ADMIN";
+        return !isCurrentUser && !isAdminRole;
+      });
+
+      setUsers(visibleUsers);
+      setFiltered(visibleUsers);
     } catch (e) {
       console.error(e);
+      setUsers([]);
+      setFiltered([]);
+    } finally {
+      setIsLoadingUsers(false);
     }
   };
 
@@ -65,13 +86,20 @@ export default function AdminUsers() {
     );
   };
 
+  const handleOpenUserDetail = (userId) => {
+    // Clear search before navigating so the list is reset when admin returns.
+    setSearch("");
+    setFiltered(users);
+    router.push({
+      pathname: "/settings/adminFolder/adminUserDetail",
+      params: { userId }
+    });
+  };
+
   const renderUser = ({ item }) => (
     <TouchableOpacity
       style={styles.row}
-      onPress={() => router.push({
-        pathname: "/settings/adminFolder/adminUserDetail",
-        params: { userId: item.userId }
-      })}
+      onPress={() => handleOpenUserDetail(item.userId)}
     >
       {item.profileImageUrl
         ? <Image source={{ uri: item.profileImageUrl }} style={styles.avatar} />
@@ -121,7 +149,7 @@ export default function AdminUsers() {
         contentContainerStyle={{ paddingHorizontal: 16 }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", color: "#999", marginTop: 40 }}>
-            No users found.
+            {isLoadingUsers ? "Loading..." : "No users found."}
           </Text>
         }
       />

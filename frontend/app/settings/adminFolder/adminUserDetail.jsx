@@ -55,11 +55,6 @@ export default function AdminUserDetail() {
     <ThemedView style={{ flex: 1 }}>
       <ScrollView contentContainerStyle={styles.container}>
 
-        <TouchableOpacity onPress={() => router.back()} style={styles.back}>
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-          <Text style={[styles.backText, { color: colors.text }]}>Back</Text>
-        </TouchableOpacity>
-
         {/* Profile image */}
         {user.profileImageUrl
           ? <Image source={{ uri: user.profileImageUrl }} style={styles.profileImg} />
@@ -100,11 +95,6 @@ export default function AdminUserDetail() {
 
 const styles = StyleSheet.create({
   container: { alignItems: "center", padding: 20, paddingTop: 50 },
-  back: {
-    flexDirection: "row", alignSelf: "flex-start",
-    alignItems: "center", marginBottom: 20,
-  },
-  backText: { fontSize: 16, marginLeft: 4 },
   profileImg: { width: 100, height: 100, borderRadius: 50, marginBottom: 12 },
   profilePlaceholder: {
     backgroundColor: "#D4B8A8",

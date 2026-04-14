@@ -6,7 +6,7 @@ import { useFocusEffect } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../scripts/apiClient";
 
-const MAX_DATA_URI_LENGTH = 250000;
+const MAX_DATA_URI_LENGTH = 2000000;
 
 export default function ProfilePic({ username, style, containerStyle, imageUrl, onPress }) {
     const router = useRouter();
