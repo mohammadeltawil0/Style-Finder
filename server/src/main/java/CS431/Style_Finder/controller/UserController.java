@@ -31,7 +31,8 @@ public class UserController {
 
         LoginResponseDto response = new LoginResponseDto(
                 user.getUserId(),
-                user.getUsername()
+                user.getUsername(),
+            user.getRole() != null ? user.getRole().name() : null
         );
 
         return ResponseEntity.ok(response);

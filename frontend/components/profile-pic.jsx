@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState , useEffect} from "react";
 import { useRouter } from "expo-router";
 import { Image, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -14,6 +14,13 @@ export default function ProfilePic({ username, style, containerStyle, imageUrl, 
     const [profilePic] = useState(
         require("../assets/images/placeholder.png")
     );
+
+
+    const [role, setRole] = useState("");
+    useEffect(() => {
+        AsyncStorage.getItem("role").then(r => setRole(r || ""));
+    }, []);
+
 
     const isSupportedImageSource = (value) => {
         if (typeof value !== "string" || !value.trim()) {
@@ -81,7 +88,11 @@ export default function ProfilePic({ username, style, containerStyle, imageUrl, 
     const source = isSupportedImageSource(resolvedImageUrl)
         ? { uri: resolvedImageUrl }
         : profilePic;
-    const handlePress = onPress || (() => router.push("/settings/Profile"));
+    const handlePress =
+      onPress ??
+      (role === "ADMIN"
+        ? () => router.push("/settings/adminFolder/adminEditProfile")
+        : () => router.push("/settings/Profile"));
 
     return (
         <View

@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
-import { apiClient } from "../../scripts/apiClient";
+import { apiClient } from "../../../scripts/apiClient";
 import Toast from "react-native-toast-message";
 
 function PasswordRules({ password }) {
@@ -129,7 +129,7 @@ export default function UpdatePassword() {
     };
 
     return (
-        <ThemedView gradient={true} style={{ paddingHorizontal: 20, flexDirection: "column", gap: 50, flex: 1, justifyContent: "flex-start"  }}>
+        <ThemedView gradient style={{ flex: 1 }}>
             <KeyboardAvoidingView
               style={{ flex: 1 }}
               behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -142,7 +142,6 @@ export default function UpdatePassword() {
               >
 
             <View style={{ flex: 1, paddingVertical: 30, gap: 30 , marginLeft: 15, width:"90%"}}>
-               
                 <View style={{ width: "90%" }} className="header-text">
                     <ThemedText
                         style={{
@@ -159,7 +158,7 @@ export default function UpdatePassword() {
                         Your new password needs to be different from your current password.
                     </ThemedText>
                 </View>
-                <View className="edit-password" style={{ flexDirection: "column", gap: 12, marginBottom: 20, }}>
+                <View className="edit-password" style={{ flexDirection: "column", gap: 12 ,marginBottom: 20,}}>
                     <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>
                         New Password:
                     </ThemedText>
@@ -179,7 +178,7 @@ export default function UpdatePassword() {
                     {password.length > 0 && <PasswordRules password={password} />}
                 </View>
                 <View className="edit-confirm-password" style={{ flexDirection: "column", gap: 12 }}>
-                    <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>
+                    <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold ,}}>
                         Confirm Password:
                     </ThemedText>
                     <TextInput
@@ -212,8 +211,9 @@ export default function UpdatePassword() {
                     </ThemedText>
                 </TouchableOpacity>
             </View>
+
             </ScrollView>
-            </KeyboardAvoidingView> 
+            </KeyboardAvoidingView>
         </ThemedView>
     )
 }

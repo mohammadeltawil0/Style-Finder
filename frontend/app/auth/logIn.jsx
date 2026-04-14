@@ -39,6 +39,9 @@ export default function Login() {
   const [newPassword, setNewPassword] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
 
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+
   const handleResetPassword = async () => {
     if (!resetUsername || !newPassword) {
       Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill in all fields.' });
@@ -86,6 +89,8 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
+
     if (!username || !password) {
       Toast.show({
         type: 'error',
@@ -142,14 +147,23 @@ export default function Login() {
       resetAnswers();
       await AsyncStorage.setItem("username", loginData.username);
       await AsyncStorage.setItem("userId", String(loginData.userId));
+      let resolvedRole = loginData.role || "";
+      await AsyncStorage.setItem("profileImageUrl", loginData.profileImageUrl || "");
+      
 
       try {
         const userResponse = await apiClient.get(`/api/users/${loginData.userId}`);
         await AsyncStorage.setItem("profileImageUrl", userResponse?.data?.profileImageUrl || "");
+        if (!resolvedRole && userResponse?.data?.role) {
+          resolvedRole = userResponse.data.role;
+        }
       } catch (error) {
         const details = describeApiError(error);
         console.error("Failed to hydrate profile image after login:", details);
       }
+
+      await AsyncStorage.setItem("role", resolvedRole || "USER");
+
 
       Toast.show({
         type: 'success',
@@ -157,8 +171,10 @@ export default function Login() {
         text2: 'You have successfully logged in.',
       });
 
-      if (hasPreferences) {
-        router.replace("/(tabs)");
+      if (resolvedRole === "ADMIN") {
+        router.replace("/settings/adminFolder/adminLanding");
+      } else if (hasPreferences) {
+        router.replace("/(tabs)"); //for returniing user
       } else {
         router.replace("/screens/survey/preferences1");
       }
@@ -169,6 +185,8 @@ export default function Login() {
         text1: 'Login Partially Completed',
         text2: 'Signed in, but app setup failed. Please retry.',
       });
+    }finally {
+      setIsLoggingIn(false); 
     }
   }
 
