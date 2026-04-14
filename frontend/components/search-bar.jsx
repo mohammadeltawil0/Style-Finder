@@ -31,11 +31,6 @@ export const SearchBar = ({ value, onChangeText, onSubmit }) => {
         });
         return response.data;
     };
-    const { data: items = [] } = useQuery({
-        queryKey: ["items", userId, searchText, category],
-        queryFn: fetchFilteredItems,
-        enabled: !!userId,
-    });
 
     return (
         <View style={{
