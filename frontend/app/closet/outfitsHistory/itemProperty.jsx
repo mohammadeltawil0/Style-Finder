@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View, Image } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
 import { useTheme } from "@react-navigation/native";
@@ -77,7 +77,15 @@ export default function ItemProperty() {
       <>
         <ScrollView showsVerticalScrollIndicator={true}>
           <ThemedView style={{ flex: 1, paddingBottom: 40 }}>
-            <View style={styles.imagePlaceholder} />
+            {item.imageUrl ? (
+                <Image
+                    source={{ uri: item.imageUrl }}
+                    style={styles.imagePlaceholder}
+                    resizeMode="cover"
+                />
+            ) : (
+                <View style={styles.imagePlaceholder} />
+            )}
 
             <View style={styles.info}>
               <ThemedText style={styles.title}>{formatEnum(item.type)}</ThemedText>

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, ScrollView, Pressable, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Modal,
+    ActivityIndicator, ScrollView, Pressable, StyleSheet, Image } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import { ThemedText } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
@@ -60,7 +61,17 @@ export default function OutfitDetailsModal({ visible, outfit, onClose, onDelete,
                                     <ThemedText style={{ fontSize: 14 }}>
                                         A {item.color ? item.color.toLowerCase() : ""} {formatEnum(item.fit)} fit {formatEnum(item.type).toLowerCase()} with a {formatEnum(item.pattern)} pattern.
                                     </ThemedText>
-                                    <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown }]} />
+                                    {item.imageUrl ? (
+                                        <Image
+                                            source={{ uri: item.imageUrl }}
+                                            style={styles.itemImagePlaceholder}
+                                            resizeMode="cover"
+                                        />
+                                    ) : (
+                                        <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown, justifyContent: 'center', alignItems: 'center' }]}>
+                                            <ThemedText style={{ color: '#666' }}>No Image</ThemedText>
+                                        </View>
+                                    )}
                                 </View>
                             </View>
                         ))}

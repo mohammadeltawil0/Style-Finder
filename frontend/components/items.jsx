@@ -1,4 +1,4 @@
-import { FlatList, View, TouchableOpacity } from "react-native";
+import { FlatList, View, TouchableOpacity, Image } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText } from "./themed-text";
 import { useRouter } from "expo-router";
@@ -36,10 +36,18 @@ export const Items = ({ items }) => {
                                 params: { id: item.id }
                             })}
                         >
-                            <View
-                                className="item-image"
-                                style={{ height: 175, marginBottom: 10 }}
-                            />
+                            {item.imageUrl ? (
+                                <Image
+                                    source={{ uri: item.imageUrl }}
+                                    style={{ height: 175, width: "100%", borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                                    resizeMode="cover"
+                                />
+                            ) : (
+                                <View
+                                    className="item-image"
+                                    style={{ height: 175, marginBottom: 10, backgroundColor: theme.colors.card, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                                />
+                            )}
                         </TouchableOpacity>
 
                         <View

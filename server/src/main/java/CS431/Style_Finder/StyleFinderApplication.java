@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class StyleFinderApplication {
 
 	public static void main(String[] args) {
+		System.setProperty("aws.java.v1.disableDeprecationAnnouncement", "true");
 		SpringApplication.run(StyleFinderApplication.class, args);
 	}
 
