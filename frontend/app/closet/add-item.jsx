@@ -178,7 +178,7 @@ export default function AddItemScreen() {
       queryClient.invalidateQueries({ queryKey: ['items'] });
       Toast.show({ type: 'success', text1: 'Item added!' });
       console.log("✅ onSuccess fired:", data);
-      router.push({ pathname: "/closet", params: { tab: "items" } }); 
+      router.replace({ pathname: "/(tabs)/closet", params: { tab: "items" } });
     },
     onError: (error) => {
       const status = error.response?.status;

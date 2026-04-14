@@ -25,8 +25,7 @@ function ThemedToast() {
 
 
 export const unstable_settings = {
-  initialRouteName: "auth/logIn",
-  anchor: "(tabs)",
+  initialRouteName: "index",
 };
 
 export default function RootLayout() {
@@ -52,11 +51,12 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={theme}>
         <SurveyProvider>
-          <Stack initialRouteName="auth/logIn">
+          <Stack initialRouteName="index">
             <Stack.Screen
-              name="auth/logIn"
+              name="index"
               options={{
                 header: () => <CustomHeader page="logIn" />,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
