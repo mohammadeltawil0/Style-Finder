@@ -190,7 +190,7 @@ export default function Register() {
 
           <View style={styles.card} >
             <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
+              <Ionicons onPress={() => router.replace("/")} name="chevron-back" size={20} color={colors.text} />
               <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
             </View>
             <TextInput

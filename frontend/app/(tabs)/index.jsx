@@ -36,8 +36,8 @@ export default function HomeScreen() {
     }, []);
 
     const handleNavigate = (target) => {
-        router.push({
-            pathname: "/closet",
+        router.navigate({
+            pathname: "/(tabs)/closet",
             params: { tab: target }
         });
     };

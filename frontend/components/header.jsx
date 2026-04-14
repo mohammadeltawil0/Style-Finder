@@ -97,26 +97,6 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </View>
           )}
-          {page === "settings" && (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons
-                name="arrow-back"
-                size={24}
-                color={theme.colors.text}
-              />
-            </TouchableOpacity>
-          )}
-          {page === "settings" && (
-            <ThemedText
-              style={{
-                fontSize: theme.sizes.h2,
-                fontFamily: theme.fonts.bold,
-                color: theme.colors.text,
-              }}
-            >
-              SETTINGS
-            </ThemedText>
-          )}
           {page === "logIn" && (
             <ThemedText
               style={{

@@ -17,7 +17,7 @@ function Profile() {
   const handleLogout = async () => {
     resetAnswers();
     await AsyncStorage.multiRemove(["username", "userId", "profileImageUrl"]);
-    router.replace("/auth/logIn");
+    router.replace("/");
   };
 
   useEffect(() => {
