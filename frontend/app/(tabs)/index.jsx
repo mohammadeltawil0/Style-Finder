@@ -1,11 +1,10 @@
 import { ThemedText, ThemedView } from "../../components";
 import { useTheme } from "@react-navigation/native";
 import { Pressable, ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 import { useState, useEffect } from "react";
 import AntDesign from '@expo/vector-icons/AntDesign';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-
 
 export default function HomeScreen() {
     // TO DO: fetch data for unworn items from backend; for now using mock data to test the UI
@@ -20,20 +19,22 @@ export default function HomeScreen() {
     const router = useRouter();
     const [username, setUsername] = useState("");
 
-    useEffect(() => {
-        const loadUserData = async () => {
-            try {
-                const storedUsername = await AsyncStorage.getItem("username");
-                if (storedUsername) {
-                    setUsername(storedUsername);
-                }
-            } catch (error) {
-                console.error("Error loading user data:", error);
-            }
-        };
+    const loadUserData = async () => {
+        try {
+            const storedUsername = await AsyncStorage.getItem("username");
+            setUsername(storedUsername || "");
+        } catch (error) {
+            console.error("Error loading user data:", error);
+        }
+    };
 
+    useEffect(() => {
         loadUserData();
     }, []);
+
+    useFocusEffect(() => {
+        loadUserData();
+    });
 
     const handleNavigate = (target) => {
         router.navigate({
@@ -57,9 +58,6 @@ export default function HomeScreen() {
                                 fontFamily: theme.fonts.bold,
                             }}
                         >Hello, {username}! </ThemedText>
-                    </View>
-                    <View style={{ width: "30%" }}>
-                        {/* TO DO: add logo here or some other thing? */}
                     </View>
                 </View>
                 <View

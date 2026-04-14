@@ -11,6 +11,7 @@ import CS431.Style_Finder.model.User;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 
@@ -69,11 +70,48 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(Long userId, UserDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
-        user.setFirstName(dto.getFirstName());
-        user.setUsername(dto.getUsername());
-        user.setPassword(dto.getPassword());
-        if (dto.getRole() != null) user.setRole(dto.getRole());
-        return userMapper.toDto(userRepository.save(user));
+        try {
+            if (dto.getFirstName() != null) {
+                user.setFirstName(dto.getFirstName());
+            }
+
+            if (dto.getUsername() != null) {
+                String newUsername = dto.getUsername().trim();
+                if (newUsername.isEmpty()) {
+                    throw new InvalidUserDataException("Username cannot be empty.");
+                }
+
+                if (!newUsername.equals(user.getUsername()) && userRepository.existsByUsername(newUsername)) {
+                    throw new InvalidUserDataException("Username already taken: " + newUsername);
+                }
+
+                user.setUsername(newUsername);
+            }
+
+            if (dto.getEmail() != null) {
+                String newEmail = dto.getEmail().trim();
+                if (newEmail.isEmpty()) {
+                    throw new InvalidUserDataException("Email cannot be empty.");
+                }
+                user.setEmail(newEmail);
+            }
+
+            if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
+                user.setPassword(dto.getPassword());
+            }
+
+            if (dto.getProfileImageUrl() != null) {
+                user.setProfileImageUrl(dto.getProfileImageUrl());
+            }
+
+            if (dto.getRole() != null) {
+                user.setRole(dto.getRole());
+            }
+
+            return userMapper.toDto(userRepository.save(user));
+        } catch (DataIntegrityViolationException ex) {
+            throw new InvalidUserDataException("Invalid or conflicting user data. Please check username/email.");
+        }
     }
 
     @Override
@@ -91,11 +129,29 @@ public class UserServiceImpl implements UserService {
             throw new InvalidCredentialsException();
         }
 
+        return UserDto.builder()
+                .userId(user.getUserId())
+                .username(user.getUsername())
+                .build();
+    }
+
+    @Override
+    public UserDto getUserByUsername(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
         return userMapper.toDto(user);
     }
 
     @Override
     public Boolean duplicateUsername(String username) {
         return userRepository.existsByUsername(username);
+    }
+    
+    public boolean usernameExists(String username) {
+        if (username == null || username.isBlank()) {
+            return false;
+        }
+
+        return userRepository.existsByUsername(username.trim());
     }
 }

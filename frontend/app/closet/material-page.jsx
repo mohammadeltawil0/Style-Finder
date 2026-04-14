@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function MaterialPage({ setPage, material, setMaterial, uri }) {
+export default function MaterialPage({ setPage, goBack, material, setMaterial, uri }) {
   const theme = useTheme();
   const materialOptions = [
     {
@@ -164,7 +164,7 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(4)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,

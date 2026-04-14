@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function SeasonPage({ season, setSeason, setPage, uri}) {
+export default function SeasonPage({ season, setSeason, setPage, goBack, uri}) {
   const theme = useTheme();
   const seasonOptions = [
     {
@@ -27,7 +27,7 @@ export default function SeasonPage({ season, setSeason, setPage, uri}) {
       id: "SPRING",
       label: "Spring",
       emoji: "🌷",
-      subheader: "Light and breezy outfits",
+      subheader: "Light but cozy outfits",
     },
     {
       id: "SUMMER",
@@ -154,7 +154,7 @@ export default function SeasonPage({ season, setSeason, setPage, uri}) {
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(6)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,

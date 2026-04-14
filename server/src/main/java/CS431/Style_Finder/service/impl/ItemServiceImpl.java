@@ -8,12 +8,15 @@ import CS431.Style_Finder.exception.ItemCreationException;
 import CS431.Style_Finder.mapper.ItemMapper;
 import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.User;
+import CS431.Style_Finder.model.enums.ItemType;
 
 import CS431.Style_Finder.repository.ItemRepository;
+import CS431.Style_Finder.repository.OutfitItemRepository;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,6 +26,7 @@ import java.util.stream.Collectors;
 public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
+    private final OutfitItemRepository outfitItemRepository;
     private final UserRepository userRepository;
     private final ItemMapper itemMapper;
 
@@ -82,9 +86,13 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    @Transactional
     public void deleteItem(Long itemId) {
         itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
+
+        // Remove dependent rows in join table to satisfy FK constraint before deleting the item.
+        outfitItemRepository.deleteByItem_ItemId(itemId);
         itemRepository.deleteById(itemId);
     }
 
@@ -94,5 +102,25 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         item.setTimesWorn(item.getTimesWorn() == null ? 1 : item.getTimesWorn() + 1);
         itemRepository.save(item);
+    }
+
+    @Override
+    public List<ItemDto> searchItems(String search, ItemType type, Long userId) {
+        return itemRepository.findAll().stream()
+        .filter(item -> userId == null || item.getUser().getUserId().equals(userId))
+        .filter(item -> type == null || item.getType() == type)
+        .filter(item -> {
+            if (search == null || search.isBlank()) return true;
+
+            String text = (
+                item.getType() + " " +
+                item.getColor() + " " +
+                item.getSeasonWear() + " " +
+                item.getFormality()
+            ).toLowerCase();
+            return text.contains(search.toLowerCase());
+        })
+        .map(itemMapper::toDto)
+        .toList();
     }
 }

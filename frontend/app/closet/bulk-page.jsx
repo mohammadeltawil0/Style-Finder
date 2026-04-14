@@ -13,6 +13,7 @@ export default function BulkPage({
   bulk,
   setBulk,
   setPage,
+  goBack,
   uri,
 }) {
   const theme = useTheme();
@@ -122,7 +123,7 @@ export default function BulkPage({
 
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => setPage(8)}
+          onPress={() => goBack()}
           //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,

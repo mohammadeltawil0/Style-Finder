@@ -124,7 +124,56 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="TripOutfitDetail" />,
               }}
             />
-          </Stack>
+            <Stack.Screen
+              name="settings/Profile"
+              options={{
+                header: () => <CustomHeader page="Profile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/EditProfile"
+              options={{
+                header: () => <CustomHeader page="EditProfile" />,
+              }}
+            />
+             <Stack.Screen
+              name="settings/UpdatePassword"
+              options={{
+                header: () => <CustomHeader page="UpdatePassword" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminSettings"
+              options={{
+                header: () => <CustomHeader page="adminSettings" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminEditProfile"
+              options={{
+                header: () => <CustomHeader page="adminEditProfile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUsers"
+              options={{
+                header: () => <CustomHeader page="AdminPortal" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUpdatePassword"
+              options={{
+                header: () => <CustomHeader page="AdminChangePassword" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminLanding"
+              options={{
+                header: () => <CustomHeader page="adminwelcomepage" />,
+              }}
+            />
+
+          </Stack>          
           <StatusBar style="auto" />
           <ThemedToast />
         </SurveyProvider>

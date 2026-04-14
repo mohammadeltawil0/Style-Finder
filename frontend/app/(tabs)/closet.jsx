@@ -150,12 +150,85 @@ export default function ClosetScreen() {
   const theme = useTheme();
   const handleSearchSubmit = async (e) => {
     console.log("Search submitted with text:", searchText);
-    setSearchText("");
-    // TO DO: implement search functionality here; for now just log the search text when user presses enter
+    //setSearchText("");
   };
 
-  // TO DO: implement tops/bottoms/dresses category filtering logic here (probably just set another state variable for category and filter items based on that when rendering)
+  //implemented filtering method for both categories + search function
+  const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+  const materialMap = {
+    1: "cotton",
+    2: "linen hemp",
+    3: "wool fleece",
+    4: "silk satin",
+    5: "leather faux leather",
+    6: "synthetics polyester nylon spandex",
+    7: "other"
+  };
 
+  const patternMap = {
+    GEOMETRIC_OR_ABSTRACT: "geometric abstract",
+    SOLID: "solid",
+    STRIPED: "striped",
+    GRAPHIC: "graphic",
+    FLORAL: "floral",
+    PLAID_OR_FLANNEL: "plaid flannel",
+  };
+
+  const eventMap = {
+    ACTIVE_OR_SPORT: "sport active gym",
+    FORMAL: "formal dressy",
+    CASUAL: "casual everyday",
+    WORK_OR_SMART: "work",
+    PARTY_OR_NIGHT_OUT: "party night out social"
+  };
+
+  const fitMap = {
+    1: "slim fitted tight",
+    2: "regular normal",
+    3: "loose oversized baggy",
+  };
+
+  const filteredItems = items.filter((item) => {
+  //category filter
+    if (category !== "all") {
+      const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        dresses: "DRESS",
+        outerwear: "OUTERWEAR"
+      };
+
+      if (item.type !== typeMap[category]) {
+        return false;
+      }
+    }
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
+
+    //search filter
+    if (terms.length > 0) {
+      const searchableText = [
+        normalize(item.type),
+        normalize(item.color),
+        normalize(item.seasonWear),
+        normalize(item.formality),
+        normalize(item.fit),
+        normalize(item.pattern),
+
+        materialMap[item.material],
+        patternMap[item.pattern],
+        eventMap[item.formality],
+        fitMap[item.fit],
+      ]
+      .filter(Boolean)
+      .join(" ");
+      const words = searchableText.split(" ");
+      console.log("SEARCH TERMS:", terms);
+      console.log("ITEM TEXT:", searchableText);
+      const matches = terms.every((term) => words.some((word) => word.startsWith(term)));
+      if(!matches) return false;
+    }
+    return true;
+  });
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
@@ -192,7 +265,7 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory("tops")}
+                    onPress={() => setCategory((prev) => (prev === "tops" ? "all" : "tops"))}
                   >
                     <ThemedText
                       style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
@@ -208,7 +281,7 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory("bottoms")}
+                    onPress={() => setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))}
                   >
                     <ThemedText
                       style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
@@ -224,7 +297,7 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory("dresses")}
+                    onPress={() => setCategory((prev) => (prev === "dresses" ? "all" : "dresses"))}
                   >
                     <ThemedText
                       style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
@@ -235,7 +308,7 @@ export default function ClosetScreen() {
                 </View>
 
                 <Items
-                  items={items}
+                  items={filteredItems}
                   setCurrItemId={setCurrItemId}
                   currItemId={currItemId}
                   setEditItemsModalVisible={setEditItemsModalVisible}
