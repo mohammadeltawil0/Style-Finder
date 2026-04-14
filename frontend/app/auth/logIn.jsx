@@ -126,7 +126,9 @@ export default function Login() {
         text2: 'You have successfully logged in.',
       });
 
-      if (hasPreferences) {
+      if (data.role === "ADMIN") {
+        router.replace("/settings/adminFolder/adminLanding");
+      } else if (hasPreferences) {
         router.replace("/(tabs)"); //for returniing user
       } else {
         router.replace("/screens/survey/preferences1"); //new user

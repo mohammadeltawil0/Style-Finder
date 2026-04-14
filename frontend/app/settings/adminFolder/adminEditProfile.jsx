@@ -169,7 +169,6 @@ function AdminEditProfile() {
     loadUser();
   }, []);
 
-  // ── JSX is identical to EditProfile.jsx ──────────────────────────
   return (
     <ThemedView gradient style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
       <View style={{ flex: 1, width: "80%", paddingHorizontal: 20, paddingVertical: 30, alignItems: "stretch", gap: 30 }}>
