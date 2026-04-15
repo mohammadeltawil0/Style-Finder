@@ -117,12 +117,6 @@ export default function AdminUsers() {
       {/* Header */}
       <View style={styles.header}>
         <Text style={[styles.headerTitle, { color: colors.text }]}> Welcome, {username}!! </Text>
-        <TouchableOpacity onPress={() => router.push("/settings/adminFolder/adminSettings")}>
-          {adminImage
-            ? <Image source={{ uri: adminImage }} style={styles.headerAvatar} />
-            : <Ionicons name="person-circle-outline" size={32} color={colors.text} />
-          }
-        </TouchableOpacity>
       </View>
 
       {/* Search */}
@@ -162,7 +156,7 @@ const styles = StyleSheet.create({
     flexDirection: "row", justifyContent: "space-between",
     alignItems: "center", padding: 16, paddingTop: 50,
   },
-  headerTitle: { fontSize: 20, fontWeight: "bold" },
+  headerTitle: { fontSize: 30, fontWeight: "bold", marginBottom:"5%",},
   headerAvatar: { width: 36, height: 36, borderRadius: 18 },
   searchBar: {
     flexDirection: "row", alignItems: "center",

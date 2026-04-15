@@ -1,18 +1,76 @@
-import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
-import { ThemedText, ThemedView } from "../../../components";
-import { useTheme } from "@react-navigation/native";
-import { useEffect, useState } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import AntDesign from "@expo/vector-icons/AntDesign";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import * as FileSystem from "expo-file-system/legacy";
+import * as ImagePicker from "expo-image-picker";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Toast from "react-native-toast-message";
+import { ThemedText, ThemedView } from "../../../components";
 import ProfilePic from "../../../components/profile-pic";
 import { apiClient } from "../../../scripts/apiClient";
-import * as ImagePicker from "expo-image-picker";
-import * as FileSystem from "expo-file-system/legacy";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import Toast from "react-native-toast-message";
 
 const MAX_PROFILE_IMAGE_DATA_URI_LENGTH = 2000000;
+
+function UsernameRules({ username }) {
+  const rules = [
+    { label: "At least 5 letters", pass: username.length >= 5  && /[a-zA-Z]/.test(username) },
+    { label: "One number", pass: /[0-9]/.test(username) },
+    {
+      label: "One special character (#, @, $, %, &)",
+      pass: /[#@$%&]/.test(username),
+    },
+  ];
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#f9f9f9",
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        padding: 10,
+      }}
+    >
+      {rules.map((rule, i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingVertical: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: rule.pass ? "#43a047" : "#e53935",
+            }}
+          />
+          <Text
+            style={{ fontSize: 13, color: rule.pass ? "#2e7d32" : "#c62828" }}
+          >
+            {rule.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
 
 function AdminEditProfile() {
   const theme = useTheme();
@@ -31,7 +89,13 @@ function AdminEditProfile() {
   const [profileImageUrl, setProfileImageUrl] = useState("");
   const [originalProfileImageUrl, setOriginalProfileImageUrl] = useState("");
 
-  const popularEmailDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com", "icloud.com"];
+  const popularEmailDomains = [
+    "gmail.com",
+    "yahoo.com",
+    "outlook.com",
+    "hotmail.com",
+    "icloud.com",
+  ];
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -47,7 +111,8 @@ function AdminEditProfile() {
     staleTime: 0,
     queryFn: async () => {
       const trimmedUsername = editedUsername.trim();
-      if (!trimmedUsername || trimmedUsername === originalUsername.trim()) return false;
+      if (!trimmedUsername || trimmedUsername === originalUsername.trim())
+        return false;
       const response = await apiClient.get("/api/users/exists", {
         params: { username: trimmedUsername },
       });
@@ -62,13 +127,18 @@ function AdminEditProfile() {
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.4,
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.4,
     });
     if (!result.canceled) setProfileImageUrl(result.assets[0].uri);
   };
 
   const convertToBase64 = async (uri) => {
-    const base64 = await FileSystem.readAsStringAsync(uri, { encoding: "base64" });
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: "base64",
+    });
 
     const extensionMatch = uri.match(/\.([a-zA-Z0-9]+)(?:\?|#|$)/);
     const extension = extensionMatch?.[1]?.toLowerCase();
@@ -92,7 +162,11 @@ function AdminEditProfile() {
       response = await apiClient.put(`/api/users/${userId}`, payload);
     } catch (error) {
       if (error?.response?.status === 500) {
-        const fallbackPayload = { firstName: payload.firstName, username: payload.username, email: payload.email };
+        const fallbackPayload = {
+          firstName: payload.firstName,
+          username: payload.username,
+          email: payload.email,
+        };
         response = await apiClient.put(`/api/users/${userId}`, fallbackPayload);
       } else throw error;
     }
@@ -103,8 +177,14 @@ function AdminEditProfile() {
     mutationFn: updateUserProfile,
     onSuccess: async (updatedUser, variables) => {
       await AsyncStorage.setItem("username", updatedUser.username || "");
-      await AsyncStorage.setItem("profileImageUrl", updatedUser.profileImageUrl || "");
-      queryClient.setQueryData(["profileImageUrl"], updatedUser.profileImageUrl || "");
+      await AsyncStorage.setItem(
+        "profileImageUrl",
+        updatedUser.profileImageUrl || "",
+      );
+      queryClient.setQueryData(
+        ["profileImageUrl"],
+        updatedUser.profileImageUrl || "",
+      );
       queryClient.invalidateQueries({ queryKey: ["profileImageUrl"] });
       setUsername(updatedUser.username || "");
       setEditedUsername(updatedUser.username || "");
@@ -112,26 +192,48 @@ function AdminEditProfile() {
       setOriginalName(updatedUser.firstName || "");
       setOriginalEmail(updatedUser.email || "");
       setOriginalProfileImageUrl(updatedUser.profileImageUrl || "");
-      if (variables?.hasChanges) Toast.show({ type: "success", text1: "Profile updated" });
+      if (variables?.hasChanges)
+        Toast.show({ type: "success", text1: "Profile updated" });
       router.back();
     },
     onError: async (error) => {
       const status = error?.response?.status;
       if (status === 404) {
-        await AsyncStorage.multiRemove(["username", "userId", "profileImageUrl"]);
-        Toast.show({ type: "error", text1: "Session expired", text2: "Please log in again." });
+        await AsyncStorage.multiRemove([
+          "username",
+          "userId",
+          "profileImageUrl",
+        ]);
+        Toast.show({
+          type: "error",
+          text1: "Session expired",
+          text2: "Please log in again.",
+        });
         router.replace("/auth/logIn");
         return;
       }
-      const backendMessage = error?.response?.data?.message || error?.response?.data?.error;
-      const messages = { 400: backendMessage || "Invalid data.", 409: "Username already exists.", 500: "Server error." };
-      Toast.show({ type: "error", text1: "Failed to update profile", text2: messages[status] || "Something went wrong." });
+      const backendMessage =
+        error?.response?.data?.message || error?.response?.data?.error;
+      const messages = {
+        400: backendMessage || "Invalid data.",
+        409: "Username already exists.",
+        500: "Server error.",
+      };
+      Toast.show({
+        type: "error",
+        text1: "Failed to update profile",
+        text2: messages[status] || "Something went wrong.",
+      });
     },
   });
 
   const handleSaveChanges = async () => {
     if (!userId) {
-      Toast.show({ type: "error", text1: "User not found", text2: "Please log in again." });
+      Toast.show({
+        type: "error",
+        text1: "User not found",
+        text2: "Please log in again.",
+      });
       return;
     }
     const hasChanges =
@@ -145,21 +247,60 @@ function AdminEditProfile() {
     const trimmedEmail = email.trim();
 
     if (trimmedName === "") {
-      Toast.show({ type: "error", text1: "Name required", text2: "Please enter your name." });
+      Toast.show({
+        type: "error",
+        text1: "Name required",
+        text2: "Please enter your name.",
+      });
       return;
     }
 
     if (trimmedUsername === "") {
-      Toast.show({ type: "error", text1: "Username required", text2: "Please enter your new username." }); return;
+      Toast.show({
+        type: "error",
+        text1: "Username required",
+        text2: "Please enter your new username.",
+      });
+      return;
+    }
+
+    const isUsernameChanged = trimmedUsername !== originalUsername.trim();
+    const usernameRules = [
+      trimmedUsername.length >= 5 && /[a-zA-Z]/.test(trimmedUsername),
+      /[0-9]/.test(trimmedUsername),
+      /[#@$%&]/.test(trimmedUsername),
+    ];
+    if (isUsernameChanged && !usernameRules.every(Boolean)) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid username",
+        text2: "Username must be at least 5 letters and include a number and one of #, @, $, %, &.",
+      });
+      return;
     }
     if (trimmedEmail === "") {
-      Toast.show({ type: "error", text1: "Email required", text2: "Please enter your email." }); return;
+      Toast.show({
+        type: "error",
+        text1: "Email required",
+        text2: "Please enter your email.",
+      });
+      return;
     }
     if (!isValidEmail(trimmedEmail)) {
-      Toast.show({ type: "error", text1: "Invalid email", text2: "Please use a valid domain." }); return;
+      Toast.show({
+        type: "error",
+        text1: "Invalid email",
+        text2: "Please use a valid domain.",
+      });
+      return;
     }
     if (usernameAvailabilityQuery.data) {
-      Toast.show({ type: "error", text1: "Username already exists", text2: "Please choose a different username." }); return;
+      Toast.show({
+        type: "error",
+        text1: "Username already exists",
+        text2: "Please choose a different username.",
+      });
+      return;
     }
 
     let profileImageData = profileImageUrl || null;
@@ -167,7 +308,10 @@ function AdminEditProfile() {
       profileImageData = await convertToBase64(profileImageUrl);
     }
 
-    if (profileImageData?.startsWith("data:image") && profileImageData.length > MAX_PROFILE_IMAGE_DATA_URI_LENGTH) {
+    if (
+      profileImageData?.startsWith("data:image") &&
+      profileImageData.length > MAX_PROFILE_IMAGE_DATA_URI_LENGTH
+    ) {
       Toast.show({
         type: "error",
         text1: "Image too large",
@@ -176,7 +320,15 @@ function AdminEditProfile() {
       return;
     }
 
-    mutate({ payload: { firstName: trimmedName, username: trimmedUsername, email: trimmedEmail, profileImageUrl: profileImageData }, hasChanges });
+    mutate({
+      payload: {
+        firstName: trimmedName,
+        username: trimmedUsername,
+        email: trimmedEmail,
+        profileImageUrl: profileImageData,
+      },
+      hasChanges,
+    });
   };
 
   useEffect(() => {
@@ -198,10 +350,19 @@ function AdminEditProfile() {
         setOriginalEmail(user.email || "");
         setProfileImageUrl(user.profileImageUrl || "");
         setOriginalProfileImageUrl(user.profileImageUrl || "");
-        await AsyncStorage.setItem("profileImageUrl", user.profileImageUrl || "");
-        queryClient.setQueryData(["profileImageUrl"], user.profileImageUrl || "");
+        await AsyncStorage.setItem(
+          "profileImageUrl",
+          user.profileImageUrl || "",
+        );
+        queryClient.setQueryData(
+          ["profileImageUrl"],
+          user.profileImageUrl || "",
+        );
       } catch (error) {
-        console.error("Failed to load admin profile:", error?.response?.data || error?.message);
+        console.error(
+          "Failed to load admin profile:",
+          error?.response?.data || error?.message,
+        );
       }
     };
     loadUser();
@@ -209,81 +370,201 @@ function AdminEditProfile() {
 
   return (
     <ThemedView gradient style={{ flex: 1 }}>
-    <KeyboardAvoidingView
-      style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-    >
-      <ScrollView
-        contentContainerStyle={{ flexGrow: 1, padding: 20 }}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
-        <View style={{ flex: 1, paddingVertical: 30, gap: 30 , marginLeft: 15, width:"90%"}}>
-          
-        <View style={{ alignItems: "center", gap: 12 }}>
-          <View style={{ position: "relative" }}>
-            <ProfilePic username={username} imageUrl={profileImageUrl} onPress={pickProfileImage}
-              style={{ height: 200, width: 200 }}
-              containerStyle={{ backgroundColor: "transparent", padding: 0, borderRadius: 16, shadowColor: "#000", shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.25, shadowRadius: 10, elevation: 12 }}
-            />
-            <View style={{ position: "absolute", right: 6, top: 6, borderRadius: 12, padding: 4 }}>
-              <TouchableOpacity onPress={pickProfileImage}>
-                <AntDesign name="edit" size={20} color={theme.colors.text} />
-              </TouchableOpacity>
-            </View>
-          </View>
-          <ThemedText style={{ fontSize: theme.sizes.h2, color: theme.colors.h2, fontFamily: theme.fonts.bold }}>
-            {username}
-          </ThemedText>
-        </View>
-
-        {[
-          { label: "Name:", value: name, setter: setName, placeholder: "Enter your name" },
-          { label: "Email:", value: email, setter: setEmail, placeholder: "Enter your email" },
-        ].map(({ label, value, setter, placeholder }) => (
-          <View key={label} style={{ flexDirection: "column", gap: 12 }}>
-            <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>
-              {label}
-            </ThemedText>
-            <TextInput value={value} onChangeText={setter} placeholder={placeholder}
-              style={{ borderRadius: 10, padding: 10, backgroundColor: theme.colors.background, color: theme.colors.text, fontFamily: theme.fonts.regular }}
-            />
-          </View>
-        ))}
-
-        {/* Username with availability check */}
-        <View style={{ flexDirection: "column", gap: 12 }}>
-          <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold }}>
-            Username:
-          </ThemedText>
-          <TextInput
-            value={editedUsername}
-            onChangeText={(value) => { setEditedUsername(value); queryClient.removeQueries({ queryKey: ["usernameExists"] }); }}
-            onBlur={async () => { try { await usernameAvailabilityQuery.refetch(); } catch (e) { console.error(e); } }}
-            placeholder="Enter your username"
-            style={{ borderRadius: 10, padding: 10, backgroundColor: theme.colors.background, color: theme.colors.text, fontFamily: theme.fonts.regular }}
-          />
-          {usernameAvailabilityQuery.isFetching && (
-            <ThemedText style={{ fontSize: theme.sizes.h4, color: theme.colors.text }}>Checking availability...</ThemedText>
-          )}
-          {usernameAvailabilityQuery.data && (
-            <ThemedText style={{ fontSize: theme.sizes.h4, color: "#c1121f" }}>Username already exists.</ThemedText>
-          )}
-        </View>
-
-        <TouchableOpacity
-          style={{ backgroundColor: theme.colors.lightBrown, padding: 10, borderRadius: 10, opacity: isPending ? 0.7 : 1 }}
-          onPress={handleSaveChanges} disabled={isPending}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          <ThemedText style={{ fontSize: theme.sizes.h3, color: theme.colors.text, fontFamily: theme.fonts.bold, textAlign: "center" }}>
-            {isPending ? "Saving..." : "Save Changes"}
-          </ThemedText>
-        </TouchableOpacity>
+          <View
+            style={{
+              flex: 1,
+              paddingVertical: 30,
+              gap: 30,
+              marginLeft: 15,
+              width: "90%",
+            }}
+          >
+            <View style={{ alignItems: "center", gap: 12 }}>
+              <View style={{ position: "relative" }}>
+                <ProfilePic
+                  username={username}
+                  imageUrl={profileImageUrl}
+                  onPress={pickProfileImage}
+                  style={{ height: 200, width: 200 }}
+                  containerStyle={{
+                    backgroundColor: "transparent",
+                    padding: 0,
+                    borderRadius: 16,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 10,
+                    elevation: 12,
+                  }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 6,
+                    top: 6,
+                    borderRadius: 12,
+                    padding: 4,
+                  }}
+                >
+                  <TouchableOpacity onPress={pickProfileImage}>
+                    <AntDesign
+                      name="edit"
+                      size={20}
+                      color={theme.colors.text}
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  color: theme.colors.h2,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                {username}
+              </ThemedText>
+            </View>
 
-      </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            {[
+              {
+                label: "Name:",
+                value: name,
+                setter: setName,
+                placeholder: "Enter your name",
+              },
+              {
+                label: "Email:",
+                value: email,
+                setter: setEmail,
+                placeholder: "Enter your email",
+              },
+            ].map(({ label, value, setter, placeholder }) => (
+              <View key={label} style={{ flexDirection: "column", gap: 12 }}>
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h3,
+                    color: theme.colors.text,
+                    fontFamily: theme.fonts.bold,
+                  }}
+                >
+                  {label}
+                </ThemedText>
+                <TextInput
+                  value={value}
+                  onChangeText={setter}
+                  placeholder={placeholder}
+                  editable={label !== "Email:"}
+                  selectTextOnFocus={label !== "Email:"}
+                  style={{
+                    borderRadius: 10,
+                    padding: 10,
+                    backgroundColor: theme.colors.background,
+                    color: theme.colors.text,
+                    fontFamily: theme.fonts.regular,
+                    opacity: label === "Email:" ? 0.65 : 1,
+                  }}
+                />
+                {label === "Email:" && (
+                  <ThemedText
+                    style={{
+                      fontSize: theme.sizes.h4,
+                      color: theme.colors.text,
+                      opacity: 0.7,
+                    }}
+                  >
+                    This is the email used to register your account.
+                  </ThemedText>
+                )}
+              </View>
+            ))}
+
+            {/* Username with availability check */}
+            <View style={{ flexDirection: "column", gap: 12 }}>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                Username:
+              </ThemedText>
+              <TextInput
+                value={editedUsername}
+                onChangeText={(value) => {
+                  setEditedUsername(value);
+                  queryClient.removeQueries({ queryKey: ["usernameExists"] });
+                }}
+                onBlur={async () => {
+                  try {
+                    await usernameAvailabilityQuery.refetch();
+                  } catch (e) {
+                    console.error(e);
+                  }
+                }}
+                placeholder="Enter your username"
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                }}
+              />
+              {usernameAvailabilityQuery.isFetching && (
+                <ThemedText
+                  style={{ fontSize: theme.sizes.h4, color: theme.colors.text }}
+                >
+                  Checking availability...
+                </ThemedText>
+              )}
+              {usernameAvailabilityQuery.data && (
+                <ThemedText
+                  style={{ fontSize: theme.sizes.h4, color: "#c1121f" }}
+                >
+                  Username already exists.
+                </ThemedText>
+              )}
+              {editedUsername.trim().length > 0 && (
+                <UsernameRules username={editedUsername.trim()} />
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.lightBrown,
+                padding: 10,
+                borderRadius: 10,
+                opacity: isPending ? 0.7 : 1,
+              }}
+              onPress={handleSaveChanges}
+              disabled={isPending}
+            >
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                  textAlign: "center",
+                }}
+              >
+                {isPending ? "Saving..." : "Save Changes"}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </ThemedView>
   );
 }
