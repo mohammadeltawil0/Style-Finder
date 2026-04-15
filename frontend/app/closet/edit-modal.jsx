@@ -36,7 +36,11 @@ export default function EditModal({
 
                 return null;
             })
-            .filter((option) => option && option.value) : [];
+            .filter(
+                (option) =>
+                    option && option.value !== null && option.value !== undefined,
+            )
+        : [];
 
     return (
         <Modal
