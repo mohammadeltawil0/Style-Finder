@@ -12,6 +12,7 @@ function AdminSettings() {
   const router = useRouter();
   const { resetAnswers } = useSurvey();
   const [username, setUsername] = useState("");
+  const [name, setName] = useState("");
 
   const handleLogout = async () => {
     resetAnswers();
@@ -22,7 +23,10 @@ function AdminSettings() {
   useEffect(() => {
     const loadUsername = async () => {
       const storedUsername = await AsyncStorage.getItem("username");
+      const storedName = await AsyncStorage.getItem("name");
+
       if (storedUsername) setUsername(storedUsername);
+      if (storedName) setName(storedName);
     };
     loadUsername();
   }, []);
@@ -68,7 +72,9 @@ function AdminSettings() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {username}
+            {"Account Holder: " + name} 
+            { "\n" } 
+            {"Username: " + username}
           </ThemedText>
         </View>
 

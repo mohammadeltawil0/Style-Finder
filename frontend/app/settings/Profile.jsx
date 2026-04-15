@@ -11,6 +11,7 @@ function Profile() {
   const theme = useTheme();
   const router = useRouter();  
   const { resetAnswers } = useSurvey();
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
 
   const handleLogout = async () => {
@@ -22,8 +23,14 @@ function Profile() {
   useEffect(() => {
     const loadUsername = async () => {
       const storedUsername = await AsyncStorage.getItem("username");
+      const storedName = await AsyncStorage.getItem("name");
+
       if (storedUsername) {
         setUsername(storedUsername);
+      }
+
+      if (storedName) {
+        setName(storedName);
       }
     };
 
@@ -63,12 +70,16 @@ function Profile() {
           </View>
           <ThemedText
             style={{
-              fontSize: theme.sizes.h2,
+              fontSize: theme.sizes.h3,
               color: theme.colors.text,
               fontFamily: theme.fonts.bold,
             }}
           >
-            {username}
+            {"Account Holder: " + name} 
+            { "\n" } 
+            {"Username: " + username}
+    
+            
           </ThemedText>
         </View>
 
