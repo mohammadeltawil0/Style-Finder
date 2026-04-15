@@ -154,6 +154,7 @@ export default function Register() {
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully.' });
 
       await AsyncStorage.multiSet([
+        ["token", response.data.token],
         ["userId", String(response.data.userId)],
         ["username", response.data.username || username],
         ["profileImageUrl", response.data.profileImageUrl || ""],

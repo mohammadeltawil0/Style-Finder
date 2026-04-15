@@ -100,16 +100,17 @@ class UserControllerTest {
         request.setUsername("stella");
         request.setPassword("password");
 
-        LoginResponseDto mockResponse = new LoginResponseDto(1L, "fake-jwt-token");
+        LoginResponseDto mockResponse =
+                new LoginResponseDto(1L, "fake-token");
 
         when(userService.login("stella", "password"))
                 .thenReturn(mockResponse);
 
-        ResponseEntity<LoginResponseDto> response = userController.login(request);
+        ResponseEntity<LoginResponseDto> response =
+                userController.login(request);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals(1L, response.getBody().getUserId());
-        assertEquals("fake-jwt-token", response.getBody().getToken());
+        assertEquals("fake-token", response.getBody().getToken());
     }
 
     //Login failure

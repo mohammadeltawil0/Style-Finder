@@ -104,7 +104,14 @@ export default function Login() {
       });
 
       loginData = response.data;
+      if (!loginData?.token) {
+        throw new Error("Token missing");
+      }
       console.log("Login successful:", loginData);
+      await AsyncStorage.setItem("token", loginData.token);
+      await AsyncStorage.setItem("userId", String(loginData.userId));
+      await AsyncStorage.setItem("username", loginData.username);
+      console.log("Stored token:", await AsyncStorage.getItem("token"));
     } catch (error) {
       const details = describeApiError(error);
       const status = details.status;
@@ -124,6 +131,9 @@ export default function Login() {
       return;
     }
 
+    await AsyncStorage.setItem("username", loginData.username);
+    await AsyncStorage.setItem("userId", String(loginData.userId));
+
     let hasPreferences = false;
     try {
       const prefResponse = await apiClient.get(`/api/preferences/${loginData.userId}`);
@@ -140,8 +150,6 @@ export default function Login() {
 
     try {
       resetAnswers();
-      await AsyncStorage.setItem("username", loginData.username);
-      await AsyncStorage.setItem("userId", String(loginData.userId));
 
       try {
         const userResponse = await apiClient.get(`/api/users/${loginData.userId}`);
