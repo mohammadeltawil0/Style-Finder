@@ -11,6 +11,21 @@ import EditModal from "./edit-modal";
 import Toast from "react-native-toast-message";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
+import ColorPicker from "react-native-color-picker-wheel";
+
+const DEFAULT_COLOR = "#74512D";
+
+const getContrastColor = (hexColor) => {
+    if (!hexColor || typeof hexColor !== "string" || !hexColor.startsWith("#") || hexColor.length < 7) {
+        return "#FFFFFF";
+    }
+
+    const r = parseInt(hexColor.substring(1, 3), 16);
+    const g = parseInt(hexColor.substring(3, 5), 16);
+    const b = parseInt(hexColor.substring(5, 7), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 125 ? "#000000" : "#FFFFFF";
+};
 
 const titleCaseFromEnum = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
@@ -109,13 +124,14 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [isSeasonModalVisible, setIsSeasonModalVisible] = useState(false);
     const [isLengthModalVisible, setIsLengthModalVisible] = useState(false);
     const [isBulkModalVisible, setIsBulkModalVisible] = useState(false);
+    const [isColorModalVisible, setIsColorModalVisible] = useState(false);
+    const [tempColor, setTempColor] = useState(DEFAULT_COLOR);
 
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    console.log("Editing item:", item);
+    console.log("Editing item:", item.color);
     const hasImageUrl = typeof uri === "string" && uri.trim().length > 0;
-    console.log("Image URL check - uri:", uri, "hasImageUrl:", hasImageUrl);
 
     const fitToSliderValue = (value) => {
         if (typeof value === "number") return value;
@@ -244,6 +260,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
         setCategory(normalizeCategory(item.type || item.category));
         setPattern(normalizePattern(item.pattern));
         setColor(item.color || null);
+        setTempColor(item.color || DEFAULT_COLOR);
         setMaterial(normalizeMaterial(item.material));
         setEvent(normalizeEvent(item.formality || item.event));
         setFit(fitToSliderValue(item.fit));
@@ -370,7 +387,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
             const payload = {
                 userId: item?.userId,
                 type: changes?.type ?? category,
-                color,
+                color: changes?.color ?? color,
                 pattern: changes?.pattern ?? pattern,
                 length: changes?.length ?? length,
                 material: changes?.material ?? material,
@@ -392,6 +409,10 @@ export default function EditItemsModal({ item, setModalVisible }) {
             }
             if (updatedItem?.pattern) {
                 setPattern(updatedItem.pattern);
+            }
+            if (updatedItem?.color !== undefined) {
+                setColor(updatedItem.color);
+                setTempColor(updatedItem.color || DEFAULT_COLOR);
             }
             if (updatedItem?.formality) {
                 setEvent(updatedItem.formality);
@@ -438,7 +459,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
             return;
         }
 
-        console.log("Deleting item id:", resolvedItemId);
         deleteItemMutation.mutate(resolvedItemId);
     };
 
@@ -574,7 +594,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     name="create"
                                     size={20}
                                     color={theme.colors.text}
-                                />                            </View>
+                                />
+                            </View>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
@@ -729,7 +750,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </TouchableOpacity>
                         </View>
                     </View>
-                    {color && (
+                    {(pattern === "SOLID" || color) && (
                         <View
                             style={[
                                 styles.responseContainer,
@@ -768,7 +789,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     <View
                                         className="colorPreview"
                                         style={{
-                                            backgroundColor: color,
+                                            backgroundColor: color || DEFAULT_COLOR,
                                             width: 30,
                                             height: 30,
                                             borderRadius: 25,
@@ -790,11 +811,26 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 className="editContainer"
                                 style={{ flexGrow: 1, alignItems: "flex-end", justifyContent: "center" }}
                             >
-                                <Ionicons
-                                    name="create"
-                                    size={20}
-                                    color={theme.colors.text}
-                                />
+                                <TouchableOpacity
+                                    onPress={() => {
+                                        if (pattern !== "SOLID") {
+                                            Toast.show({
+                                                type: "info",
+                                                text1: "Color editing is for solid items",
+                                                text2: "Set pattern to Solid to edit color.",
+                                            });
+                                            return;
+                                        }
+                                        setTempColor(color || DEFAULT_COLOR);
+                                        setIsColorModalVisible(true);
+                                    }}
+                                >
+                                    <Ionicons
+                                        name="create"
+                                        size={20}
+                                        color={theme.colors.text}
+                                    />
+                                </TouchableOpacity>
                             </View>
                         </View>
                     )}
@@ -1304,12 +1340,93 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 value={pattern}
                 onSelect={(nextPattern) => {
                     setPattern(nextPattern);
-                    updateItemMutation.mutate({ pattern: nextPattern });
+                    if (nextPattern === "SOLID") {
+                        const nextColor = color || DEFAULT_COLOR;
+                        setColor(nextColor);
+                        setTempColor(nextColor);
+                        updateItemMutation.mutate({ pattern: nextPattern, color: nextColor });
+                        setIsColorModalVisible(true);
+                        return;
+                    }
+
+                    setColor(null);
+                    updateItemMutation.mutate({ pattern: nextPattern, color: null });
                 }}
                 options={PATTERN_OPTIONS}
                 title="Edit Pattern"
                 isSaving={updateItemMutation.isPending}
             />
+
+            <Modal
+                visible={isColorModalVisible}
+                transparent
+                animationType="fade"
+                onRequestClose={() => setIsColorModalVisible(false)}
+            >
+                <View style={styles.confirmOverlay}>
+                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}> 
+                        <ThemedText
+                            style={{
+                                fontSize: theme.sizes.h2,
+                                fontFamily: theme.fonts.bold,
+                                marginBottom: 12,
+                            }}
+                        >
+                            Edit Color
+                        </ThemedText>
+
+                        <View style={styles.colorWheelWrap}>
+                            <ColorPicker
+                                color={tempColor}
+                                onColorChange={(nextColor) => setTempColor(nextColor)}
+                                onColorChangeComplete={(nextColor) => setTempColor(nextColor)}
+                                style={{ width: "100%" }}
+                            />
+                        </View>
+
+                        <View style={[styles.colorPreviewBadge, { backgroundColor: tempColor }]}> 
+                            <ThemedText style={{ color: getContrastColor(tempColor), fontFamily: theme.fonts.bold }}>
+                                {String(tempColor || DEFAULT_COLOR).toUpperCase()}
+                            </ThemedText>
+                        </View>
+
+                        <View style={styles.confirmActions}>
+                            <TouchableOpacity
+                                style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
+                                onPress={() => {
+                                    setTempColor(color || DEFAULT_COLOR);
+                                    setIsColorModalVisible(false);
+                                }}
+                                disabled={updateItemMutation.isPending}
+                            >
+                                <ThemedText>Cancel</ThemedText>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[
+                                    styles.confirmBtn,
+                                    {
+                                        backgroundColor: theme.colors.tabIconSelected,
+                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
+                                    },
+                                ]}
+                                onPress={() => {
+                                    setColor(tempColor);
+                                    updateItemMutation.mutate({ color: tempColor });
+                                    setIsColorModalVisible(false);
+                                }}
+                                disabled={updateItemMutation.isPending}
+                            >
+                                {updateItemMutation.isPending ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <ThemedText style={{ color: theme.colors.text }}>Save</ThemedText>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <EditModal
                 modalVisible={isFormalityModalVisible}
@@ -1517,6 +1634,19 @@ const styles = {
         paddingVertical: 12,
         alignItems: "center",
         justifyContent: "center",
-    }
+    },
+    colorWheelWrap: {
+        width: 260,
+        height: 260,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    colorPreviewBadge: {
+        marginTop: 14,
+        marginBottom: 16,
+        borderRadius: 18,
+        paddingHorizontal: 18,
+        paddingVertical: 8,
+    },
 };
 
