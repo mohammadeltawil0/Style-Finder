@@ -783,7 +783,7 @@ export default function ReviewPage({
                   </View>
                 </View>
               )}
-              {bulk ? (
+              {bulk !== null && bulk !== undefined ? (
                 <View
                   style={[
                     styles.responseContainer,

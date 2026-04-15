@@ -20,9 +20,9 @@ export default function BulkPage({
 }) {
   const theme = useTheme();
   const options = [
-    "Thick",
-    "Regular",
     "Thin",
+    "Regular",
+    "Thick",
   ];
 
   const { width } = useWindowDimensions();
