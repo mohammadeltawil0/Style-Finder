@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TouchableOpacity, Modal,
-    ActivityIndicator, ScrollView, Pressable, StyleSheet, Image } from "react-native";
+import { View, Text, TouchableOpacity, Modal, ActivityIndicator, ScrollView, Pressable, StyleSheet, Image } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import { ThemedText } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
@@ -96,6 +95,7 @@ const styles = StyleSheet.create({
     chevronView: { alignItems: "flex-end", marginBottom: 10 },
     modalTitle: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, textAlign: 'center' },
     responseContainer: { padding: 15, borderRadius: 10, marginBottom: 15 },
+    itemImage: { height: 180, borderRadius: 10, marginTop: 5 },
     itemImagePlaceholder: { height: 180, borderRadius: 10, marginTop: 5 },
     modalActions: { marginTop: 20, gap: 10 },
     actionBtn: { padding: 15, borderRadius: 10, alignItems: 'center' },
