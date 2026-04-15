@@ -173,6 +173,12 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="adminwelcomepage" />,
               }}
             />
+            <Stack.Screen
+              name="settings/adminFolder/adminUserDetail"
+              options={{
+                header: () => <CustomHeader page="adminUserDetail" />,
+              }}
+            />
 
           </Stack>          
           <StatusBar style="auto" />

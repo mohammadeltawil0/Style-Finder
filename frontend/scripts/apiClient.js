@@ -3,8 +3,13 @@ import axios from 'axios';
 
 // 1. Verify the URL loaded correctly (Debugging)
 // const API_URL = "https://api.stylefinder.tech";
-const API_URL = "http://localhost:8080";
-// const API_URL = "http://{localIP}:8080"; // Use your machine's local IP address for Android emulator
+
+// If using web 
+// const API_URL = "http://localhost:8080";
+
+// If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
+// const API_URL = "http://{YOUR_IP_ADDRESS}:8080";
+
 console.log("Connecting to Backend at:", API_URL);
 
 // 2. Create a global Axios instance

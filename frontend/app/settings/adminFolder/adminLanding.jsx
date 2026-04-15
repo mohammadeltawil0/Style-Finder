@@ -17,7 +17,7 @@ export default function AdminLanding() {
 
   return (
     <ThemedView gradient style={styles.container}>
-      <View style={styles.logoCircle}>
+      <View style={styles.logoWrap}>
         <Image source={require("../../../assets/images/custom-logo-2.png")} style={styles.logoImage} />
       </View>
       <Text style={styles.welcome}>WELCOME{"\n"}ADMIN!</Text>
@@ -27,19 +27,19 @@ export default function AdminLanding() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: "center", alignItems: "center" },
-  logoCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: "#D4B8A8",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 32,
+  logoWrap: {
+    width: "50%",
+    aspectRatio: 1,
+    borderRadius: 999,
     overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
   },
   logoImage: {
-    width: 160,
-    height: 160,
+    width: "80%",
+    height: "100%",
+    resizeMode: "cover",
   },
-  welcome: { fontSize: 32, fontWeight: "bold", textAlign: "center", letterSpacing: 1 },
+  welcome: { fontSize: 32, fontWeight: "bold", textAlign: "center", },
 });
