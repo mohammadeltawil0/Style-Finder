@@ -21,7 +21,7 @@ export const CustomHeader = ({ page }) => {
     page === "UpdatePassword" ||
     page === "adminSettings" ||
     page === "AdminChangePassword" ||
-    page == "adminwelcomepage" ||
+    page === "adminwelcomepage" ||
     page === "adminEditProfile" ||
     page === "adminUserDetail";
 
