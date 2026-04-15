@@ -5,11 +5,20 @@ import { ThemedText } from "./themed-text";
 import { useEffect, useState } from "react";
 import Entypo from '@expo/vector-icons/Entypo';
 
-export function TogglePreview({ uri }) {
+export function TogglePreview({ uri, previewMode, setPreviewMode }) {
     const [imageFailed, setImageFailed] = useState(false);
-    const [togglePreview, setTogglePreview] = useState(false);
+    const [localTogglePreview, setLocalTogglePreview] = useState(false);
 
     const theme = useTheme();
+    const isControlled = typeof previewMode === "boolean" && typeof setPreviewMode === "function";
+    const togglePreview = isControlled ? previewMode : localTogglePreview;
+    const handleTogglePreview = () => {
+        if (isControlled) {
+            setPreviewMode(!togglePreview);
+            return;
+        }
+        setLocalTogglePreview(!togglePreview);
+    };
 
     useEffect(() => {
         setImageFailed(false);
@@ -20,7 +29,7 @@ export function TogglePreview({ uri }) {
             <View style={{ alignItems: "center", width: "100%" }}>
                 <Pressable
                     className="toggleHeader"
-                    onPress={() => setTogglePreview(!togglePreview)}
+                    onPress={handleTogglePreview}
                     style={{ alignItems: "center", backgroundColor: theme.colors.lightBrown, borderRadius: 10, flexDirection: "row", gap: 8, justifyContent: "center", marginTop: 30, paddingHorizontal: 30, paddingVertical: 10, width: "100%" }}>
                     <ThemedText style={{ fontSize: theme.sizes.h2, color: theme.colors.text, textAlign: "center" }}>
                     Preview Image

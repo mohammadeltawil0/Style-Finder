@@ -9,7 +9,7 @@ import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import Slider from "@react-native-community/slider";
 
-export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri }) {
+export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
 
   const { width } = useWindowDimensions();
@@ -44,7 +44,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri })
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
           <View className="mainContent" style={styles.mainContent}>
             <View

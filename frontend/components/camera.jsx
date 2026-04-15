@@ -320,19 +320,21 @@ const styles = StyleSheet.create({
   },
   previewContainer: {
     alignItems: "center",
-    flex: 1,
-    paddingHorizontal: 30,
+    width: "90%",
+    aspectRatio: 1,
     justifyContent: "center",
-    width: "100%",
+    alignSelf: "center",
+    marginTop: 55
   },
   previewContainerWeb: {
+    width: "100%",
+    maxWidth: 560,
     alignSelf: "center",
-    paddingTop: 6,
-    paddingBottom: 24,
   },
   previewImage: {
     width: "100%",
-    aspectRatio: 1,
+    height: "100%",
+    borderRadius: 16,
   },
   previewImageWeb: {
     borderRadius: 16,

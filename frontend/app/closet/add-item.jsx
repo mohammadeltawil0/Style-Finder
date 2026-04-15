@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";
 import ColorPage from "./color-page.jsx";
@@ -15,6 +15,8 @@ import { apiClient } from "../../scripts/apiClient";
 import * as FileSystem from 'expo-file-system/legacy';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
+
+const PREVIEW_MODE_STORAGE_KEY = "addItemPreviewMode";
 
 export default function AddItemScreen() {
   const [navigation, setNavigation] = useState({
@@ -34,9 +36,42 @@ export default function AddItemScreen() {
   const [length, setLength] = useState("");
   const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
   const [editing, setEditing] = useState(false); // track if user is editing an existing item or adding new
+  const [previewMode, setPreviewMode] = useState(false); // track if user is in review mode to conditionally show "Edit" buttons
+  const [isPreviewModeHydrated, setIsPreviewModeHydrated] = useState(false);
 
   const router = useRouter();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const loadPreviewMode = async () => {
+      try {
+        const storedPreviewMode = await AsyncStorage.getItem(PREVIEW_MODE_STORAGE_KEY);
+        if (storedPreviewMode === "true" || storedPreviewMode === "false") {
+          setPreviewMode(storedPreviewMode === "true");
+        }
+      } catch (error) {
+        console.error("Failed to load preview mode:", error);
+      } finally {
+        setIsPreviewModeHydrated(true);
+      }
+    };
+
+    loadPreviewMode();
+  }, []);
+
+  useEffect(() => {
+    if (!isPreviewModeHydrated) return;
+
+    const persistPreviewMode = async () => {
+      try {
+        await AsyncStorage.setItem(PREVIEW_MODE_STORAGE_KEY, String(previewMode));
+      } catch (error) {
+        console.error("Failed to save preview mode:", error);
+      }
+    };
+
+    persistPreviewMode();
+  }, [previewMode, isPreviewModeHydrated]);
 
   // Navigation helpers
   const goToPage = (pageNum, fromPage = null) => {
@@ -223,6 +258,8 @@ export default function AddItemScreen() {
           itemType={itemType}
           setItemType={setItemType}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -238,6 +275,8 @@ export default function AddItemScreen() {
           uri={uri}
           isSolid={isSolid}
           setIsSolid={setIsSolid}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -249,6 +288,8 @@ export default function AddItemScreen() {
           formality={formality}
           setFormality={setFormality}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -260,6 +301,8 @@ export default function AddItemScreen() {
           material={material}
           setMaterial={setMaterial}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
       {/* Sixth Page: Fit */}
@@ -271,6 +314,8 @@ export default function AddItemScreen() {
           fit={fit}
           setFit={setFit}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -282,6 +327,8 @@ export default function AddItemScreen() {
           season={season}
           setSeason={setSeason}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -294,6 +341,8 @@ export default function AddItemScreen() {
           length={length}
           setLength={setLength}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
@@ -305,6 +354,8 @@ export default function AddItemScreen() {
           bulk={bulk}
           setBulk={setBulk}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 

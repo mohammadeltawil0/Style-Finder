@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function SeasonPage({ season, setSeason, setPage, goBack, uri}) {
+export default function SeasonPage({ season, setSeason, setPage, goBack, uri, previewMode, setPreviewMode}) {
   const theme = useTheme();
   const seasonOptions = [
     {
@@ -70,7 +70,7 @@ export default function SeasonPage({ season, setSeason, setPage, goBack, uri}) {
         >
           <View style={styles.togglePreviewContainer}
             pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View

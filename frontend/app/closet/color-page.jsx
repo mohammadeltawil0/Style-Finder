@@ -23,7 +23,7 @@ const getContrastColor = (hex) => {
   return brightness > 125 ? '#000000' : '#FFFFFF';
 };
 
-export default function ColorPage({ setPage, color, setColor, pattern, setPattern, uri, isSolid, setIsSolid }) {
+export default function ColorPage({ setPage, goBack, color, setColor, pattern, setPattern, uri, isSolid, setIsSolid, previewMode, setPreviewMode }) {
   const [tempColor, setTempColor] = useState(color || '#74512D');
   const [isReady, setIsReady] = useState(false);
 
@@ -80,6 +80,18 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     return () => { isMounted = false; };
   }, []);
 
+  const handleBack = () => {
+    // If user is on the Solid color picker step, go back to pattern selection first.
+    if (pattern === "SOLID" && isSolid) {
+      setIsSolid(false);
+      return;
+    }
+
+    if (typeof goBack === "function") {
+      goBack();
+    }
+  };
+
   if (!isReady && pattern === "SOLID") {
     return (
       <ThemedView style={styles.page}>
@@ -104,7 +116,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View style={styles.mainContent}>
@@ -187,8 +199,11 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                             setIsSolid(false);
                           } else {
                             setPattern(option.id);
-                            setIsSolid(false);
-                            if (option.id !== "SOLID") {
+                            if (option.id === "SOLID") {
+                              // Enter color picker immediately when Solid is chosen.
+                              setIsSolid(true);
+                            } else {
+                              setIsSolid(false);
                               setColor("");
                             }
                           }
@@ -235,7 +250,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
       </ScrollView>
       <View style={styles.navigationButtons}>
         <Pressable
-          onPress={() => goBack()}
+          onPress={handleBack}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
@@ -245,7 +260,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {((color && pattern === "SOLID") || (!color && pattern !== "SOLID" && pattern.length > 0)) && (
+        {((color && pattern === "SOLID" && isSolid) || (!color && pattern !== "SOLID" && pattern.length > 0)) && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -258,7 +273,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
         )}
-        {pattern === "SOLID" && color === "" && (
+        {pattern === "SOLID" && !isSolid && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,

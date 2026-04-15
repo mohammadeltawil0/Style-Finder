@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function EventPage({ setPage, goBack, formality, setFormality, uri }) {
+export default function EventPage({ setPage, goBack, formality, setFormality, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
   const eventOptions = [
     {
@@ -75,7 +75,7 @@ export default function EventPage({ setPage, goBack, formality, setFormality, ur
         >
           <View style={styles.togglePreviewContainer}
             pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View

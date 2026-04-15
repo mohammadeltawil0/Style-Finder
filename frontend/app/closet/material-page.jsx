@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function MaterialPage({ setPage, goBack, material, setMaterial, uri }) {
+export default function MaterialPage({ setPage, goBack, material, setMaterial, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
   const materialOptions = [
     {
@@ -72,7 +72,7 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View className="mainContent" style={styles.mainContent}>

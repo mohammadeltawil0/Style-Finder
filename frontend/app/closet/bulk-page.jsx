@@ -15,6 +15,8 @@ export default function BulkPage({
   setPage,
   goBack,
   uri,
+  previewMode,
+  setPreviewMode,
 }) {
   const theme = useTheme();
   const options = [
@@ -45,7 +47,7 @@ export default function BulkPage({
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View className="mainContent" style={styles.mainContent}>
