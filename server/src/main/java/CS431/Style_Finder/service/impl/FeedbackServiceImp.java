@@ -25,7 +25,7 @@ public class FeedbackServiceImp implements FeedbackService {
 
     @Transactional
     public void processFeedback(FeedbackDto feedback) {
-        UserWeights vw = weightsDb.findById(feedback.getUserId())
+        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(feedback.getUserId())
                 .orElseThrow(() -> new RuntimeException("User weights not found."));
 
         // EXPLICIT MEMORY: Create a new CBR Case

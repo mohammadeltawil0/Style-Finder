@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  Image,
 } from "react-native";
 import {
   ClosetToggle,
@@ -143,6 +144,11 @@ export default function ClosetScreen() {
     name: `${formatItemType(item.type)} (Item ${index + 1})`,
   }));
 
+  const getOutfitCoverImage = (outfit) => {
+    const firstOutfitItem = outfit?.outfitItems?.[0]?.item;
+    return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
+  };
+
   const filteredItems = processedItems.filter((item) => {
     let matchesCategory = true;
     if (category === "tops") matchesCategory = item.type === "TOP";
@@ -237,9 +243,17 @@ export default function ClosetScreen() {
                               renderItem={({ item, index }) => (
                                   <View style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.lightBrown, borderRadius: 10, marginBottom: 20, width: "48%" }}>
                                     <TouchableOpacity onPress={() => { setSelectedOutfit(item); setIsOutfitModalVisible(true); }}>
-                                      <View style={{ height: 175, marginBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
-                                        <ThemedText style={{ color: '#666', fontSize: 12 }}>Items: {item.itemIds?.length || 0}</ThemedText>
-                                      </View>
+                                      {getOutfitCoverImage(item) ? (
+                                        <Image
+                                          source={{ uri: getOutfitCoverImage(item) }}
+                                          style={{ width: "100%", height: 175, marginBottom: 10, borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                                          resizeMode="cover"
+                                        />
+                                      ) : (
+                                        <View style={{ height: 175, marginBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
+                                          <ThemedText style={{ color: '#666', fontSize: 12 }}>Items: {item.itemIds?.length || 0}</ThemedText>
+                                        </View>
+                                      )}
                                     </TouchableOpacity>
                                     <View style={{ backgroundColor: theme.colors.card, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderTopColor: theme.colors.border, flexDirection: "row", justifyContent: "space-between", padding: 10, alignItems: "center" }}>
                                       <ThemedText>Outfit {index + 1}</ThemedText>
