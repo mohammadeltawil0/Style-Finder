@@ -17,6 +17,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
 
+  const showNext = fit !== null && fit !== undefined;
   const upperOptions = ["Skinny", "Regular", "Loose"];
 
   const lowerOptions = [
@@ -96,17 +97,17 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
                 }}
               >
                 {itemType === "Top" ||
-                itemType === "Full Body"
+                  itemType === "Full Body"
                   ? upperOptions.map((option, index) => (
-                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                        {option}
-                      </ThemedText>
-                    ))
+                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                      {option}
+                    </ThemedText>
+                  ))
                   : lowerOptions.map((option, index) => (
-                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                        {option}
-                      </ThemedText>
-                    ))}
+                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                      {option}
+                    </ThemedText>
+                  ))}
               </View>
               <View className="sliderView" style={styles.sliderView}>
                 <Slider
@@ -117,7 +118,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
                   minimumValue={0}
                   maximumValue={2}
                   step={0.1}
-                  value={fit}
+                  value={fit ?? 1}
                   onValueChange={(value) => {
                     setFit(value);
                     console.log("fit", value);
@@ -129,26 +130,31 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
           onPress={() => goBack()}
-          //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {fit !== null && fit !== undefined && (
+        {showNext && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: buttonWidth,
             }}
             onPress={() => setPage(7)}
           >

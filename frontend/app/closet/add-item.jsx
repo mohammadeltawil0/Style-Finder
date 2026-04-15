@@ -31,10 +31,10 @@ export default function AddItemScreen() {
   const [formality, setFormality] = useState("");
   const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
-  const [fit, setFit] = useState(1); // default to middle value of 1, range from 0-2 (0: skinny, 1: regular, 2: loose)
+  const [fit, setFit] = useState(null); // null means unselected; user must move slider before continuing
   const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
-  const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
+  const [bulk, setBulk] = useState(null); // null means unselected; user must move slider before continuing
   const [editing, setEditing] = useState(false); // track if user is editing an existing item or adding new
   const [previewMode, setPreviewMode] = useState(false); // track if user is in review mode to conditionally show "Edit" buttons
   const [isPreviewModeHydrated, setIsPreviewModeHydrated] = useState(false);
@@ -101,8 +101,6 @@ export default function AddItemScreen() {
     }));
   };
 
-  console.log("goNext navigation state:", navigation);
-
   const goBack = () => {
     setNavigation((prev) => ({
       currentPage: prev.previousPage,
@@ -111,7 +109,6 @@ export default function AddItemScreen() {
     }));
   };
 
-  console.log("goBack navigation state:", navigation);
   // Helper to navigate to edit a specific field from review
   const editField = (fieldPageNum) => {
     setEditing(true); // Enable editing mode
@@ -120,19 +117,22 @@ export default function AddItemScreen() {
 
   // Convert states to match backend
   //1. Convert fit
-  let convertedBulk = 0;
 
   const convertFit = (fit) => {
+    if (fit === null || fit === undefined) return null;
     if (fit < 0.5) return "SLIM";
     if (fit < 1.5) return "REGULAR";
     return "LOOSE";
   };
 
-  bulk >= 0 && bulk <= 0.50
-    ? (convertedBulk = 0)
-    : bulk >= 0.51 && bulk < 1.49
-      ? (convertedBulk = 1)
-      : (convertedBulk = 2);
+  const convertedBulk =
+    bulk === null || bulk === undefined
+      ? null
+      : bulk <= 0.5
+        ? 0
+        : bulk < 1.49
+          ? 1
+          : 2;
 
   const convertPattern = (pattern) => {
     const map = {
@@ -190,8 +190,6 @@ export default function AddItemScreen() {
     fit: normalizeEnum(convertFit(fit)),
     // removed imageUrl here since we set it after base64 conversion
   });
-
-  let convertedFit = convertFit(fit);
 
   const convertToBase64 = async (uri) => {
     const base64 = await FileSystem.readAsStringAsync(uri, {

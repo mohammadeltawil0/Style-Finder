@@ -29,6 +29,7 @@ export default function BulkPage({
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+  const showNext = bulk !== null && bulk !== undefined;
 
   return (
     <ThemedView
@@ -109,7 +110,7 @@ export default function BulkPage({
                       minimumValue={0}
                       maximumValue={2}
                       step={0.25}
-                      value={bulk}
+                      value={bulk ?? 1}
                       onValueChange={(value) => {
                         setBulk(value);
                         console.log("bulk", value);
@@ -123,30 +124,37 @@ export default function BulkPage({
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
           onPress={() => goBack()}
-          //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        <Pressable
-          style={{
-            backgroundColor: theme.colors.card,
-            borderRadius: 10,
-            padding: 10,
-            width: "35%",
-          }}
-          onPress={() => setPage(10)}
-        >
-          <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
-        </Pressable>
+        {showNext && (
+          <Pressable
+            style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              padding: 10,
+              width: buttonWidth,
+            }}
+            onPress={() => setPage(10)}
+          >
+            <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
+          </Pressable>
+        )}
       </View>
     </ThemedView>
   );

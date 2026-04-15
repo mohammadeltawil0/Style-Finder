@@ -82,6 +82,7 @@ export default function LengthPage({
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+  const showNext = Boolean(length);
 
   // for the animation
 
@@ -192,30 +193,37 @@ export default function LengthPage({
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
           onPress={() => goBack()}
-          //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        <Pressable
-          style={{
-            backgroundColor: theme.colors.card,
-            borderRadius: 10,
-            padding: 10,
-            width: "35%",
-          }}
-          onPress={() => setPage()}
-        >
-          <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
-        </Pressable>
+        {showNext && (
+          <Pressable
+            style={{
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              padding: 10,
+              width: buttonWidth,
+            }}
+            onPress={() => setPage(9)}
+          >
+            <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
+          </Pressable>
+        )}
       </View>
     </ThemedView>
   );

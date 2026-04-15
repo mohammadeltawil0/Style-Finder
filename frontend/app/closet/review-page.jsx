@@ -1,9 +1,9 @@
 import { useState } from "react";
 import {
   Image,
+  Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   useWindowDimensions,
   View,
 } from "react-native";
@@ -882,15 +882,14 @@ export default function ReviewPage({
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View style={[styles.navigationButtons, isWeb && styles.navigationButtonsWeb]}>
         <Pressable
           onPress={() => goBack()}
-          //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
@@ -902,7 +901,7 @@ export default function ReviewPage({
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
