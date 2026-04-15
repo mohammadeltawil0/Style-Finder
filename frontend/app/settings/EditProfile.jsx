@@ -4,13 +4,13 @@ import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import ProfilePic from "../../components/profile-pic";
 import { apiClient } from "../../scripts/apiClient";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
+import { Ionicons } from "@expo/vector-icons";
 
 function EditProfile() {
     const theme = useTheme();
@@ -312,7 +312,11 @@ function EditProfile() {
                             }}
                         >
                             <TouchableOpacity onPress={pickProfileImage}>
-                                <AntDesign name="edit" size={20} color={theme.colors.text} />
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
                             </TouchableOpacity>
                         </View>
                     </View>

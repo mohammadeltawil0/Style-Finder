@@ -9,7 +9,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import EditModal from "./edit-modal";
 import Toast from "react-native-toast-message";
-import AntDesign from "@expo/vector-icons/AntDesign";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 
@@ -571,8 +570,11 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     padding: 4,
                                 }}
                             >
-                                <AntDesign name="edit" size={20} color={theme.colors.text} />
-                            </View>
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />                            </View>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
@@ -600,10 +602,15 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     top: 6,
                                     borderRadius: 12,
                                     padding: 4,
+                                    justifyContent: "center",
                                     backgroundColor: "rgba(255,255,255,0.5)",
                                 }}
                             >
-                                <AntDesign name="edit" size={20} color={theme.colors.text} />
+                                <Ionicons
+                                    name="create"
+                                    size={20}
+                                    color={theme.colors.text}
+                                />
                             </View>
                         </TouchableOpacity>
                     )}
