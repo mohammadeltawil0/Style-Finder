@@ -574,7 +574,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     name="create"
                                     size={20}
                                     color={theme.colors.text}
-                                />                            </View>
+                                />
+                            </View>
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
