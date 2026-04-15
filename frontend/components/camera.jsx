@@ -1,7 +1,6 @@
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useEffect, useRef, useState } from "react";
 import {
-  Alert,
   Platform,
   Pressable,
   StyleSheet,
@@ -12,6 +11,7 @@ import { Image } from "expo-image";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import * as ImagePicker from "expo-image-picker";
+import Toast from "react-native-toast-message";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
 
@@ -20,6 +20,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
   const [isCameraAvailable, setIsCameraAvailable] = useState(true);
+  const [isTakingPicture, setIsTakingPicture] = useState(false);
 
   const { width } = useWindowDimensions();
 
@@ -135,10 +136,11 @@ export const Camera = ({ setUri, setPage, uri }) => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
 
     if (status !== "granted") {
-      Alert.alert(
-        "Permission Denied",
-        "We need access to your photos to make this work!",
-      );
+      Toast.show({
+        type: "error",
+        text1: "Permission Denied",
+        text2: "We need access to your photos to make this work!",
+      });
       return;
     }
 
@@ -157,8 +159,24 @@ export const Camera = ({ setUri, setPage, uri }) => {
   };
 
   const takePicture = async () => {
-    const photo = await ref.current?.takePictureAsync();
-    if (photo?.uri) setUri(photo.uri);
+    if (isTakingPicture || !ref.current) return;
+
+    setIsTakingPicture(true);
+    try {
+      const photo = await ref.current.takePictureAsync();
+      if (photo?.uri) setUri(photo.uri);
+    } catch (error) {
+      const message = String(error?.message ?? error);
+      if (!message.includes("Camera unmounted during taking photo process")) {
+        Toast.show({
+          type: "error",
+          text1: "Camera Error",
+          text2: "Could not take photo. Please try again.",
+        });
+      }
+    } finally {
+      setIsTakingPicture(false);
+    }
   };
 
   const toggleFacing = () => {
@@ -224,15 +242,23 @@ export const Camera = ({ setUri, setPage, uri }) => {
       <View
         style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}
       >
-        <Pressable onPress={toggleFacing} style={styles.iconBtn}>
+        <Pressable
+          onPress={toggleFacing}
+          style={styles.iconBtn}
+          disabled={isTakingPicture}
+        >
           <FontAwesome6 name="rotate-left" size={32} color="white" />
         </Pressable>
-        <Pressable onPress={takePicture}>
+        <Pressable onPress={takePicture} disabled={isTakingPicture}>
           <View style={[styles.shutterBtn]}>
             <View style={styles.shutterBtnInner} />
           </View>
         </Pressable>
-        <Pressable onPress={pickImage} style={styles.iconBtn}>
+        <Pressable
+          onPress={pickImage}
+          style={styles.iconBtn}
+          disabled={isTakingPicture}
+        >
           <FontAwesome name="photo" size={32} color="white" />
         </Pressable>
       </View>
@@ -246,6 +272,7 @@ export const Camera = ({ setUri, setPage, uri }) => {
             width: buttonWidth,
           }}
           onPress={() => setPage(2)}
+          disabled={isTakingPicture}
         >
           <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
         </Pressable>
