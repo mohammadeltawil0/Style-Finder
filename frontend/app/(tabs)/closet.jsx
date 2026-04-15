@@ -189,7 +189,7 @@ export default function ClosetScreen() {
   };
 
   const filteredItems = items.filter((item) => {
-  //category filter
+    //category filter
     if (category !== "all") {
       const typeMap = {
         tops: "TOP",
@@ -219,13 +219,13 @@ export default function ClosetScreen() {
         eventMap[item.formality],
         fitMap[item.fit],
       ]
-      .filter(Boolean)
-      .join(" ");
+        .filter(Boolean)
+        .join(" ");
       const words = searchableText.split(" ");
       console.log("SEARCH TERMS:", terms);
       console.log("ITEM TEXT:", searchableText);
       const matches = terms.every((term) => words.some((word) => word.startsWith(term)));
-      if(!matches) return false;
+      if (!matches) return false;
     }
     return true;
   });
@@ -389,31 +389,20 @@ export default function ClosetScreen() {
                             className="outfit-image"
                             style={{ height: 175, marginBottom: 10 }}
                           />
+                          <View
+                            style={{
+                              position: "absolute",
+                              right: 6,
+                              top: 6,
+                              borderRadius: 12,
+                              padding: 4,
+                              backgroundColor: theme.colors.background,
+                            }}
+                          >
+                            <Feather name="more-horizontal" size={16} color={theme.colors.text} />
+                          </View>
                         </TouchableOpacity>
                         {/* TO DO: add logic and possible placeholder for when user has no outfit image */}
-                        {/* TO DO: think about if we leave it as squares, do we then render them as rectangles when we open the edit item screen? */}
-                        <View
-                          className="outfit-footer"
-                          style={{
-                            backgroundColor: theme.colors.card,
-                            borderBottomLeftRadius: 10,
-                            borderBottomRightRadius: 10,
-                            borderTopColor: theme.colors.border,
-                            flexDirection: "row",
-                            justifyContent: "space-between",
-                            padding: 10,
-                            alignItems: "center",
-                          }}
-                        >
-                          <ThemedText> {item.name} </ThemedText>
-                          <Pressable>
-                            <Feather
-                              name="more-horizontal"
-                              size={20}
-                              color={theme.colors.text}
-                            />
-                          </Pressable>
-                        </View>
                       </View>
                     )}
                   />
