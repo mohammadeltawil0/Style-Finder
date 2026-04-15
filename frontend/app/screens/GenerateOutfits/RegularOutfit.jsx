@@ -119,11 +119,10 @@ const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
                     {formatEnum(item.type).toLowerCase()}.
                   </ThemedText>
                   {/* Image Placeholder for visualization */}
-                  <View
-                    style={[
-                      styles.itemImagePlaceholder,
-                      { backgroundColor: theme.colors.lightBrown },
-                    ]}
+                   <Image
+                    source={{ uri: item.imageUrl }}
+                    style={styles.itemImagePlaceholder}
+                    resizeMode="cover"
                   />
                 </View>
               </View>
