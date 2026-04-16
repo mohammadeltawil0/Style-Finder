@@ -75,7 +75,7 @@ function AdminSettings() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {name}
+            {name} 
           </ThemedText>
         </View>
 
