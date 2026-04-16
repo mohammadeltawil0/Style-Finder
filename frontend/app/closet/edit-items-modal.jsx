@@ -730,15 +730,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                             padding: 0,
                                         }}
                                     ></View>
-                                    <ThemedText
-                                        style={{
-                                            fontFamily: theme.fonts.regular,
-                                            fontSize: theme.sizes.text,
-                                            margin: 0,
-                                        }}
-                                    >
-                                        {displayValue(color)}
-                                    </ThemedText>
                                 </View>
                             </View>
                             <View
@@ -1387,13 +1378,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 style={{ width: "100%" }}
                             />
                         </View>
-
-                        <View style={[styles.colorPreviewBadge, { backgroundColor: tempColor }]}> 
-                            <ThemedText style={{ color: getContrastColor(tempColor), fontFamily: theme.fonts.bold }}>
-                                {String(tempColor || DEFAULT_COLOR).toUpperCase()}
-                            </ThemedText>
-                        </View>
-
                         <View style={styles.confirmActions}>
                             <TouchableOpacity
                                 style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
@@ -1628,6 +1612,7 @@ const styles = {
         marginBottom: 16,
     },
     confirmActions: {
+        marginTop: "10%",
         width: "100%",
         flexDirection: "row",
         gap: 10,
