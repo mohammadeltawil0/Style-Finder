@@ -158,6 +158,18 @@ export default function AddItemScreen() {
     return material ? Number(material) : null; // Convert material to number or return null if not set
   };
 
+  const convertFormality = (formality) => {
+    const map = {
+      "Versatile": "VERSATILE",
+      "Casual": "CASUAL",
+      "Work/Smart": "WORK_OR_SMART",
+      "Party/Night Out": "PARTY_OR_NIGHT_OUT",
+      "Formal": "FORMAL",
+      "Active/Sport": "ACTIVE_OR_SPORT",
+    };
+    return map[formality] || formality;
+  }
+
   const normalizeEnum = (value) => {
     if (value === "" || value === undefined) return null;
     return value;
@@ -239,7 +251,7 @@ export default function AddItemScreen() {
   };
 
   return (
-      <View style={{ flex: 1 }}>
+    <View style={{ flex: 1 }}>
       {/* First Page: camera */}
       {navigation.currentPage === 1 && <CameraPage setUri={setUri} setPage={goNext} uri={uri} />}
 
@@ -377,14 +389,14 @@ export default function AddItemScreen() {
           bulk={bulk}
           handleSubmit={handleSubmit}
           isPending={isPending}
-            setUri={setUri}
-          />
+          setUri={setUri}
+        />
       )}
       {isUploading && (
-          <View style={styles.loadingOverlay}>
-            <ActivityIndicator size="large" color="#b49480" />
-            <Text style={styles.loadingText}>Uploading to Wardrobe...</Text>
-          </View>
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#b49480" />
+          <Text style={styles.loadingText}>Uploading to Wardrobe...</Text>
+        </View>
       )}
     </View>
   );

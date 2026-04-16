@@ -8,7 +8,7 @@ import axios from 'axios';
 // const API_URL = "http://localhost:8080";
 
 // If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
-const API_URL = "http://192.168.1.163:8080";
+const API_URL = "http://{ip}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 

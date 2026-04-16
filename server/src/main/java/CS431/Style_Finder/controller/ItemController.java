@@ -19,10 +19,9 @@ public class ItemController {
     // POST /api/items
     // Body: { "userId":1, "type":"TOP", "color":"black", "formality":"CASUAL",
     //         "seasonWear":"SUMMER", "fit":"SLIM", "material":2 }
-    @PostMapping("/add")
+    @PostMapping({"", "/add"})
     public ResponseEntity<ItemDto> createItem(@RequestBody ItemDto dto) {
-        ResponseEntity<ItemDto> temp = ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(dto));
-        return temp;
+        return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(dto));
     }
 
     // GET /api/items/{id}
