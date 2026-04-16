@@ -76,8 +76,10 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         item.setType(dto.getType());
         item.setColor(dto.getColor());
+        item.setPattern(dto.getPattern());
         item.setLength(dto.getLength());
         item.setMaterial(dto.getMaterial());
+        item.setBulk(dto.getBulk());
         item.setSeasonWear(dto.getSeasonWear());
         item.setFormality(dto.getFormality());
         item.setFit(dto.getFit());

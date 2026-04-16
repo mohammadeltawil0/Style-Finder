@@ -7,6 +7,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   FlatList,
   Image,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -51,7 +52,11 @@ export default function ClosetScreen() {
   const fetchItems = async () => {
     if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
-    return response.data;
+    return [...response.data].sort((a, b) => {
+      const aId = Number(a?.itemId ?? a?.id ?? 0);
+      const bId = Number(b?.itemId ?? b?.id ?? 0);
+      return bId - aId;
+    });
   };
 
   useEffect(() => {
@@ -70,10 +75,12 @@ export default function ClosetScreen() {
   // replace useFocusEffect loadData with:
   const {
     data: items = [],
-    isLoading,
+    isLoading: isItemsLoading,
+    isError: isItemsError,
+    error: itemsError,
     refetch,
   } = useQuery({
-    queryKey: ["items", userId],
+    queryKey: ['items', userId],
     queryFn: fetchItems,
     enabled: !!userId,
   });
@@ -255,7 +262,10 @@ export default function ClosetScreen() {
 
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
-      <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
+      {!editItemsModalVisible && (
+        <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
+      )}
+
       <View
         style={{
           flex: 1,
@@ -268,10 +278,9 @@ export default function ClosetScreen() {
           <EditItemsModal
             item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            // maybe add a close modal here
           />
         ) : (
-          <View>
+          <View style={{ flex: 1, width: "100%" }}>
             {(isItems || mode === "trip") && (
               <SearchBar
                 value={searchText}
@@ -279,126 +288,170 @@ export default function ClosetScreen() {
                 onSubmit={handleSearchSubmit}
               />
             )}
+
             {isItems ? (
               <>
-                <View
-                  className="item-categories"
-                  style={{
-                    flexDirection: "row",
-                    gap: 38,
-                    justifyContent: "space-between",
-                    padding: 15,
-                  }}
-                >
-                  <Pressable
-                    className="tops-category"
+                {isItemsLoading ? (
+                  <View
                     style={{
-                      backgroundColor: theme.colors.lightBrown,
-                      borderRadius: 10,
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
                     }}
-                    onPress={() =>
-                      setCategory((prev) => (prev === "tops" ? "all" : "tops"))
-                    }
                   >
-                    <ThemedText
+                    <ActivityIndicator
+                      size="large"
+                      color={theme.colors.tabIconSelected}
+                    />
+                    <ThemedText>Loading your items...</ThemedText>
+                  </View>
+                ) : isItemsError ? (
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
+                    <ThemedText style={{ textAlign: "center" }}>
+                      {itemsError?.message || "Could not load items. Please try again."}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => refetch()}
                       style={{
-                        color: theme.colors.text,
-                        fontSize: theme.sizes.text,
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
                       }}
                     >
-                      Tops
-                    </ThemedText>
-                  </Pressable>
-                  <Pressable
-                    className="bottoms-category"
-                    style={{
-                      backgroundColor: theme.colors.lightBrown,
-                      borderRadius: 10,
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                    }}
-                    onPress={() =>
-                      setCategory((prev) =>
-                        prev === "bottoms" ? "all" : "bottoms",
-                      )
-                    }
-                  >
-                    <ThemedText
+                      <ThemedText>Retry</ThemedText>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <>
+                    <View
+                      className="item-categories"
                       style={{
-                        color: theme.colors.text,
-                        fontSize: theme.sizes.text,
+                        flexDirection: "row",
+                        gap: 38,
+                        justifyContent: "space-between",
+                        padding: 15,
                       }}
                     >
-                      Bottoms
-                    </ThemedText>
-                  </Pressable>
-                  <Pressable
-                    className="dresses-category"
-                    style={{
-                      backgroundColor: theme.colors.lightBrown,
-                      borderRadius: 10,
-                      paddingHorizontal: 20,
-                      paddingVertical: 10,
-                    }}
-                    onPress={() =>
-                      setCategory((prev) =>
-                        prev === "dresses" ? "all" : "dresses",
-                      )
-                    }
-                  >
-                    <ThemedText
-                      style={{
-                        color: theme.colors.text,
-                        fontSize: theme.sizes.text,
-                      }}
-                    >
-                      Dresses
-                    </ThemedText>
-                  </Pressable>
-                </View>
+                      <Pressable
+                        className="tops-category"
+                        style={{
+                          backgroundColor: theme.colors.lightBrown,
+                          borderRadius: 10,
+                          paddingHorizontal: 20,
+                          paddingVertical: 10,
+                        }}
+                        onPress={() =>
+                          setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+                        }
+                      >
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
+                          Tops
+                        </ThemedText>
+                      </Pressable>
 
-                <Items
-                  items={filteredItems}
-                  setCurrItemId={setCurrItemId}
-                  currItemId={currItemId}
-                  setEditItemsModalVisible={setEditItemsModalVisible}
-                  editItemsModalVisible={editItemsModalVisible}
-                />
-                <Pressable
-                  style={{
-                    backgroundColor: theme.colors.tabIconSelected,
-                    borderRadius: 100,
-                    bottom: 30,
-                    padding: 5,
-                    position: "absolute",
-                    right: 30,
-                    shadowColor: "#000",
-                    shadowOffset: { width: 0, height: 2 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 3.84,
-                    elevation: 5,
-                  }}
-                  onPress={() => router.push("../closet/add-item")} // TO DO: link this to add item page
-                >
-                  <Ionicons name="add-sharp" size={40} color="black" />
-                </Pressable>
+                      <Pressable
+                        className="bottoms-category"
+                        style={{
+                          backgroundColor: theme.colors.lightBrown,
+                          borderRadius: 10,
+                          paddingHorizontal: 20,
+                          paddingVertical: 10,
+                        }}
+                        onPress={() =>
+                          setCategory((prev) =>
+                            prev === "bottoms" ? "all" : "bottoms",
+                          )
+                        }
+                      >
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
+                          Bottoms
+                        </ThemedText>
+                      </Pressable>
+
+                      <Pressable
+                        className="dresses-category"
+                        style={{
+                          backgroundColor: theme.colors.lightBrown,
+                          borderRadius: 10,
+                          paddingHorizontal: 20,
+                          paddingVertical: 10,
+                        }}
+                        onPress={() =>
+                          setCategory((prev) =>
+                            prev === "dresses" ? "all" : "dresses",
+                          )
+                        }
+                      >
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
+                          Dresses
+                        </ThemedText>
+                      </Pressable>
+                    </View>
+
+                    <Items
+                      items={filteredItems}
+                      setCurrItemId={setCurrItemId}
+                      currItemId={currItemId}
+                      setEditItemsModalVisible={setEditItemsModalVisible}
+                      editItemsModalVisible={editItemsModalVisible}
+                    />
+
+                    <Pressable
+                      style={{
+                        backgroundColor: theme.colors.tabIconSelected,
+                        borderRadius: 100,
+                        bottom: 30,
+                        padding: 5,
+                        position: "absolute",
+                        right: 30,
+                        shadowColor: "#000",
+                        shadowOffset: { width: 0, height: 2 },
+                        shadowOpacity: 0.5,
+                        shadowRadius: 3.84,
+                        elevation: 5,
+                      }}
+                      onPress={() => router.push("../closet/add-item")}
+                    >
+                      <Ionicons name="add-sharp" size={40} color="black" />
+                    </Pressable>
+                  </>
+                )}
               </>
             ) : (
-              // else outfit history
               <>
                 <View style={styles.outfitToggle}>
                   <TouchableOpacity
-                    style={[
-                      styles.toggleBtn,
-                      mode === "trip" && styles.activeToggle,
-                    ]}
+                    style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
                     onPress={() => setMode("trip")}
                   >
                     <ThemedText>Trip</ThemedText>
                   </TouchableOpacity>
-                 
+
                   <TouchableOpacity
                     style={[
                       styles.toggleBtn,
@@ -413,9 +466,9 @@ export default function ClosetScreen() {
                 {mode === "regular" && (
                   <FlatList
                     className="regularOutfit-list"
-                    data={outfits} // An array of user regular outfit TODO: remeber when fetch have array
-                    keyExtractor={(outfits) => outfits.id} // Unique ID for outfit
-                    numColumns="2"
+                    data={outfits}
+                    keyExtractor={(outfit) => outfit.id}
+                    numColumns={2}
                     style={{
                       marginVertical: 15,
                       paddingHorizontal: 30,
@@ -456,10 +509,7 @@ export default function ClosetScreen() {
                               <Image
                                 key={`${item.id}-${index}`}
                                 source={OUTFIT_PREVIEW_PLACEHOLDER}
-                                style={[
-                                  styles.regularPreviewImage,
-                                  previewSizeStyle,
-                                ]}
+                                style={[styles.regularPreviewImage, previewSizeStyle]}
                                 resizeMode="cover"
                               />
                             ))}
@@ -483,7 +533,6 @@ export default function ClosetScreen() {
                     className="trip_Oufit_Details"
                     data={filteredTrips}
                     keyExtractor={(trip) => trip.id}
-                    // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
                     style={{
                       marginVertical: 15,
                       paddingHorizontal: 30,
@@ -499,7 +548,6 @@ export default function ClosetScreen() {
                             })
                           }
                         >
-                          
                           <View style={styles.tripHeader}>
                             <View>
                               <ThemedText> {item.location} </ThemedText>
@@ -515,19 +563,12 @@ export default function ClosetScreen() {
                             </View>
                           </View>
                         </TouchableOpacity>
+
                         <View style={styles.previewRow}>
-                          <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={true}
-                          >
-                            {item.outfits.map(
-                              (
-                                outfit,
-                                index, // Place Holder only
-                              ) => (
-                                <View key={index} style={styles.previewBox} />
-                              ),
-                            )}
+                          <ScrollView horizontal showsHorizontalScrollIndicator={true}>
+                            {item.outfits.map((outfit, index) => (
+                              <View key={index} style={styles.previewBox} />
+                            ))}
                           </ScrollView>
                         </View>
                       </View>

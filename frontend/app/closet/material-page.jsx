@@ -8,7 +8,7 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function MaterialPage({ setPage, goBack, material, setMaterial, uri }) {
+export default function MaterialPage({ setPage, goBack, material, setMaterial, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
   const materialOptions = [
     {
@@ -54,6 +54,7 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+  const showNext = Boolean(material);
 
   return (
     <ThemedView
@@ -72,7 +73,7 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View className="mainContent" style={styles.mainContent}>
@@ -162,26 +163,31 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
           onPress={() => goBack()}
-          //TO DO: if next is not visible, make this flex-start or figure it out
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {material && (
+        {showNext && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: buttonWidth,
             }}
             onPress={() => setPage(6)}
           >

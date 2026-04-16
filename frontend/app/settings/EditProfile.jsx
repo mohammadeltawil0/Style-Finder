@@ -3,7 +3,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system/legacy";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView,
@@ -13,6 +12,7 @@ import Toast from "react-native-toast-message";
 import { ThemedText, ThemedView } from "../../components";
 import ProfilePic from "../../components/profile-pic";
 import { apiClient } from "../../scripts/apiClient";
+import * as ImagePicker from "expo-image-picker";
 
 function UsernameRules({ username }) {
   const rules = [
