@@ -109,12 +109,6 @@ export default function AddItemScreen() {
     }));
   };
 
-  // Helper to navigate to edit a specific field from review
-  const editField = (fieldPageNum) => {
-    setEditing(true); // Enable editing mode
-    goToPage(fieldPageNum, 10); // 10 is review page, will come back here after edit
-  };
-
   // Convert states to match backend
   //1. Convert fit
 
@@ -230,17 +224,26 @@ export default function AddItemScreen() {
   });
 
   const handleSubmit = async () => {
-    const storedUserId = await AsyncStorage.getItem("userId");
-    const userId = Number(storedUserId);
+    try {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const userId = Number(storedUserId);
 
-    if (!Number.isInteger(userId) || userId <= 0) {
-      Toast.show({ type: 'error', text1: 'Please log in again.' });
-      return;
+      if (!Number.isInteger(userId) || userId <= 0) {
+        Toast.show({ type: 'error', text1: 'Please log in again.' });
+        return;
+      }
+
+      const imageData = uri ? await convertToBase64(uri) : null;
+      const payload = { ...buildItemPayload(userId), imageUrl: imageData };
+      mutate(payload); // useMutation handles everything from here
+    } catch (error) {
+      console.log("❌ handleSubmit crashed:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to prepare item',
+        text2: 'Please try another image or try again.',
+      });
     }
-
-    const imageData = uri ? await convertToBase64(uri) : null;
-    const payload = { ...buildItemPayload(userId), imageUrl: imageData };
-    mutate(payload); // useMutation handles everything from here
   };
 
   return (
@@ -360,9 +363,16 @@ export default function AddItemScreen() {
       {/* Eleventh Page: Review */}
       {navigation.currentPage === 10 && (
         <ReviewPage
-          setPage={goNext}
           goBack={goBack}
-          editField={editField}
+          setItemType={setItemType}
+          setPattern={setPattern}
+          setColor={setColor}
+          setFormality={setFormality}
+          setMaterial={setMaterial}
+          setFit={setFit}
+          setSeason={setSeason}
+          setLength={setLength}
+          setBulk={setBulk}
           uri={uri}
           formality={formality}
           pattern={pattern}
@@ -375,7 +385,8 @@ export default function AddItemScreen() {
           bulk={convertedBulk}
           handleSubmit={handleSubmit}
           isPending={isPending}
-        />
+            setUri={setUri}
+          />
       )}
     </>
   );

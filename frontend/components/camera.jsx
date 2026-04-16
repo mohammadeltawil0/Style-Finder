@@ -15,7 +15,7 @@ import Toast from "react-native-toast-message";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
 
-export const Camera = ({ setUri, setPage, uri }) => {
+export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
@@ -78,18 +78,20 @@ export const Camera = ({ setUri, setPage, uri }) => {
           No camera detected on this device. Please upload an image from your
           library instead.
         </ThemedText>
-        <Pressable
-          style={{
-            alignSelf: "center",
-            backgroundColor: theme.colors.card,
-            borderRadius: 10,
-            paddingVertical: 10,
-            width: buttonWidth,
-          }}
-          onPress={() => setPage(2)}
-        >
-          <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
-        </Pressable>
+        {!hideNextButton && (
+          <Pressable
+            style={{
+              alignSelf: "center",
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              paddingVertical: 10,
+              width: buttonWidth,
+            }}
+            onPress={() => setPage(2)}
+          >
+            <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+          </Pressable>
+        )}
       </View>
     );
   }
@@ -214,17 +216,19 @@ export const Camera = ({ setUri, setPage, uri }) => {
               Change Photo
             </ThemedText>
           </Pressable>
-          <Pressable
-            style={{
-              backgroundColor: theme.colors.card,
-              borderRadius: 10,
-              padding: 10,
-              width: buttonWidth,
-            }}
-            onPress={() => setPage(2)}
-          >
-            <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
-          </Pressable>
+          {!hideNextButton && (
+            <Pressable
+              style={{
+                backgroundColor: theme.colors.card,
+                borderRadius: 10,
+                padding: 10,
+                width: buttonWidth,
+              }}
+              onPress={() => setPage(2)}
+            >
+              <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
+            </Pressable>
+          )}
         </View>
       </>
     );
@@ -262,21 +266,23 @@ export const Camera = ({ setUri, setPage, uri }) => {
           <FontAwesome name="photo" size={32} color="white" />
         </Pressable>
       </View>
-      <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
-        <Pressable
-          style={{
-            alignSelf: "center",
-            backgroundColor: theme.colors.card,
-            borderRadius: 10,
-            paddingVertical: 10,
-            width: buttonWidth,
-          }}
-          onPress={() => setPage(2)}
-          disabled={isTakingPicture}
-        >
-          <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
-        </Pressable>
-      </View>
+      {!hideNextButton && (
+        <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
+          <Pressable
+            style={{
+              alignSelf: "center",
+              backgroundColor: theme.colors.card,
+              borderRadius: 10,
+              paddingVertical: 10,
+              width: buttonWidth,
+            }}
+            onPress={() => setPage(2)}
+            disabled={isTakingPicture}
+          >
+            <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 };
