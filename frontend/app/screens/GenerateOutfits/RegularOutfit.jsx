@@ -25,6 +25,7 @@ import React, { useEffect } from "react";
 import { apiClient } from "../../../scripts/apiClient";
 import * as Location from "expo-location";
 import Entypo from "@expo/vector-icons/Entypo";
+import OutfitCoverImage from "../../closet/outfit-cover-image";
 
 const formatEnum = (str) => {
   if (!str) return "";
@@ -602,9 +603,7 @@ export default function Recommendations() {
                 setIsModalVisible(true);
               }}
             >
-              <View style={styles.cardImagePlaceholder}>
-                <ThemedText>Outfit {index + 1}</ThemedText>
-              </View>
+              <OutfitCoverImage itemIds={item.itemIds || []} height={120} />
               <View
                 style={[
                   styles.cardFooter,
