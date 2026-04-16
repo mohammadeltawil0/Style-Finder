@@ -392,7 +392,7 @@ function AdminEditProfile() {
             }}
           >
             <View style={{ alignItems: "center", gap: 12 }}>
-              <View style={{ position: "relative" }}>
+              <TouchableOpacity style={{ position: "relative" }} onPress={pickProfileImage}>
                 <ProfilePic
                   username={username}
                   imageUrl={profileImageUrl}
@@ -416,17 +416,16 @@ function AdminEditProfile() {
                     top: 6,
                     borderRadius: 12,
                     padding: 4,
+                    backgroundColor: "rgba(255,255,255,0.6)",
                   }}
                 >
-                  <TouchableOpacity onPress={pickProfileImage}>
                     <AntDesign
                       name="edit"
                       size={20}
                       color={theme.colors.text}
                     />
-                  </TouchableOpacity>
                 </View>
-              </View>
+              </TouchableOpacity>
               <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
