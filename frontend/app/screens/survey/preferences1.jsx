@@ -16,7 +16,7 @@ const OPTIONS = {
 
 export default function Preferences1() {
   const router = useRouter();
-  const { answers, setAnswers } = useSurvey();
+  const { answers, setAnswers, resetAnswers } = useSurvey();
   //saves preferences from previous sessions
   useEffect(() => {
     const loadPreferences = async () => {
@@ -24,12 +24,10 @@ export default function Preferences1() {
         const storedUserId = await AsyncStorage.getItem("userId");
         if (!storedUserId) return;
 
-        console.log("Found stored userId:", storedUserId);
-        console.log("type:", typeof storedUserId);
-        
         const userId = Number(storedUserId);
         if (!Number.isInteger(userId) || userId <= 0) {
           console.warn("Invalid stored userId:", storedUserId);
+          resetAnswers();
           return;
         }
 
@@ -73,8 +71,13 @@ export default function Preferences1() {
           tripPriority: data.tripPriority || "",
         }));
 
-      } catch (error) {
-        console.error("Error loading preferences (User might be new):", error?.message);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          console.log("No existing preferences (new user)");
+          resetAnswers();
+        } else {
+          console.error("Error loading preferences:", err);
+        } 
       }
     };
 

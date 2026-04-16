@@ -48,7 +48,7 @@ export default function ItemProperty() {
       }
     };
 
-    if (id) {
+        if (id) {
       fetchItem();
     }
   }, [id, isEditModalVisible]); // Re-fetch if the modal closes in case data was updated!
@@ -72,20 +72,17 @@ export default function ItemProperty() {
         </ThemedView>
     );
   }
-
+    
   return (
-      <>
-        <ScrollView showsVerticalScrollIndicator={true}>
-          <ThemedView style={{ flex: 1, paddingBottom: 40 }}>
-            {item.imageUrl ? (
-                <Image
-                    source={{ uri: item.imageUrl }}
-                    style={styles.imagePlaceholder}
-                    resizeMode="cover"
-                />
-            ) : (
-                <View style={styles.imagePlaceholder} />
-            )}
+    <>
+      <ScrollView showsVerticalScrollIndicator={true}>
+        <ThemedView>
+          {item?.imageUrl ? (
+            <Image source={{ uri: item.imageUrl }} style={styles.imagePlaceholder} resizeMode="cover" />
+          ) : (
+            <View style={styles.imagePlaceholder} />
+          )}
+
 
             <View style={styles.info}>
               <ThemedText style={styles.title}>{formatEnum(item.type)}</ThemedText>
@@ -135,12 +132,11 @@ export default function ItemProperty() {
               </View>
             </View>
           </ThemedView>
-        </ScrollView>
-        {/* Render Modal Overlay if visible */}
-        {isEditModalVisible && (
-            <EditItemsModal setModalVisible={setIsEditModalVisible} itemId={id} />
-        )}
-      </>
+      </ScrollView>
+      {isEditModalVisible && (
+        <EditItemsModal setModalVisible={setIsEditModalVisible} itemId={id} />
+      )}
+    </>
   );
 }
 

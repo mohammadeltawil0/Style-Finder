@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";
@@ -13,38 +13,124 @@ import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { apiClient } from "../../scripts/apiClient";
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
+const PREVIEW_MODE_STORAGE_KEY = "addItemPreviewMode";
 
 export default function AddItemScreen() {
-  const [page, setPage] = useState(1);
+  const [navigation, setNavigation] = useState({
+    currentPage: 1,
+    nextPage: 2,
+    previousPage: null,
+  });
   const [uri, setUri] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
 
   // These states now natively hold Java Enum strings from their child pages
   const [itemType, setItemType] = useState("");
+  const [color, setColor] = useState("");
+  const [pattern, setPattern] = useState("");
   const [formality, setFormality] = useState("");
+  const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
+  const [fit, setFit] = useState(null); // null means unselected; user must move slider before continuing
   const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
-  const [color, setColor] = useState("");
-  const [bulk, setBulk] = useState(1); // Slider: 0 to 2
-
-  // These states hold UI values that must be mapped before submission
-  const [pattern, setPattern] = useState("");
-  const [isSolid, setIsSolid] = useState(false);
-  const [fit, setFit] = useState(1);  // Slider: 0 to 2
+  const [bulk, setBulk] = useState(null); // null means unselected; user must move slider before continuing
+  const [editing, setEditing] = useState(false); // track if user is editing an existing item or adding new
+  const [previewMode, setPreviewMode] = useState(false); // track if user is in review mode to conditionally show "Edit" buttons
+  const [isPreviewModeHydrated, setIsPreviewModeHydrated] = useState(false);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const loadPreviewMode = async () => {
+      try {
+        const storedPreviewMode = await AsyncStorage.getItem(PREVIEW_MODE_STORAGE_KEY);
+        if (storedPreviewMode === "true" || storedPreviewMode === "false") {
+          setPreviewMode(storedPreviewMode === "true");
+        }
+      } catch (error) {
+        console.error("Failed to load preview mode:", error);
+      } finally {
+        setIsPreviewModeHydrated(true);
+      }
+    };
+
+    loadPreviewMode();
+  }, []);
+
+  useEffect(() => {
+    if (!isPreviewModeHydrated) return;
+
+    const persistPreviewMode = async () => {
+      try {
+        await AsyncStorage.setItem(PREVIEW_MODE_STORAGE_KEY, String(previewMode));
+      } catch (error) {
+        console.error("Failed to save preview mode:", error);
+      }
+    };
+
+    persistPreviewMode();
+  }, [previewMode, isPreviewModeHydrated]);
+
+  // Navigation helpers
+  const goToPage = (pageNum, fromPage = null) => {
+    setNavigation({
+      currentPage: pageNum,
+      nextPage: pageNum + 1,
+      previousPage: fromPage !== null ? fromPage : navigation.currentPage,
+    });
+  };
+
+  const goNext = () => {
+    // If editing, go back to review and stop editing
+    if (editing) {
+      setNavigation({
+        currentPage: 10,
+        nextPage: 11,
+        previousPage: 9,
+      });
+      setEditing(false);
+      return;
+    }
+
+    setNavigation((prev) => ({
+      currentPage: prev.nextPage,
+      nextPage: prev.nextPage + 1,
+      previousPage: prev.currentPage,
+    }));
+  };
+
+  const goBack = () => {
+    setNavigation((prev) => ({
+      currentPage: prev.previousPage,
+      nextPage: prev.currentPage,
+      previousPage: prev.previousPage > 1 ? prev.previousPage - 1 : null,
+    }));
+  };
 
   // Convert states to match backend
   //1. Convert fit
-  // TO DO: convert 0.1 steps to enums to match our Fit Model
 
   const convertFit = (fit) => {
+    if (fit === null || fit === undefined) return null;
     if (fit < 0.5) return "SLIM";
     if (fit < 1.5) return "REGULAR";
     return "LOOSE";
   };
+
+  const convertedBulk =
+    bulk === null || bulk === undefined
+      ? null
+      : bulk <= 0.5
+        ? 0
+        : bulk < 1.49
+          ? 1
+          : 2;
 
   const convertPattern = (pattern) => {
     const map = {
@@ -52,8 +138,8 @@ export default function AddItemScreen() {
       "Striped": "STRIPED",
       "Plaid": "PLAID_OR_FLANNEL",
       "Floral": "FLORAL",
-      "GRAPHIC": "GRAPHIC",
-      "GEOMETRIC": "GEOMETRIC_OR_ABSTRACT",
+      "Graphic": "GRAPHIC",
+      "Geometric": "GEOMETRIC_OR_ABSTRACT",
     };
     return map[pattern] || pattern;
   };
@@ -68,94 +154,113 @@ export default function AddItemScreen() {
     return map[itemType] || itemType;
   };
 
+  const convertMaterial = (material) => {
+    return material ? Number(material) : null; // Convert material to number or return null if not set
+  };
+
+  const normalizeEnum = (value) => {
+    if (value === "" || value === undefined) return null;
+    return value;
+  };
+
+  const buildItemPayload = (userId) => ({
+    userId,
+    type: normalizeEnum(convertItemType(itemType)),
+    color: color || null,
+    pattern: normalizeEnum(convertPattern(pattern)),
+    length: normalizeEnum(length),
+    material: convertMaterial(material),
+    bulk: convertedBulk,
+    seasonWear: normalizeEnum(season),
+    formality: normalizeEnum(convertFormality(formality)),
+    fit: normalizeEnum(convertFit(fit)),
+    // removed imageUrl here since we set it after base64 conversion
+  });
+
+  const convertToBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: 'base64',  // ✅ use string instead of FileSystem.EncodingType.Base64
+    });
+    return `data:image/jpeg;base64,${base64}`;
+  };
+
+  const submitItem = async (payload) => {
+    const response = await apiClient.post("/api/items", payload);
+    console.log("Submission response:", response.data);
+    return response;
+  };
+
+  // Use useMutation to handle item submission with automatic loading and error states
+  const { mutate, isPending } = useMutation({
+    mutationFn: submitItem,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      Toast.show({ type: 'success', text1: 'Item added!' });
+      console.log("✅ onSuccess fired:", data);
+      router.replace({ pathname: "/(tabs)/closet", params: { tab: "items" } });
+    },
+    onError: (error) => {
+      const status = error.response?.status;
+      console.log("❌ onError fired:", error);
+      const messages = {
+        400: 'Invalid item data.',
+        422: 'Image format not supported.',
+        500: 'Server error. Please try again.',
+      };
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to add item',
+        text2: messages[status] || 'Something went wrong.',
+      });
+    },
+  });
+
   const handleSubmit = async () => {
-    setIsUploading(true);
-    let finalImageUrl = uri;
-
     try {
-      if (uri && !uri.startsWith('http')) {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const userId = Number(storedUserId);
 
-        const filename = uri.split('/').pop();
-        const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match}` : `image/jpeg`;
-
-        console.log("Requesting VIP Pass (Pre-signed URL) from Spring Boot...");
-
-        const urlResponse = await apiClient.get(
-            `/api/upload/presigned-url?filename=${filename}&contentType=${type}`);
-
-        const { uploadUrl, publicUrl } = urlResponse.data;
-        console.log("Uploading directly to Backblaze...");
-
-        const response = await fetch(uri);
-        const blob = await response.blob();
-
-        // D. Upload to Backblaze using the temporary URL
-        const backblazeResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: blob,
-          headers: {
-            'Content-Type': type,
-          },
-        });
-        if (!backblazeResponse.ok) {
-          const errorText = await backblazeResponse.text;
-          console.error("Backblaze upload failed:", errorText);
-        }
-
-        finalImageUrl = publicUrl;
-        console.log("Success! Hosted permanently at:", finalImageUrl);
+      if (!Number.isInteger(userId) || userId <= 0) {
+        Toast.show({ type: 'error', text1: 'Please log in again.' });
+        return;
       }
 
-      // 2. SAVE THE ITEM TO THE DATABASE
-      const userId = parseInt(await AsyncStorage.getItem("userId"), 10);
-      const itemData = {
-        userId: userId,
-        type: itemType ? convertItemType(itemType) : null,
-        color: color || null,
-        pattern: convertPattern(pattern),
-        length: length || null,
-        material: material || null,
-        bulk: bulk || null,
-        seasonWear: season || null,
-        formality: formality || null,
-        fit: convertFit(fit),
-        imageUrl: finalImageUrl || null, // Now using the permanent Backblaze URL
-      };
-
-      console.log("Submitting perfectly mapped DTO:", itemData);
-      await apiClient.post(`/api/items/add`, itemData);
-
-      alert("Item submitted successfully!");
-      router.replace("/closet");
-
+      const imageData = uri ? await convertToBase64(uri) : null;
+      const payload = { ...buildItemPayload(userId), imageUrl: imageData };
+      mutate(payload); // useMutation handles everything from here
     } catch (error) {
-      console.error("Error submitting item:", error);
-      alert("Failed to submit item. Please try again.");
-    } finally {
-      setIsUploading(false);
+      console.log("❌ handleSubmit crashed:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to prepare item',
+        text2: 'Please try another image or try again.',
+      });
     }
   };
 
   return (
       <View style={{ flex: 1 }}>
       {/* First Page: camera */}
-      {page === 1 && <CameraPage setUri={setUri} setPage={setPage} uri={uri} />}
+      {navigation.currentPage === 1 && <CameraPage setUri={setUri} setPage={goNext} uri={uri} />}
 
       {/* Second Page: Item Type */}
-      {page === 2 && (
+      {navigation.currentPage === 2 && (
         <CategoryPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           setItemType={setItemType}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Third Page: Color */}
-      {page === 3 && (
+      {navigation.currentPage === 3 && (
         <ColorPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           color={color}
           setColor={setColor}
           pattern={pattern}
@@ -163,74 +268,103 @@ export default function AddItemScreen() {
           uri={uri}
           isSolid={isSolid}
           setIsSolid={setIsSolid}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Fourth Page: Formality */}
-      {page === 4 && (
+      {navigation.currentPage === 4 && (
         <EventPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           formality={formality}
           setFormality={setFormality}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Fifth Page: Material  */}
-      {page === 5 && (
+      {navigation.currentPage === 5 && (
         <MaterialPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           material={material}
           setMaterial={setMaterial}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
       {/* Sixth Page: Fit */}
-      {page === 6 && (
+      {navigation.currentPage === 6 && (
         <FitPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           fit={fit}
           setFit={setFit}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
-      {/* Seventh Page: Season */}
-      {page === 7 && (
+      {/* OPTIONAL PARAMETERS: Season */}
+      {navigation.currentPage === 7 && (
         <SeasonPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           season={season}
           setSeason={setSeason}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
-      {/* Eighth Page: Length */}
-      {page === 8 && (
+      {/* OPTIONAL PARAMETERS: Length */}
+      {navigation.currentPage === 8 && (
         <LengthPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           length={length}
           setLength={setLength}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
-      {/* Ninth Page: Bulk */}
-      {page === 9 && (
+      {/* OPTIONAL PARAMETERS: Bulk */}
+      {navigation.currentPage === 9 && (
         <BulkPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           bulk={bulk}
           setBulk={setBulk}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
-      {/* Tenth Page: Review */}
-      {page === 10 && (
+      {/* Eleventh Page: Review */}
+      {navigation.currentPage === 10 && (
         <ReviewPage
-          setPage={setPage}
+          goBack={goBack}
+          setItemType={setItemType}
+          setPattern={setPattern}
+          setColor={setColor}
+          setFormality={setFormality}
+          setMaterial={setMaterial}
+          setFit={setFit}
+          setSeason={setSeason}
+          setLength={setLength}
+          setBulk={setBulk}
           uri={uri}
           formality={formality}
           pattern={pattern}
@@ -242,7 +376,9 @@ export default function AddItemScreen() {
           length={length}
           bulk={bulk}
           handleSubmit={handleSubmit}
-        />
+          isPending={isPending}
+            setUri={setUri}
+          />
       )}
       {isUploading && (
           <View style={styles.loadingOverlay}>

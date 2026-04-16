@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import CS431.Style_Finder.model.enums.ItemType;
 import java.util.List;
 
 @RestController
@@ -55,5 +55,14 @@ public class ItemController {
     public ResponseEntity<String> markWorn(@PathVariable Long id) {
         itemService.incrementTimesWorn(id);
         return ResponseEntity.ok("Times worn updated.");
+    }
+
+    //GET /api/items/filter -- to filter backend
+    @GetMapping("/filter")
+    public List<ItemDto> filterItems(@RequestParam(required = false) String search, @RequestParam(required = false) ItemType type, @RequestParam(required = false) Long userId) {
+        System.out.println("SEARCH: " + search);
+        System.out.println("TYPE: " + type);
+        System.out.println("USERID: " + userId);
+        return itemService.searchItems(search, type, userId);
     }
 }
