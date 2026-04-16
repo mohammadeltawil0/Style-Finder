@@ -64,9 +64,13 @@ export default function RootLayout() {
               name="auth/register"
               options={{
                 header: () => <CustomHeader page="register" />,
+                gestureEnabled: false,
               }}
             />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{
+              headerShown: false, 
+              gestureEnabled: false,
+            }} />
             <Stack.Screen
               name="screens/settings"
               options={{
@@ -103,10 +107,6 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="survey" />,
               }}
             />
-            {/* <Stack.Screen
-              name="modal"
-              options={{ presentation: "modal", title: "Modal" }}
-            /> */}
             <Stack.Screen
               name="closet/add-item"
               options={{
@@ -137,7 +137,7 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="EditProfile" />,
               }}
             />
-             <Stack.Screen
+            <Stack.Screen
               name="settings/UpdatePassword"
               options={{
                 header: () => <CustomHeader page="UpdatePassword" />,
@@ -180,7 +180,7 @@ export default function RootLayout() {
               }}
             />
 
-          </Stack>          
+          </Stack>
           <StatusBar style="auto" />
           <ThemedToast />
         </SurveyProvider>
