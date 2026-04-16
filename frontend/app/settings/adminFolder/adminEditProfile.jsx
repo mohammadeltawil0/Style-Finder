@@ -25,12 +25,7 @@ const MAX_PROFILE_IMAGE_DATA_URI_LENGTH = 2000000;
 
 function UsernameRules({ username }) {
   const rules = [
-    { label: "At least 5 letters", pass: username.length >= 5  && /[a-zA-Z]/.test(username) },
-    { label: "One number", pass: /[0-9]/.test(username) },
-    {
-      label: "One special character (#, @, $, %, &)",
-      pass: /[#@$%&]/.test(username),
-    },
+    { label: "At least 5 letters", pass: username.length >= 5  && /[a-zA-Z]/.test(username) }
   ];
 
   return (
@@ -120,6 +115,30 @@ function AdminEditProfile() {
     },
   });
 
+  const adminProfileQuery = useQuery({
+    queryKey: ["adminProfile", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/users/${userId}`);
+      return response.data;
+    },
+  });
+
+  useEffect(() => {
+    if (!adminProfileQuery.data) return;
+
+    const user = adminProfileQuery.data;
+    setName(user.firstName || "");
+    setOriginalName(user.firstName || "");
+    setUsername(user.username || "");
+    setEditedUsername(user.username || "");
+    setOriginalUsername(user.username || "");
+    setEmail(user.email || "");
+    setOriginalEmail(user.email || "");
+    setProfileImageUrl(user.profileImageUrl || "");
+    setOriginalProfileImageUrl(user.profileImageUrl || "");
+  }, [adminProfileQuery.data]);
+
   const pickProfileImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
@@ -185,7 +204,9 @@ function AdminEditProfile() {
         ["profileImageUrl"],
         updatedUser.profileImageUrl || "",
       );
+      queryClient.setQueryData(["adminProfile", userId], updatedUser);
       queryClient.invalidateQueries({ queryKey: ["profileImageUrl"] });
+      queryClient.invalidateQueries({ queryKey: ["adminProfile", userId] });
       setUsername(updatedUser.username || "");
       setEditedUsername(updatedUser.username || "");
       setOriginalUsername(updatedUser.username || "");
@@ -332,40 +353,21 @@ function AdminEditProfile() {
   };
 
   useEffect(() => {
-    const loadUser = async () => {
+    const loadUserId = async () => {
       try {
         const storedUserId = await AsyncStorage.getItem("userId");
         if (!storedUserId) return;
+
         const parsedUserId = Number(storedUserId);
         if (!Number.isInteger(parsedUserId) || parsedUserId <= 0) return;
-        const response = await apiClient.get(`/api/users/${parsedUserId}`);
-        const user = response.data;
+
         setUserId(parsedUserId);
-        setName(user.firstName || "");
-        setOriginalName(user.firstName || "");
-        setUsername(user.username || "");
-        setEditedUsername(user.username || "");
-        setOriginalUsername(user.username || "");
-        setEmail(user.email || "");
-        setOriginalEmail(user.email || "");
-        setProfileImageUrl(user.profileImageUrl || "");
-        setOriginalProfileImageUrl(user.profileImageUrl || "");
-        await AsyncStorage.setItem(
-          "profileImageUrl",
-          user.profileImageUrl || "",
-        );
-        queryClient.setQueryData(
-          ["profileImageUrl"],
-          user.profileImageUrl || "",
-        );
       } catch (error) {
-        console.error(
-          "Failed to load admin profile:",
-          error?.response?.data || error?.message,
-        );
+        console.error("Failed to load admin user id:", error?.message || error);
       }
     };
-    loadUser();
+
+    loadUserId();
   }, []);
 
   return (
@@ -432,64 +434,34 @@ function AdminEditProfile() {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                {username}
+                {originalName || name}
               </ThemedText>
             </View>
 
-            {[
-              {
-                label: "Name:",
-                value: name,
-                setter: setName,
-                placeholder: "Enter your name",
-              },
-              {
-                label: "Email:",
-                value: email,
-                setter: setEmail,
-                placeholder: "Enter your email",
-              },
-            ].map(({ label, value, setter, placeholder }) => (
-              <View key={label} style={{ flexDirection: "column", gap: 12 }}>
-                <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h3,
-                    color: theme.colors.text,
-                    fontFamily: theme.fonts.bold,
-                  }}
-                >
-                  {label}
-                </ThemedText>
-                <TextInput
-                  value={value}
-                  onChangeText={setter}
-                  placeholder={placeholder}
-                  editable={label !== "Email:"}
-                  selectTextOnFocus={label !== "Email:"}
-                  style={{
-                    borderRadius: 10,
-                    padding: 10,
-                    backgroundColor: theme.colors.background,
-                    color: theme.colors.text,
-                    fontFamily: theme.fonts.regular,
-                    opacity: label === "Email:" ? 0.65 : 1,
-                  }}
-                />
-                {label === "Email:" && (
-                  <ThemedText
-                    style={{
-                      fontSize: theme.sizes.h4,
-                      color: theme.colors.text,
-                      opacity: 0.7,
-                    }}
-                  >
-                    This is the email used to register your account.
-                  </ThemedText>
-                )}
-              </View>
-            ))}
+            <View style={{ flexDirection: "column", gap: 12 }}>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                Name:
+              </ThemedText>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter your name"
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                }}
+              />
+            </View>
 
-            {/* Username with availability check */}
             <View style={{ flexDirection: "column", gap: 12 }}>
               <ThemedText
                 style={{
@@ -539,6 +511,42 @@ function AdminEditProfile() {
               {editedUsername.trim().length > 0 && (
                 <UsernameRules username={editedUsername.trim()} />
               )}
+            </View>
+
+            <View style={{ flexDirection: "column", gap: 12 }}>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                Email:
+              </ThemedText>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                editable={false}
+                selectTextOnFocus={false}
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                  opacity: 0.65,
+                }}
+              />
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h4,
+                  color: theme.colors.text,
+                  opacity: 0.7,
+                }}
+              >
+                This is the email used to register your account.
+              </ThemedText>
             </View>
 
             <TouchableOpacity

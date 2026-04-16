@@ -2,7 +2,16 @@ import { ThemedText, ThemedView } from "components";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
-import { Alert, TextInput, TouchableOpacity, View, KeyboardAvoidingView, ScrollView, Platform } from "react-native";
+import {
+    Alert,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    KeyboardAvoidingView,
+    ScrollView,
+    Platform,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "../../../scripts/apiClient";

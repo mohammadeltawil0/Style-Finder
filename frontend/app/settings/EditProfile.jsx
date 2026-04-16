@@ -440,7 +440,7 @@ function EditProfile() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {name}
+            {originalName || name}
           </ThemedText>
         </View>
         <View
@@ -473,6 +473,15 @@ function EditProfile() {
           className="edit-username"
           style={{ flexDirection: "column", gap: 12 }}
         >
+          <ThemedText
+            style={{
+              fontSize: theme.sizes.h2,
+              color: theme.colors.text,
+              fontFamily: theme.fonts.bold,
+            }}
+          >
+            {originalUsername || username}
+          </ThemedText>
           <ThemedText
             style={{
               fontSize: theme.sizes.h3,
@@ -527,6 +536,15 @@ function EditProfile() {
           className="edit-email"
           style={{ flexDirection: "column", gap: 12 }}
         >
+          <ThemedText
+            style={{
+              fontSize: theme.sizes.h2,
+              color: theme.colors.text,
+              fontFamily: theme.fonts.bold,
+            }}
+          >
+            {originalEmail || email}
+          </ThemedText>
           <ThemedText
             style={{
               fontSize: theme.sizes.h3,

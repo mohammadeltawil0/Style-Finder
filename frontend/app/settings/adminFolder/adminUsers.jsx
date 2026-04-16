@@ -18,13 +18,18 @@ export default function AdminUsers() {
   const [isLoadingUsers, setIsLoadingUsers] = useState(true);
   const [search, setSearch] = useState("");
   const [adminImage, setAdminImage] = useState("");
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
 
 
   useEffect(() => {
     const loadUserData = async () => {
       try {
+        const storedName = await AsyncStorage.getItem("name");
         const storedUsername = await AsyncStorage.getItem("username");
+        if (storedName) {
+          setName(storedName);
+        }
         if (storedUsername) {
           setUsername(storedUsername);
         }
@@ -116,7 +121,7 @@ export default function AdminUsers() {
     <ThemedView style={{ flex: 1 }}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.text }]}> Welcome, {username}!! </Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}> Welcome, {name}!! </Text>
       </View>
 
       {/* Search */}
