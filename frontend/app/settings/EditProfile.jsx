@@ -404,7 +404,7 @@ function EditProfile() {
           className="profile-and-name"
           style={{ alignItems: "center", gap: 12 }}
         >
-          <View style={{ position: "relative" }}>
+          <TouchableOpacity style={{ position: "relative" }} onPress={pickProfileImage}>
             <ProfilePic
               username={username}
               imageUrl={profileImageUrl}
@@ -433,11 +433,11 @@ function EditProfile() {
                 padding: 4,
               }}
             >
-              <TouchableOpacity onPress={pickProfileImage}>
+              <View onPress={pickProfileImage}>
                 <AntDesign name="edit" size={20} color={theme.colors.text} />
-              </TouchableOpacity>
+              </View>
             </View>
-          </View>
+          </TouchableOpacity>
           <ThemedText
             style={{
               fontSize: theme.sizes.h2,

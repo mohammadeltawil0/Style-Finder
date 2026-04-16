@@ -1,7 +1,7 @@
 import { FlatList, Image, TouchableOpacity, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
-import { FontAwesome6 } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 
 export const Items = ({
   items,
@@ -77,7 +77,11 @@ export const Items = ({
                   backgroundColor: theme.colors.background,
                 }}
               >
-                <Feather name="more-horizontal" size={16} color={theme.colors.text} />
+                <Ionicons
+                  name="eye-outline"
+                  size={18}
+                  color={theme.colors.text}
+                />
               </View>
             </TouchableOpacity>
           )

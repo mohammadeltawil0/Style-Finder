@@ -111,21 +111,19 @@ export default function ProfilePic({
         containerStyle,
       ]}
     >
-      <TouchableOpacity onPress={handlePress}>
-        <Image
-          source={source}
-          style={[
-            {
-              borderRadius: 10,
-              width: 30,
-              height: 30,
-              alignSelf: "center",
-            },
-            style,
-          ]}
-          resizeMode="cover"
-        />
-      </TouchableOpacity>
+      <Image
+        source={source}
+        style={[
+          {
+            borderRadius: 10,
+            width: 30,
+            height: 30,
+            alignSelf: "center",
+          },
+          style,
+        ]}
+        resizeMode="cover"
+      />
     </View>
   );
 }
