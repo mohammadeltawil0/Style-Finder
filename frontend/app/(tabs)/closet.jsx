@@ -1,12 +1,17 @@
+import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import Feather from "@expo/vector-icons/Feather";
 import {
+  FlatList,
+  Image,
   Pressable,
-  View,
+  ScrollView,
   StyleSheet,
   TouchableOpacity,
-  mode,
-  FlatList,
+  View,
 } from "react-native";
 import {
   ClosetToggle,
@@ -15,14 +20,10 @@ import {
   ThemedText,
   ThemedView,
 } from "../../components";
-import { useTheme } from "@react-navigation/native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ScrollView } from "react-native";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+
+const OUTFIT_PREVIEW_PLACEHOLDER = require("../../assets/images/placeholder.png");
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -67,8 +68,12 @@ export default function ClosetScreen() {
   }, []);
 
   // replace useFocusEffect loadData with:
-  const { data: items = [], isLoading, refetch } = useQuery({
-    queryKey: ['items', userId],
+  const {
+    data: items = [],
+    isLoading,
+    refetch,
+  } = useQuery({
+    queryKey: ["items", userId],
     queryFn: fetchItems,
     enabled: !!userId,
   });
@@ -78,40 +83,44 @@ export default function ClosetScreen() {
       if (userId) {
         refetch();
       }
-    }, [refetch, userId])
+    }, [refetch, userId]),
   );
 
   const outfits = [
     { id: "o1", name: "Outfit1", items: [{}, {}] },
     { id: "o2", name: "Outfit2", items: [{}] },
-    { id: "o3", name: "Outfit3", items: [{}, {}] },
+    { id: "o3", name: "Outfit3", items: [{}, {}, {}] },
     { id: "o4", name: "Outfit1", items: [{}] },
     { id: "o5", name: "Outfit2", items: [{}, {}] },
-    { id: "o6", name: "Outfit3", items: [{}] },
+    { id: "o6", name: "Outfit3", items: [{}, {}, {}] },
   ];
 
   const trips = [
     {
       id: "t1",
       name: "NYC Trip",
+      location: "New York City",
       dates: "03/01/26 - 03/05/26",
       outfits: [{}, {}, {}, {}, {}, {}],
     },
     {
       id: "t2",
       name: "Beach Trip",
+      location: "Miami Beach",
       dates: "04/10/26 - 04/15/26",
       outfits: [{}, {}, {}, {}, {}, {}],
     },
     {
       id: "t3",
       name: "NYC Trip",
+      location: "New York City",
       dates: "03/01/26 - 03/05/26",
       outfits: [{}, {}, {}, {}, {}, {}],
     },
     {
       id: "t4",
       name: "Beach Trip",
+      location: "Miami Beach",
       dates: "04/10/26 - 04/15/26",
       outfits: [{}, {}, {}, {}, {}, {}],
     },
@@ -162,7 +171,7 @@ export default function ClosetScreen() {
     4: "silk satin",
     5: "leather faux leather",
     6: "synthetics polyester nylon spandex",
-    7: "other"
+    7: "other",
   };
 
   const patternMap = {
@@ -179,7 +188,7 @@ export default function ClosetScreen() {
     FORMAL: "formal dressy",
     CASUAL: "casual everyday",
     WORK_OR_SMART: "work",
-    PARTY_OR_NIGHT_OUT: "party night out social"
+    PARTY_OR_NIGHT_OUT: "party night out social",
   };
 
   const fitMap = {
@@ -195,7 +204,7 @@ export default function ClosetScreen() {
         tops: "TOP",
         bottoms: "BOTTOM",
         dresses: "DRESS",
-        outerwear: "OUTERWEAR"
+        outerwear: "OUTERWEAR",
       };
 
       if (item.type !== typeMap[category]) {
@@ -224,28 +233,52 @@ export default function ClosetScreen() {
       const words = searchableText.split(" ");
       console.log("SEARCH TERMS:", terms);
       console.log("ITEM TEXT:", searchableText);
-      const matches = terms.every((term) => words.some((word) => word.startsWith(term)));
+      const matches = terms.every((term) =>
+        words.some((word) => word.startsWith(term)),
+      );
       if (!matches) return false;
     }
     return true;
   });
+
+  const filteredTrips = trips.filter((trip) => {
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
+    if (terms.length === 0) return true;
+
+    const searchableTripText = [trip.location, trip.name]
+      .map(normalize)
+      .filter(Boolean)
+      .join(" ");
+
+    return terms.every((term) => searchableTripText.includes(term));
+  });
+
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
-      <View style={{ flex: 1, width: "100%", alignItems: "center", position: "relative" }}>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
         {editItemsModalVisible ? (
           <EditItemsModal
             item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-          // maybe add a close modal here
+            // maybe add a close modal here
           />
         ) : (
           <View>
-            <SearchBar
-              value={searchText}
-              onChangeText={(text) => setSearchText(text)}
-              onSubmit={handleSearchSubmit}
-            />
+            {(isItems || mode === "trip") && (
+              <SearchBar
+                value={searchText}
+                onChangeText={(text) => setSearchText(text)}
+                onSubmit={handleSearchSubmit}
+              />
+            )}
             {isItems ? (
               <>
                 <View
@@ -265,10 +298,15 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory((prev) => (prev === "tops" ? "all" : "tops"))}
+                    onPress={() =>
+                      setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+                    }
                   >
                     <ThemedText
-                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+                      style={{
+                        color: theme.colors.text,
+                        fontSize: theme.sizes.text,
+                      }}
                     >
                       Tops
                     </ThemedText>
@@ -281,10 +319,17 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))}
+                    onPress={() =>
+                      setCategory((prev) =>
+                        prev === "bottoms" ? "all" : "bottoms",
+                      )
+                    }
                   >
                     <ThemedText
-                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+                      style={{
+                        color: theme.colors.text,
+                        fontSize: theme.sizes.text,
+                      }}
                     >
                       Bottoms
                     </ThemedText>
@@ -297,10 +342,17 @@ export default function ClosetScreen() {
                       paddingHorizontal: 20,
                       paddingVertical: 10,
                     }}
-                    onPress={() => setCategory((prev) => (prev === "dresses" ? "all" : "dresses"))}
+                    onPress={() =>
+                      setCategory((prev) =>
+                        prev === "dresses" ? "all" : "dresses",
+                      )
+                    }
                   >
                     <ThemedText
-                      style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+                      style={{
+                        color: theme.colors.text,
+                        fontSize: theme.sizes.text,
+                      }}
                     >
                       Dresses
                     </ThemedText>
@@ -338,11 +390,15 @@ export default function ClosetScreen() {
               <>
                 <View style={styles.outfitToggle}>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
+                    style={[
+                      styles.toggleBtn,
+                      mode === "trip" && styles.activeToggle,
+                    ]}
                     onPress={() => setMode("trip")}
                   >
                     <ThemedText>Trip</ThemedText>
                   </TouchableOpacity>
+                 
                   <TouchableOpacity
                     style={[
                       styles.toggleBtn,
@@ -366,18 +422,20 @@ export default function ClosetScreen() {
                       width: "100%",
                     }}
                     columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-                    renderItem={({ item }) => (
-                      <View
-                        className="regularOufit"
-                        style={{
-                          borderColor: theme.colors.border,
-                          backgroundColor: theme.colors.lightBrown,
-                          borderRadius: 10,
-                          marginBottom: 20,
-                          width: "48%",
-                        }}
-                      >
+                    renderItem={({ item }) => {
+                      const previewCount = Math.min(item.items.length, 3);
+                      const previewSizeStyle =
+                        previewCount === 1
+                          ? styles.regularPreviewImageOne
+                          : previewCount === 2
+                            ? styles.regularPreviewImageTwo
+                            : styles.regularPreviewImageThree;
+
+                      return (
                         <TouchableOpacity
+                          className="regularOufit"
+                          activeOpacity={0.85}
+                          style={styles.regularOutfitCard}
                           onPress={() =>
                             router.push({
                               pathname: "/closet/outfitsHistory/itemProperty",
@@ -385,33 +443,45 @@ export default function ClosetScreen() {
                             })
                           }
                         >
-                          <View
-                            className="outfit-image"
-                            style={{ height: 175, marginBottom: 10 }}
-                          />
-                          <View
-                            style={{
-                              position: "absolute",
-                              right: 6,
-                              top: 6,
-                              borderRadius: 12,
-                              padding: 4,
-                              backgroundColor: theme.colors.background,
-                            }}
-                          >
-                            <Feather name="more-horizontal" size={16} color={theme.colors.text} />
+                          <View style={styles.viewIconBadge}>
+                            <Ionicons
+                              name="eye-outline"
+                              size={18}
+                              color={theme.colors.text}
+                            />
                           </View>
+
+                          <View style={styles.regularPreviewContainer}>
+                            {item.items.slice(0, 3).map((_, index) => (
+                              <Image
+                                key={`${item.id}-${index}`}
+                                source={OUTFIT_PREVIEW_PLACEHOLDER}
+                                style={[
+                                  styles.regularPreviewImage,
+                                  previewSizeStyle,
+                                ]}
+                                resizeMode="cover"
+                              />
+                            ))}
+                          </View>
+
+                          {item.items.length > 3 && (
+                            <View style={styles.previewCountBadge}>
+                              <ThemedText style={styles.previewCountText}>
+                                +{item.items.length - 3}
+                              </ThemedText>
+                            </View>
+                          )}
                         </TouchableOpacity>
-                        {/* TO DO: add logic and possible placeholder for when user has no outfit image */}
-                      </View>
-                    )}
+                      );
+                    }}
                   />
                 )}
 
                 {mode === "trip" && (
                   <FlatList
                     className="trip_Oufit_Details"
-                    data={trips}
+                    data={filteredTrips}
                     keyExtractor={(trip) => trip.id}
                     // TODO: Show two option of UI to Fiona without the comnent style and with the comment styling
                     style={{
@@ -429,13 +499,20 @@ export default function ClosetScreen() {
                             })
                           }
                         >
+                          
                           <View style={styles.tripHeader}>
                             <View>
-                              <ThemedText> {item.name} </ThemedText>
+                              <ThemedText> {item.location} </ThemedText>
                               <ThemedText>{item.dates}</ThemedText>
                               <ThemedText># Trip</ThemedText>
                             </View>
-                            <Ionicons name="ellipsis-horizontal" size={18} />
+                            <View style={styles.viewIconBadge}>
+                              <Ionicons
+                                name="eye-outline"
+                                size={18}
+                                color={theme.colors.text}
+                              />
+                            </View>
                           </View>
                         </TouchableOpacity>
                         <View style={styles.previewRow}>
@@ -467,6 +544,62 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
+  regularOutfitCard: {
+    backgroundColor: "#d6c6b8",
+    borderRadius: 14,
+    padding: 14,
+    width: "48%",
+    marginBottom: 16,
+    minHeight: 175,
+    position: "relative",
+  },
+  regularPreviewContainer: {
+    flexDirection: "column",
+    gap: 6,
+    marginTop: 26,
+    alignItems: "center",
+  },
+  regularPreviewImage: {
+    borderRadius: 8,
+  },
+  regularPreviewImageOne: {
+    width: 90,
+    height: 64,
+  },
+  regularPreviewImageTwo: {
+    width: 74,
+    height: 50,
+  },
+  regularPreviewImageThree: {
+    width: 58,
+    height: 38,
+  },
+  viewIconBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    borderRadius: 20,
+    width: 30,
+    height: 30,
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1,
+  },
+  previewCountBadge: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  previewCountText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 12,
+  },
   outfitToggle: {
     flexDirection: "row",
     margin: 15,

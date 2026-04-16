@@ -22,7 +22,7 @@ export default function ItemProperty() {
   const outfits = [
     { id: "o1", name: "Outfit1", items: [{}, {}] },
     { id: "o2", name: "Outfit2", items: [{}] },
-    { id: "o3", name: "Outfit3", items: [{}, {}] },
+    { id: "o3", name: "Outfit3", items: [{}, {}, {}] },
     { id: "o4", name: "Outfit4", items: [{}] },
     { id: "o5", name: "Outfit5", items: [{}, {}] },
     { id: "o6", name: "Outfit6", items: [{}] },
