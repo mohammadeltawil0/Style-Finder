@@ -210,7 +210,7 @@ export default function ClosetScreen() {
       const typeMap = {
         tops: "TOP",
         bottoms: "BOTTOM",
-        dresses: "DRESS",
+        full_body: "FULL_BODY",
         outerwear: "OUTERWEAR",
       };
 
@@ -260,6 +260,140 @@ export default function ClosetScreen() {
     return terms.every((term) => searchableTripText.includes(term));
   });
 
+  const itemsListHeader = (
+    <>
+      <SearchBar
+        value={searchText}
+        onChangeText={(text) => setSearchText(text)}
+        onSubmit={handleSearchSubmit}
+      />
+      <View
+        className="item-categories"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 10,
+          justifyContent: "flex-start",
+          paddingVertical: 15,
+        }}
+      >
+        <Pressable
+          className="tops-category"
+          style={{
+            backgroundColor:
+              category === "tops"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Tops
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="bottoms-category"
+          style={{
+            backgroundColor:
+              category === "bottoms"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "bottoms" ? "all" : "bottoms",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Bottoms
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="full-body-category"
+          style={{
+            backgroundColor:
+              category === "full_body"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "full_body" ? "all" : "full_body",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Full Body
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="outerwear-category"
+          style={{
+            backgroundColor:
+              category === "outerwear"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "outerwear" ? "all" : "outerwear",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Outerwear
+          </ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       {!editItemsModalVisible && (
@@ -281,7 +415,7 @@ export default function ClosetScreen() {
           />
         ) : (
           <View style={{ flex: 1, width: "100%" }}>
-            {(isItems || mode === "trip") && (
+            {!isItems && mode === "trip" && (
               <SearchBar
                 value={searchText}
                 onChangeText={(text) => setSearchText(text)}
@@ -333,92 +467,13 @@ export default function ClosetScreen() {
                   </View>
                 ) : (
                   <>
-                    <View
-                      className="item-categories"
-                      style={{
-                        flexDirection: "row",
-                        gap: 38,
-                        justifyContent: "space-between",
-                        padding: 15,
-                      }}
-                    >
-                      <Pressable
-                        className="tops-category"
-                        style={{
-                          backgroundColor: theme.colors.lightBrown,
-                          borderRadius: 10,
-                          paddingHorizontal: 20,
-                          paddingVertical: 10,
-                        }}
-                        onPress={() =>
-                          setCategory((prev) => (prev === "tops" ? "all" : "tops"))
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Tops
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        className="bottoms-category"
-                        style={{
-                          backgroundColor: theme.colors.lightBrown,
-                          borderRadius: 10,
-                          paddingHorizontal: 20,
-                          paddingVertical: 10,
-                        }}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "bottoms" ? "all" : "bottoms",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Bottoms
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        className="dresses-category"
-                        style={{
-                          backgroundColor: theme.colors.lightBrown,
-                          borderRadius: 10,
-                          paddingHorizontal: 20,
-                          paddingVertical: 10,
-                        }}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "dresses" ? "all" : "dresses",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Dresses
-                        </ThemedText>
-                      </Pressable>
-                    </View>
-
                     <Items
                       items={filteredItems}
                       setCurrItemId={setCurrItemId}
                       currItemId={currItemId}
                       setEditItemsModalVisible={setEditItemsModalVisible}
                       editItemsModalVisible={editItemsModalVisible}
+                      listHeaderComponent={itemsListHeader}
                     />
 
                     <Pressable
