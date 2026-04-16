@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, TouchableOpacity, Modal, ActivityIndicator, ScrollView, Pressable, StyleSheet, Image } from "react-native";
-import { View, Text, TouchableOpacity, Modal, ActivityIndicator, ScrollView, Pressable, StyleSheet, Image } from "react-native";
 import Entypo from "@expo/vector-icons/Entypo";
 import { ThemedText } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
@@ -22,8 +21,16 @@ export default function OutfitDetailsModal({ visible, outfit, onClose, onDelete,
             try {
                 setIsLoading(true);
                 const itemPromises = outfit.itemIds.map(id => apiClient.get(`/api/items/${id}`));
-                const responses = await Promise.all(itemPromises);
-                let fetchedItems = responses.map(res => res.data);
+                const results = await Promise.allSettled(itemPromises);
+                const fetchedItems = results
+                    .filter((result) => result.status === "fulfilled")
+                    .map((result) => result.value.data);
+
+                const missingCount = results.length - fetchedItems.length;
+                if (missingCount > 0) {
+                    console.warn(`Skipped ${missingCount} missing outfit item(s).`);
+                }
+
                 const typeOrder = { "OVER": 1, "OUTERWEAR": 1, "TOP": 2, "FULL_BODY": 3, "BOTTOM": 4 };
                 fetchedItems.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
                 setItems(fetchedItems);

@@ -53,11 +53,17 @@ const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
       if (!outfit || !outfit.itemIds) return;
       try {
         setIsLoading(true);
-        const itemPromises = outfit.itemIds.map((id) =>
-          apiClient.get(`/api/items/${id}`),
-        );
-        const responses = await Promise.all(itemPromises);
-        let fetchedItems = responses.map((res) => res.data);
+        const itemPromises = outfit.itemIds.map((id) => apiClient.get(`/api/items/${id}`));
+        const results = await Promise.allSettled(itemPromises);
+        const fetchedItems = results
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value.data);
+
+        const missingCount = results.length - fetchedItems.length;
+        if (missingCount > 0) {
+          console.warn(`Skipped ${missingCount} missing outfit item(s).`);
+        }
+
         const typeOrder = {
           OVER: 1,
           OUTERWEAR: 1,
@@ -373,6 +379,19 @@ export default function Recommendations() {
       setIsModalVisible(false);
       setSelectedOutfit(null);
     } catch (error) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        console.warn("Feedback already recorded; treating as success.");
+        setSuggestions((prev) =>
+          prev.filter(
+            (outfit) => outfit.suggestionId !== selectedOutfit.suggestionId,
+          ),
+        );
+        setIsModalVisible(false);
+        setSelectedOutfit(null);
+        return;
+      }
+
       console.error("=== Feedback Error ===", error);
       Alert.alert("Error", "Failed to process your choice.");
     }

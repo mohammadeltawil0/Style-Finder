@@ -133,8 +133,16 @@ const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
       try {
         setIsLoading(true);
         const itemPromises = outfit.itemIds.map(id => apiClient.get(`/api/items/${id}`));
-        const responses = await Promise.all(itemPromises);
-        let fetchedItems = responses.map(res => res.data);
+        const results = await Promise.allSettled(itemPromises);
+        const fetchedItems = results
+          .filter((result) => result.status === "fulfilled")
+          .map((result) => result.value.data);
+
+        const missingCount = results.length - fetchedItems.length;
+        if (missingCount > 0) {
+          console.warn(`Skipped ${missingCount} missing outfit item(s).`);
+        }
+
         const typeOrder = { "OVER": 1, "OUTERWEAR": 1, "TOP": 2, "FULL_BODY": 3, "BOTTOM": 4 };
         fetchedItems.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
         setItems(fetchedItems);
@@ -356,6 +364,21 @@ export default function TripOutfit() {
       setActiveDate(null);
 
     } catch (error) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        console.warn("Feedback already recorded; treating as success.");
+        setSuggestionsByDate((prev) => ({
+          ...prev,
+          [activeDate]: (prev[activeDate] || []).filter(
+            (o) => o.suggestionId !== selectedOutfit.suggestionId,
+          ),
+        }));
+        setIsModalVisible(false);
+        setSelectedOutfit(null);
+        setActiveDate(null);
+        return;
+      }
+
       Alert.alert("Error", "Failed to process your choice.");
     }
   };
