@@ -159,6 +159,7 @@ export default function RootLayout() {
               name="settings/adminFolder/adminUsers"
               options={{
                 header: () => <CustomHeader page="AdminPortal" />,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -171,6 +172,8 @@ export default function RootLayout() {
               name="settings/adminFolder/adminLanding"
               options={{
                 header: () => <CustomHeader page="adminwelcomepage" />,
+                headerShown: false,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen

@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useRouter, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import ProfilePic from "../../../components/profile-pic";
@@ -20,16 +20,19 @@ function AdminSettings() {
     router.replace("/");
   };
 
-  useEffect(() => {
-    const loadUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      const storedName = await AsyncStorage.getItem("name");
+  useFocusEffect(
+    useCallback(() => {
+      const loadProfile = async () => {
+        const storedUsername = await AsyncStorage.getItem("username");
+        const storedName = await AsyncStorage.getItem("name");
 
-      if (storedUsername) setUsername(storedUsername);
-      if (storedName) setName(storedName);
-    };
-    loadUsername();
-  }, []);
+        if (storedUsername) setUsername(storedUsername);
+        if (storedName) setName(storedName);
+      };
+
+      loadProfile();
+    }, []),
+  );
 
   return (
     <ThemedView
