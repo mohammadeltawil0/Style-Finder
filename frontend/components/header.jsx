@@ -1,7 +1,7 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useGlobalSearchParams, useRouter } from "expo-router";
 import { TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ProfilePic from "./profile-pic";
@@ -10,6 +10,8 @@ import { ThemedText } from "./themed-text";
 export const CustomHeader = ({ page }) => {
   const theme = useTheme();
   const router = useRouter();
+  const params = useGlobalSearchParams();
+  const isNewUserSurveyFlow = params?.isNewUser === "true";
 
   const hideSettingsIcon =
     page === "Profile" ||
@@ -32,6 +34,14 @@ export const CustomHeader = ({ page }) => {
       return;
     }
     router.push("/settings/Profile");
+  };
+
+  const handleSafeBack = (fallbackRoute = "/(tabs)") => {
+    if (typeof router.canGoBack === "function" && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace(fallbackRoute);
   };
 
   return (
@@ -355,13 +365,17 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "survey" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={theme.colors.text}
-                />
-              </TouchableOpacity>
+              {!isNewUserSurveyFlow && (
+                <TouchableOpacity
+                  onPress={() => handleSafeBack("/settings/Profile")}
+                >
+                  <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color={theme.colors.text}
+                  />
+                </TouchableOpacity>
+              )}
               <ThemedText
                 style={{
                   fontSize: theme.sizes.h2,
@@ -395,9 +409,7 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "UpdatePassword" && (
             <>
-              <TouchableOpacity
-                onPress={() => router.back()}
-              >
+              <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
                   size={24}

@@ -110,7 +110,10 @@ function PasswordRules({ password }) {
 
 function UsernameRules({ username }) {
   const rules = [
-    { label: "At least 5 letters", pass: username.length >= 5 && /[a-zA-Z]/.test(username) },
+    {
+      label: "At least 5 letters",
+      pass: username.length >= 5 && /[a-zA-Z]/.test(username),
+    },
   ];
 
   return (
@@ -222,8 +225,7 @@ export default function Register() {
       Toast.show({
         type: "error",
         text1: "Invalid Username",
-        text2:
-          "Username must be at least 5 letters.",
+        text2: "Username must be at least 5 letters.",
       });
       return;
     }
@@ -294,7 +296,10 @@ export default function Register() {
         ["role", response.data.role || "USER"],
       ]);
 
-      router.replace("/screens/survey/preferences1"); //reroute to survey
+      router.replace({
+        pathname: "/screens/survey/preferences1",
+        params: { isNewUser: "true" },
+      }); //reroute to survey
     } catch (error) {
       const status = error.response?.status;
       const serverMessage = error.response?.data?.message;
