@@ -37,8 +37,7 @@ export const MATERIAL_OPTIONS = [
 export const FIT_OPTIONS = [
     { label: "Slim", value: "SLIM" },
     { label: "Regular", value: "REGULAR" },
-    { label: "Loose", value: "LOOSE" },
-    { label: "Oversized", value: "OVERSIZED" },
+    { label: "Loose", value: "LOOSE" }
 ];
 
 export const SEASON_OPTIONS = [

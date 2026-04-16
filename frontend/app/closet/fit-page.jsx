@@ -18,6 +18,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
   const buttonWidth = isWide ? 220 : "30%";
 
   const showNext = fit !== null && fit !== undefined;
+  const isUpperBodyItem = itemType === "Top" || itemType === "Full Body" || itemType === "TOP" || itemType === "FULL_BODY";
   const upperOptions = ["Skinny", "Regular", "Loose"];
 
   const lowerOptions = [
@@ -96,8 +97,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
                   alignItems: "flex-end",
                 }}
               >
-                {itemType === "Top" ||
-                  itemType === "Full Body"
+                {isUpperBodyItem
                   ? upperOptions.map((option, index) => (
                     <ThemedText key={index} style={{ textAlign: "flex-end" }}>
                       {option}
@@ -121,7 +121,6 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
                   value={fit ?? 1}
                   onValueChange={(value) => {
                     setFit(value);
-                    console.log("fit", value);
                   }}
                 />
               </View>
@@ -265,6 +264,6 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     transform: [{ rotate: "90deg" }],
-    width: "fit-content",
+    width: 220,
   },
 };

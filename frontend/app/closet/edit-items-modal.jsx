@@ -1,6 +1,6 @@
 import { ActivityIndicator, Image, Modal, Pressable, ScrollView, TouchableOpacity, View } from "react-native";
 import { useTheme } from "@react-navigation/native";
-import { ThemedText } from "../../components";
+import { Camera, ThemedText } from "../../components";
 import Entypo from "@expo/vector-icons/Entypo";
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
@@ -9,7 +9,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import EditModal from "./edit-modal";
 import Toast from "react-native-toast-message";
-import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import ColorPicker from "react-native-color-picker-wheel";
 import {
@@ -135,12 +134,13 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [isLengthModalVisible, setIsLengthModalVisible] = useState(false);
     const [isBulkModalVisible, setIsBulkModalVisible] = useState(false);
     const [isColorModalVisible, setIsColorModalVisible] = useState(false);
+    const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+    const [draftImageUri, setDraftImageUri] = useState(null);
     const [tempColor, setTempColor] = useState(DEFAULT_COLOR);
 
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    console.log("Editing item:", item.color);
     const hasImageUrl = typeof uri === "string" && uri.trim().length > 0;
 
     const fitToSliderValue = (value) => {
@@ -266,6 +266,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
         if (!item) return;
 
         setUri(item.imageUrl || item.uri || null);
+        setDraftImageUri(item.imageUrl || item.uri || null);
         setImageDataForSave(item.imageUrl || item.uri || null);
         setCategory(normalizeCategory(item.type || item.category));
         setPattern(normalizePattern(item.pattern));
@@ -410,39 +411,31 @@ export default function EditItemsModal({ item, setModalVisible }) {
         return `data:image/jpeg;base64,${base64}`;
     };
 
-    const pickImage = async () => {
+    const openImageEditor = () => {
+        setDraftImageUri(uri ?? null);
+        setIsImageModalVisible(true);
+    };
+
+    const handleImageChange = (nextUri) => {
+        setDraftImageUri(nextUri ?? null);
+    };
+
+    const saveImageChanges = async () => {
         if (updateItemMutation.isPending) return;
 
-        // 1. Request permission
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-        if (status !== "granted") {
-            Toast.show({
-                type: "error",
-                text1: "Permission required",
-                text2: "Allow photo access to update this item image.",
-            });
+        const hasChanged = draftImageUri !== uri;
+        if (!hasChanged) {
+            setIsImageModalVisible(false);
             return;
         }
 
-        // 2. Launch the library
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ["images"],
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 1,
-        });
-
-        // 3. Handle the result
-        if (result.canceled || !result.assets?.length) return;
-
-        const pickedUri = result.assets[0].uri;
-        setUri(pickedUri);
-
         try {
-            const imageData = await convertToBase64(pickedUri);
+            const imageData = draftImageUri ? await convertToBase64(draftImageUri) : null;
+
+            setUri(draftImageUri ?? null);
             setImageDataForSave(imageData);
             updateItemMutation.mutate({ imageUrl: imageData });
+            setIsImageModalVisible(false);
         } catch (error) {
             console.error("Failed to process selected image:", error);
             Toast.show({
@@ -506,7 +499,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                     </View>
                     {!hasImageUrl ? (
                         <TouchableOpacity
-                            onPress={pickImage}
+                            onPress={openImageEditor}
                             disabled={updateItemMutation.isPending}
                             style={[
                                 styles.imageContainer,
@@ -540,7 +533,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         </TouchableOpacity>
                     ) : (
                         <TouchableOpacity
-                            onPress={pickImage}
+                            onPress={openImageEditor}
                             disabled={updateItemMutation.isPending}
                             className="imageContainer"
                             style={[
@@ -1262,6 +1255,76 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 </ScrollView>
             </View>
 
+            <Modal
+                visible={isImageModalVisible}
+                transparent
+                animationType="slide"
+                onRequestClose={() => setIsImageModalVisible(false)}
+            >
+                <View style={styles.imageModalOverlay}>
+                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}> 
+                        <View style={styles.imageModalHeader}>
+                            <ThemedText
+                                style={{
+                                    fontSize: theme.sizes.h2,
+                                    fontFamily: theme.fonts.bold,
+                                }}
+                            >
+                                Edit Image
+                            </ThemedText>
+                        </View>
+
+                        <View style={styles.imageModalBody}>
+                            <Camera
+                                setUri={handleImageChange}
+                                uri={draftImageUri}
+                                setPage={() => setIsImageModalVisible(false)}
+                                hideNextButton={true}
+                            />
+                        </View>
+                        <View style={styles.confirmActions}>
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setDraftImageUri(uri ?? null);
+                                    setIsImageModalVisible(false);
+                                }}
+                                disabled={updateItemMutation.isPending}
+                                style={[
+                                    styles.confirmBtn,
+                                    {
+                                        backgroundColor: theme.colors.card,
+                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
+                                    },
+                                ]}
+                            >
+                                <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+                                    Cancel
+                                </ThemedText>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={saveImageChanges}
+                                disabled={updateItemMutation.isPending}
+                                style={[
+                                    styles.confirmBtn,
+                                    {
+                                        backgroundColor: theme.colors.tabIconSelected,
+                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
+                                    },
+                                ]}
+                            >
+                                {updateItemMutation.isPending ? (
+                                    <ActivityIndicator size="small" color="#fff" />
+                                ) : (
+                                    <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+                                        Save
+                                    </ThemedText>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
             <EditModal
                 modalVisible={isCategoryModalVisible}
                 setModalVisible={setIsCategoryModalVisible}
@@ -1588,6 +1651,32 @@ const styles = {
         borderRadius: 18,
         paddingHorizontal: 18,
         paddingVertical: 8,
+    },
+    imageModalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.35)",
+        alignItems: "center",
+        justifyContent: "center",
+        paddingHorizontal: 24,
+    },
+    imageModalCard: {
+        width: "100%",
+        maxWidth: 560,
+        maxHeight: "90%",
+        borderRadius: 12,
+        overflow: "hidden",
+        padding: 12,
+    },
+    imageModalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 4,
+        paddingBottom: 8,
+    },
+    imageModalBody: {
+        width: "100%",
+        height: 400,
     },
 };
 

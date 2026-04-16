@@ -1398,7 +1398,7 @@ const styles = {
   },
   imageModalBody: {
     width: "100%",
-    height: 520,
+    height: 400,
   },
   answerText: {
     alignSelf: "flex-start",

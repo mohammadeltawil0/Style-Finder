@@ -189,7 +189,11 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
     return (
       <>
         <View
-          style={[styles.previewContainer, isWeb && styles.previewContainerWeb]}
+          style={[
+            styles.previewContainer,
+            hideNextButton && styles.previewContainerCompact,
+            isWeb && styles.previewContainerWeb,
+          ]}
         >
           <Image
             source={{ uri }}
@@ -200,6 +204,7 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
         <View
           style={[
             styles.navigationButtons,
+            hideNextButton && styles.navigationButtonsCompact,
             isWeb && styles.navigationButtonsWeb,
           ]}
         >
@@ -235,7 +240,13 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
   }
 
   return (
-    <View style={[styles.container, isWeb && styles.containerWeb]}>
+    <View
+      style={[
+        styles.container,
+        hideNextButton && styles.containerCompact,
+        isWeb && styles.containerWeb,
+      ]}
+    >
       <CameraView
         style={[styles.camera, isWeb && styles.cameraWeb]}
         ref={ref}
@@ -244,7 +255,11 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
         animateShutter={false}
       />
       <View
-        style={[styles.shutterContainer, isWeb && styles.shutterContainerWeb]}
+        style={[
+          styles.shutterContainer,
+          hideNextButton && styles.shutterContainerCompact,
+          isWeb && styles.shutterContainerWeb,
+        ]}
       >
         <Pressable
           onPress={toggleFacing}
@@ -295,6 +310,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     position: "relative",
   },
+  containerCompact: {
+    justifyContent: "flex-start",
+    paddingTop: 8,
+  },
   containerWeb: {
     maxWidth: 680,
     alignSelf: "center",
@@ -321,6 +340,9 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingHorizontal: 40,
     width: "90%",
+  },
+  shutterContainerCompact: {
+    paddingTop: 10,
   },
   shutterContainerWeb: {
     position: "relative",
@@ -359,6 +381,9 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     marginTop: 55
   },
+  previewContainerCompact: {
+    marginTop: 8,
+  },
   previewContainerWeb: {
     width: "100%",
     maxWidth: 560,
@@ -381,6 +406,15 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 10,
     width: "100%",
+  },
+  navigationButtonsCompact: {
+    position: "relative",
+    bottom: 0,
+    marginTop: 10,
+    gap: 16,
+    padding: 0,
+    width: "90%",
+    alignSelf: "center",
   },
   navigationButtonsWeb: {
     position: "relative",
