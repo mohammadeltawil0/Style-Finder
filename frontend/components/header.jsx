@@ -375,7 +375,7 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "EditProfile" && (
             <>
-              <TouchableOpacity onPress={() => router.replace("/(tabs)")}>
+              <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -396,7 +396,7 @@ export const CustomHeader = ({ page }) => {
           {page === "UpdatePassword" && (
             <>
               <TouchableOpacity
-                onPress={() => router.replace("/settings/Profile")}
+                onPress={() => router.back()}
               >
                 <Ionicons
                   name="arrow-back"

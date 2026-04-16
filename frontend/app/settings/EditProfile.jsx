@@ -16,12 +16,7 @@ import { apiClient } from "../../scripts/apiClient";
 
 function UsernameRules({ username }) {
   const rules = [
-    { label: "At least 5 letters", pass: username.length >= 5 && /[a-zA-Z]/.test(username) },
-    { label: "One number", pass: /[0-9]/.test(username) },
-    {
-      label: "One special character (#, @, $, %, &)",
-      pass: /[#@$%&]/.test(username),
-    },
+    { label: "At least 5 letters", pass: username.length >= 5 && /[a-zA-Z]/.test(username) }
   ];
 
   return (
@@ -296,7 +291,7 @@ function EditProfile() {
         type: "error",
         text1: "Invalid username",
         text2:
-          "Username must be at least 5 letters and include a number and one of #, @, $, %, &.",
+          "Username must be at least 5 letters.",
       });
       return;
     }
@@ -441,11 +436,11 @@ function EditProfile() {
           <ThemedText
             style={{
               fontSize: theme.sizes.h2,
-              color: theme.colors.h2,
+              color: theme.colors.text,
               fontFamily: theme.fonts.bold,
             }}
           >
-            {username}
+            {name}
           </ThemedText>
         </View>
         <View

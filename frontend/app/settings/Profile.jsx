@@ -70,16 +70,12 @@ function Profile() {
           </View>
           <ThemedText
             style={{
-              fontSize: theme.sizes.h3,
+              fontSize: theme.sizes.h2,
               color: theme.colors.text,
               fontFamily: theme.fonts.bold,
             }}
           >
-            {"Account Holder: " + name} 
-            { "\n" } 
-            {"Username: " + username}
-    
-            
+            {name} 
           </ThemedText>
         </View>
 
