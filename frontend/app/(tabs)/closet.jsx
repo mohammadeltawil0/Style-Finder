@@ -225,6 +225,7 @@ export default function ClosetScreen() {
       <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
             itemId={currItemId}
           />
