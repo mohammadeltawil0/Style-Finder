@@ -111,11 +111,6 @@ function PasswordRules({ password }) {
 function UsernameRules({ username }) {
   const rules = [
     { label: "At least 5 letters", pass: username.length >= 5 && /[a-zA-Z]/.test(username) },
-    { label: "One number", pass: /[0-9]/.test(username) },
-    {
-      label: "One special character (#, @, $, %, &)",
-      pass: /[#@$%&]/.test(username),
-    },
   ];
 
   return (
@@ -222,15 +217,13 @@ export default function Register() {
 
     const usernameRules = [
       trimmedUsername.length >= 5 && /[a-zA-Z]/.test(trimmedUsername),
-      /[0-9]/.test(trimmedUsername),
-      /[#@$%&]/.test(trimmedUsername),
     ];
     if (!usernameRules.every(Boolean)) {
       Toast.show({
         type: "error",
         text1: "Invalid Username",
         text2:
-          "Username must be at least 5 letters and include a number and one of #, @, $, %, &.",
+          "Username must be at least 5 letters.",
       });
       return;
     }
