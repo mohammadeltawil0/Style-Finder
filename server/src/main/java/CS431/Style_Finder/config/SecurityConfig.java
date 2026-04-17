@@ -18,11 +18,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable()) // mobile app → no CSRF needed
-            .authorizeHttpRequests(auth -> auth.requestMatchers("/api/users/login", "/api/users/register").permitAll().anyRequest().authenticated())
-
-            //add JWT filter before Spring's auth filter
-            .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        .csrf().disable()
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers(
+                "/api/users/login",
+                "/api/users/register",
+                "/api/users/exists",
+                "/api/users/check-username",
+                "/api/users/reset-password"
+            ).permitAll()
+            .anyRequest().authenticated()
+        )
+        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 }

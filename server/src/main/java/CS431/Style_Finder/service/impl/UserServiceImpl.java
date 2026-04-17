@@ -15,7 +15,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.beans.factory.annotation.Autowired;
 import CS431.Style_Finder.dto.auth.LoginResponseDto;
 
 
@@ -129,21 +128,23 @@ public class UserServiceImpl implements UserService {
     }
 
     private final JwtUtil jwtUtil;
+
     public LoginResponseDto login(String username, String password) {
+        System.out.println("LOGIN HIT with username: " + username);
 
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new InvalidCredentialsException());
 
+        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
+            System.out.println("PASSWORD MISMATCH");
             throw new InvalidCredentialsException();
         }
 
         String token = jwtUtil.generateToken(user.getUsername());
-        System.out.println("USERNAME: " + username);
-        System.out.println("PASSWORD: " + password);
-        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
 
-        return new LoginResponseDto(user.getUserId(), token);
+        return new LoginResponseDto(token, user.getUserId(), user.getUsername());
     }
 
     @Override

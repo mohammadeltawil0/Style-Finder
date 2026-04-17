@@ -98,9 +98,10 @@ export default function Login() {
 
     try {
       console.log("Sending login request...");
+      console.log("LOGIN INPUT:", {username, password, length: password.length});
       const response = await apiClient.post("/api/users/login", {
-        username,
-        password,
+        username: username.trim(),
+        password: password.trim(),
       });
 
       loginData = response.data;
@@ -110,8 +111,8 @@ export default function Login() {
       console.log("Login successful:", loginData);
       await AsyncStorage.setItem("token", loginData.token);
       await AsyncStorage.setItem("userId", String(loginData.userId));
-      await AsyncStorage.setItem("username", loginData.username);
-      console.log("Stored token:", await AsyncStorage.getItem("token"));
+      await AsyncStorage.setItem("username", loginData.username || "");
+      //console.log("Stored token:", await AsyncStorage.getItem("token"));
     } catch (error) {
       const details = describeApiError(error);
       const status = details.status;

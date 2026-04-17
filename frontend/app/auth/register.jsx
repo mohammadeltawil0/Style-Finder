@@ -92,7 +92,7 @@ export default function Register() {
       console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
 
   try {
-    await apiClient.get(`/api/users/check-username?username=${username}`);
+    //await apiClient.get(`/api/users/check-username?username=${username.trim()}`);
     return false; // 200 = username is available
   } catch (error) {
     if (error.response?.status === 409) {
@@ -150,6 +150,8 @@ export default function Register() {
         role: "USER",
         createdAt: new Date().toISOString(),
       });
+      console.log("REGISTER RESPONSE:", response.data);
+      console.log("Saved token:", await AsyncStorage.getItem("token"));
 
       Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully.' });
 
@@ -159,6 +161,7 @@ export default function Register() {
         ["username", response.data.username || username],
         ["profileImageUrl", response.data.profileImageUrl || ""],
       ]);
+
 
       router.replace("/screens/survey/preferences1"); //reroute to survey
 

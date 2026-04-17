@@ -4,6 +4,7 @@ import CS431.Style_Finder.dto.UserDto;
 import CS431.Style_Finder.dto.auth.LoginResponseDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
+import CS431.Style_Finder.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -20,10 +21,13 @@ class UserControllerTest {
     private UserService userService;
     private UserController userController;
 
+    private JwtUtil jwtUtil;
+
     @BeforeEach
     void setUp() {
         userService = mock(UserService.class);
-        userController = new UserController(userService);
+        jwtUtil = mock(JwtUtil.class); 
+        userController = new UserController(userService, jwtUtil);
     }
 
     //create user
@@ -32,12 +36,18 @@ class UserControllerTest {
         UserDto input = new UserDto();
         input.setUsername("stella");
 
-        when(userService.createUser(input)).thenReturn(input);
+        UserDto user = new UserDto();
+        user.setUserId(1L);
+        user.setUsername("stella");
 
-        ResponseEntity<UserDto> response = userController.createUser(input);
+        when(userService.createUser(input)).thenReturn(user);
+        when(jwtUtil.generateToken("stella")).thenReturn("fake-token");
+
+        ResponseEntity<LoginResponseDto> response = userController.createUser(input);
 
         assertEquals(201, response.getStatusCodeValue());
-        assertEquals("stella", response.getBody().getUsername());
+        assertEquals("fake-token", response.getBody().getToken());
+        assertEquals(1L, response.getBody().getUserId());
     }
 
     //Get user by ID
@@ -101,7 +111,7 @@ class UserControllerTest {
         request.setPassword("password");
 
         LoginResponseDto mockResponse =
-                new LoginResponseDto(1L, "fake-token");
+                new LoginResponseDto("fake-token", 1L, "stella");
 
         when(userService.login("stella", "password"))
                 .thenReturn(mockResponse);

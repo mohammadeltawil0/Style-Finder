@@ -4,25 +4,37 @@ import CS431.Style_Finder.dto.UserDto;
 import CS431.Style_Finder.dto.auth.LoginResponseDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
+import CS431.Style_Finder.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     // POST /api/users
     // Body: { "firstName":"Stella", "username":"stella123", "passwordHash":"abc", "role":"ROLE_USER" }
     @PostMapping("/register")
-    public ResponseEntity<UserDto> createUser(@RequestBody UserDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(userService.createUser(dto));
+    public ResponseEntity<LoginResponseDto> createUser(@RequestBody UserDto dto) {
+
+        UserDto user = userService.createUser(dto);
+
+        String token = jwtUtil.generateToken(user.getUsername());
+
+        LoginResponseDto response = new LoginResponseDto(
+            token,
+            user.getUserId(),
+            user.getUsername()
+        );
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")

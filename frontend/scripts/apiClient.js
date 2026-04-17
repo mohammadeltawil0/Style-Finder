@@ -1,5 +1,7 @@
 // import {API_URL} from '@env';
 import axios from 'axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 // 1. Verify the URL loaded correctly (Debugging)
 // const API_URL = "https://api.stylefinder.tech";
@@ -15,3 +17,28 @@ export const apiClient = axios.create({
     },
     timeout: 10000 // Stop trying if the backend takes longer than 10 seconds
 });
+
+apiClient.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("token");
+
+    console.log("TOKEN BEING SENT:", token); 
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const describeApiError = (error) => {
+  return {
+    status: error?.response?.status || error?.status || null,
+    message:
+      error?.response?.data?.message ||
+      error?.message ||
+      "Unknown error",
+  };
+};
