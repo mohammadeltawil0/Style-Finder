@@ -130,15 +130,15 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     public LoginResponseDto login(String username, String password) {
-        System.out.println("LOGIN HIT with username: " + username);
+        //System.out.println("LOGIN HIT with username: " + username);
 
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new InvalidCredentialsException());
 
-        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+        //System.out.println("DB PASSWORD (hashed): " + user.getPassword());
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            System.out.println("PASSWORD MISMATCH");
+            //System.out.println("PASSWORD MISMATCH");
             throw new InvalidCredentialsException();
         }
 
