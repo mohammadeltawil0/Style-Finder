@@ -15,6 +15,7 @@ public class WebConfig {
                 registry.addMapping("/**")
                         .allowedOrigins("*")
                         .allowedMethods("*");
+
             }
         };
     }

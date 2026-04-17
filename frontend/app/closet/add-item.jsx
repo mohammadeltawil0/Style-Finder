@@ -77,8 +77,10 @@ export default function AddItemScreen() {
 
         const filename = uri.split('/').pop();
         const match = /\.(\w+)$/.exec(filename);
-        const type = match ? `image/${match}` : `image/jpeg`;
+        const type = match ? `image/${match[1]}` : `image/jpeg`;
 
+        console.log("Filename:", filename);
+        console.log("Type:", type);
         console.log("Requesting VIP Pass (Pre-signed URL) from Spring Boot...");
 
         const urlResponse = await apiClient.get(

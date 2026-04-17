@@ -18,9 +18,9 @@ import { useTheme } from "@react-navigation/native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { ScrollView } from "react-native";
+import { ScrollView, Image} from "react-native";
 import EditItemsModal from "../closet/edit-items-modal";
-import OutfitDetailsModal from "../closet/outfit-details-modal"; // NEW IMPORT!
+import OutfitDetailsModal from "../closet/outfit-details-modal";
 import { apiClient } from "../../scripts/apiClient";
 
 export default function ClosetScreen() {
@@ -237,9 +237,17 @@ export default function ClosetScreen() {
                               renderItem={({ item, index }) => (
                                   <View style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.lightBrown, borderRadius: 10, marginBottom: 20, width: "48%" }}>
                                     <TouchableOpacity onPress={() => { setSelectedOutfit(item); setIsOutfitModalVisible(true); }}>
-                                      <View style={{ height: 175, marginBottom: 10, justifyContent: 'center', alignItems: 'center' }}>
-                                        <ThemedText style={{ color: '#666', fontSize: 12 }}>Items: {item.itemIds?.length || 0}</ThemedText>
-                                      </View>
+                                      {item.coverImageUrl ? (
+                                          <Image
+                                              source={{ uri: item.coverImageUrl }}
+                                              style={{ height: 175, width: "100%", borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
+                                              resizeMode="cover"
+                                          />
+                                      ) : (
+                                          <View style={{ height: 175, backgroundColor: theme.colors.card, borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'center', alignItems: 'center' }}>
+                                            <ThemedText style={{ color: '#666', fontSize: 12 }}>Items: {item.itemIds?.length || 0}</ThemedText>
+                                          </View>
+                                      )}
                                     </TouchableOpacity>
                                     <View style={{ backgroundColor: theme.colors.card, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderTopColor: theme.colors.border, flexDirection: "row", justifyContent: "space-between", padding: 10, alignItems: "center" }}>
                                       <ThemedText>Outfit {index + 1}</ThemedText>
@@ -280,8 +288,6 @@ export default function ClosetScreen() {
                               )}
                           />
                       )}
-
-                      {/* MODAL COMPONENT USING THE NEW EXTERNAL IMPORT */}
                       <OutfitDetailsModal
                           visible={isOutfitModalVisible}
                           outfit={selectedOutfit}

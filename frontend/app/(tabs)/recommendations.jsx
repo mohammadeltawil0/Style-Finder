@@ -8,6 +8,7 @@ import { useTheme } from "@react-navigation/native";
 import Entypo from "@expo/vector-icons/Entypo";
 import { ThemedText } from "../../components";
 import * as Location from 'expo-location';
+import OutfitDetailsModal from "../closet/outfit-details-modal";
 
 const formatEnum = (str) => {
   if (!str) return "";
@@ -16,74 +17,6 @@ const formatEnum = (str) => {
 };
 
 const FORMALITY_OPTIONS = ["CASUAL", "FORMAL", "WORK_OR_SMART", "PARTY_OR_NIGHT_OUT", "VERSATILE"];
-
-// --- OUTFIT DETAILS MODAL ---
-const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchOutfitItems = async () => {
-      if (!outfit || !outfit.itemIds) return;
-      try {
-        setIsLoading(true);
-        const itemPromises = outfit.itemIds.map(id => apiClient.get(`/api/items/${id}`));
-        const responses = await Promise.all(itemPromises);
-        let fetchedItems = responses.map(res => res.data);
-        const typeOrder = { "OVER": 1, "OUTERWEAR": 1, "TOP": 2, "FULL_BODY": 3, "BOTTOM": 4 };
-        fetchedItems.sort((a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99));
-        setItems(fetchedItems);
-      } catch (error) {
-        console.error("Failed to load items:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (visible) fetchOutfitItems();
-  }, [visible, outfit]);
-
-  return (
-      <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-        <View style={[styles.modalContainer, { backgroundColor: theme.colors.background }]}>
-          <View style={styles.chevronView}>
-            <Pressable onPress={onClose}><Entypo name="chevron-down" size={30} color={theme.colors.text} /></Pressable>
-          </View>
-
-          {isLoading ? (
-              <ActivityIndicator size="large" color={theme.colors.text} />
-          ) : (
-              <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-                <ThemedText style={styles.modalTitle}>Outfit Details</ThemedText>
-                {items.map((item, index) => (
-                    <View key={index} style={[styles.responseContainer, { backgroundColor: theme.colors.card }]}>
-                      <View style={{ flex: 1 }}>
-                        <ThemedText style={{ fontWeight: 'bold', fontSize: 18 }}>{formatEnum(item.type)}</ThemedText>
-                        <ThemedText style={{ fontSize: 14, marginBottom: 10 }}>
-                          A {item.color?.toLowerCase()} {formatEnum(item.fit)} fit {formatEnum(item.type).toLowerCase()}.
-                        </ThemedText>
-
-                        {/* Image Placeholder for visualization */}
-                        <View style={[styles.itemImagePlaceholder, { backgroundColor: theme.colors.lightBrown }]} />
-                      </View>
-                    </View>
-                ))}
-                <View style={styles.modalActions}>
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#b49480' }]} onPress={() => onAction('SAVE')}>
-                    <Text style={styles.actionBtnText}>Save Outfit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#e2d7cd' }]} onPress={() => onAction('EDIT_SAVE')}>
-                    <Text style={[styles.actionBtnText, { color: '#000' }]}>Edit & Save</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#ff4444' }]} onPress={() => onAction('REJECT')}>
-                    <Text style={styles.actionBtnText}>Reject</Text>
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-          )}
-        </View>
-      </Modal>
-  );
-};
 
 // --- MAIN SCREEN ---
 export default function SuggestionHub() {
@@ -203,14 +136,28 @@ export default function SuggestionHub() {
             numColumns={2}
             columnWrapperStyle={{ justifyContent: "space-between" }}
             renderItem={({ item, index }) => (
-                <TouchableOpacity style={[styles.outfitCard, { backgroundColor: theme.colors.lightBrown }]} onPress={() => { setSelectedOutfit(item); setIsModalVisible(true); }}>
-                  <View style={styles.cardImagePlaceholder}><ThemedText>Outfit {index + 1}</ThemedText></View>
-                  <View style={[styles.cardFooter, { backgroundColor: theme.colors.card }]}><ThemedText>Score: {item.score?.toFixed(1)}</ThemedText></View>
+                <TouchableOpacity
+                    style={[styles.outfitCard, { backgroundColor: theme.colors.lightBrown }]}
+                    onPress={() => { setSelectedOutfit(item); setIsModalVisible(true); }}
+                >
+                  {item.coverImageUrl ? (
+                      <Image
+                          source={{ uri: item.coverImageUrl }}
+                          style={{ height: 120, width: "100%" }}
+                          resizeMode="cover"
+                      />
+                  ) : (
+                      <View style={styles.cardImagePlaceholder}>
+                        <ThemedText>Outfit {index + 1}</ThemedText>
+                      </View>
+                  )}
+                  <View style={[styles.cardFooter, { backgroundColor: theme.colors.card }]}>
+                    <ThemedText>Score: {item.score?.toFixed(1)}</ThemedText>
+                  </View>
                 </TouchableOpacity>
             )}
         />
 
-        {/* Restored: Passing the handleAction method successfully */}
         <OutfitDetailsModal
             visible={isModalVisible}
             outfit={selectedOutfit}
