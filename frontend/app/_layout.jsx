@@ -1,3 +1,9 @@
+            <Stack.Screen
+              name="closet/edit-item-screen"
+              options={{
+                header: () => <CustomHeader page="closet" />,
+              }}
+            />
 import {
   ThemeProvider
 } from "@react-navigation/native";
@@ -68,7 +74,7 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen name="(tabs)" options={{
-              headerShown: false, 
+              headerShown: false,
               gestureEnabled: false,
             }} />
             <Stack.Screen
@@ -182,7 +188,12 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="adminUserDetail" />,
               }}
             />
-
+            <Stack.Screen
+              name="closet/edit-item-screen"
+              options={{
+                header: () => <CustomHeader page="closet" />,
+              }}
+            />
           </Stack>
           <StatusBar style="auto" />
           <ThemedToast />
