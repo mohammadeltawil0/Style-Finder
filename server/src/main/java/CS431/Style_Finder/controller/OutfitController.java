@@ -60,4 +60,9 @@ public class OutfitController {
         outfitService.deleteOutfit(id);
         return ResponseEntity.ok("Outfit deleted successfully.");
     }
+    // GET /api/outfits/user/{userId}/three-outfits
+    @GetMapping("/user/{userId}/three-outfits")
+    public ResponseEntity<List<OutfitDto>> getThreeOutfitsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(outfitService.find3Outfits(userId));
+    }
 }

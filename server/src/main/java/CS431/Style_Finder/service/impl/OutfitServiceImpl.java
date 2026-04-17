@@ -95,4 +95,14 @@ public class OutfitServiceImpl implements OutfitService {
                 .orElseThrow(() -> new ResourceNotFoundException("Outfit not found with id: " + outfitId));
         outfitRepository.deleteById(outfitId);
     }
+
+     @Override
+    public List<OutfitDto> find3Outfits(Long userId) {
+        List<Outfit> allOutfits = outfitRepository.findByUser_UserId(userId);
+        Collections.shuffle(allOutfits);
+        return allOutfits.stream()
+                .limit(3)
+                .map(outfitMapper::toDto)
+                .collect(Collectors.toList());
+    }
 }
