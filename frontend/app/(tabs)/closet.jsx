@@ -1,14 +1,14 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
 import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   Image,
-  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -35,11 +35,9 @@ export default function ClosetScreen() {
   const [mode, setMode] = useState("regular");
   const [userId, setUserId] = useState(null);
   const [currItemId, setCurrItemId] = useState(null);
-
   const [dbOutfits, setDbOutfits] = useState([]);
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [selectedOutfit, setSelectedOutfit] = useState(null);
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
 
@@ -201,8 +199,10 @@ export default function ClosetScreen() {
     let matchesCategory = true;
     if (category === "tops") matchesCategory = item.type === "TOP";
     else if (category === "bottoms") matchesCategory = item.type === "BOTTOM";
-    else if (category === "dresses") matchesCategory = item.type === "FULL_BODY";
-    else if (category === "outerwear") matchesCategory = item.type === "OUTERWEAR";
+    else if (category === "dresses")
+      matchesCategory = item.type === "FULL_BODY";
+    else if (category === "outerwear")
+      matchesCategory = item.type === "OUTERWEAR";
 
     let matchesSearch = true;
     if (activeSearchText) {
@@ -254,9 +254,13 @@ export default function ClosetScreen() {
                 ) : isItemsError ? (
                   <View style={styles.centerState}>
                     <ThemedText style={{ textAlign: "center" }}>
-                      {itemsError?.message || "Could not load items. Please try again."}
+                      {itemsError?.message ||
+                        "Could not load items. Please try again."}
                     </ThemedText>
-                    <Pressable onPress={() => refetch()} style={styles.retryButton}>
+                    <Pressable
+                      onPress={() => refetch()}
+                      style={styles.retryButton}
+                    >
                       <ThemedText>Retry</ThemedText>
                     </Pressable>
                   </View>
@@ -266,10 +270,17 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+                          setCategory((prev) =>
+                            prev === "tops" ? "all" : "tops",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Tops
                         </ThemedText>
                       </Pressable>
@@ -277,10 +288,17 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
+                          setCategory((prev) =>
+                            prev === "bottoms" ? "all" : "bottoms",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Bottoms
                         </ThemedText>
                       </Pressable>
@@ -288,21 +306,32 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "dresses" ? "all" : "dresses"))
+                          setCategory((prev) =>
+                            prev === "dresses" ? "all" : "dresses",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Dresses
                         </ThemedText>
                       </Pressable>
                     </View>
 
                     {isLoading ? (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                      <ThemedText
+                        style={{ textAlign: "center", marginTop: 20 }}
+                      >
                         Loading your closet...
                       </ThemedText>
                     ) : filteredItems.length === 0 ? (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                      <ThemedText
+                        style={{ textAlign: "center", marginTop: 20 }}
+                      >
                         No items found.
                       </ThemedText>
                     ) : (
@@ -328,13 +357,19 @@ export default function ClosetScreen() {
               <>
                 <View style={styles.outfitToggle}>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
+                    style={[
+                      styles.toggleBtn,
+                      mode === "trip" && styles.activeToggle,
+                    ]}
                     onPress={() => setMode("trip")}
                   >
                     <ThemedText>Trip</ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, mode === "regular" && styles.activeToggle]}
+                    style={[
+                      styles.toggleBtn,
+                      mode === "regular" && styles.activeToggle,
+                    ]}
                     onPress={() => setMode("regular")}
                   >
                     <ThemedText>Regular</ThemedText>
@@ -349,10 +384,16 @@ export default function ClosetScreen() {
                       item.outfitId?.toString() || index.toString()
                     }
                     numColumns={2}
-                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
                     columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
                     ListEmptyComponent={() => (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                      <ThemedText
+                        style={{ textAlign: "center", marginTop: 20 }}
+                      >
                         No saved outfits yet.
                       </ThemedText>
                     )}
@@ -360,8 +401,13 @@ export default function ClosetScreen() {
                       <View style={styles.outfitCard}>
                         <TouchableOpacity
                           onPress={() => {
-                            setSelectedOutfit(item);
-                            setIsOutfitModalVisible(true);
+                            router.push({
+                              pathname: "/closet/outfitsHistory/itemProperty",
+                              params: {
+                                outfitId: item.outfitId,
+                                isOutfit: "true",
+                              },
+                            });
                           }}
                         >
                           {getOutfitCoverImage(item) ? (
@@ -372,7 +418,9 @@ export default function ClosetScreen() {
                             />
                           ) : (
                             <View style={styles.outfitPlaceholder}>
-                              <ThemedText style={{ color: "#666", fontSize: 12 }}>
+                              <ThemedText
+                                style={{ color: "#666", fontSize: 12 }}
+                              >
                                 Items: {item.itemIds?.length || 0}
                               </ThemedText>
                             </View>
@@ -383,8 +431,13 @@ export default function ClosetScreen() {
                           <ThemedText>Outfit {index + 1}</ThemedText>
                           <Pressable
                             onPress={() => {
-                              setSelectedOutfit(item);
-                              setIsOutfitModalVisible(true);
+                              router.push({
+                                pathname: "/closet/outfitsHistory/itemProperty",
+                                params: {
+                                  outfitId: item.outfitId,
+                                  isOutfit: "true",
+                                },
+                              });
                             }}
                           >
                             <Feather
@@ -404,7 +457,11 @@ export default function ClosetScreen() {
                     className="trip_Oufit_Details"
                     data={trips}
                     keyExtractor={(trip, index) => trip.id || index.toString()}
-                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
                     renderItem={({ item }) => (
                       <View className="TripOufit" style={styles.tripCard}>
                         <TouchableOpacity
