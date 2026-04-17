@@ -88,6 +88,7 @@ export default function ClosetScreen() {
     }
   };
 
+  // TODO: Uncommend where this is user, had it, may be changed when trip feature implemented, just want to make sure outfits are loading for now.
   const fetchUserTrips = async (id) => {
     try {
       const response = await apiClient.get(`/api/trips/user/${id}`);
@@ -246,7 +247,23 @@ export default function ClosetScreen() {
     return matchesCategory && matchesSearch;
   });
 
-  const trips = dbTrips;
+  // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
+  // const trips = dbTrips;
+  const dummyTrips = [
+      { id: "t1", name: "NYC Trip", location: "New York City", dates: "03/01/26 - 03/05/26", outfits: [{}, {}, {}, {}] },
+      { id: "t2", name: "Beach Trip", location: "Miami Beach", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}] },
+      { id: "t3", name: "Business Trip", location: "San Francisco", dates: "05/02/26 - 05/06/26", outfits: [{}, {}] },
+      { id: "t4", name: "Weekend Getaway", location: "Chicago", dates: "06/14/26 - 06/16/26", outfits: [{}, {}, {}, {}, {}] },
+    ];
+
+    const trips = dummyTrips.filter((trip) => {
+      if (!activeSearchText) return true;
+      const query = activeSearchText.toLowerCase();
+      return (
+        trip.name.toLowerCase().includes(query) ||
+        trip.location.toLowerCase().includes(query)
+      );
+    });
 
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
@@ -526,7 +543,13 @@ export default function ClosetScreen() {
                               <ThemedText>{item.dates}</ThemedText>
                               <ThemedText># Trip</ThemedText>
                             </View>
-                            <Ionicons name="ellipsis-horizontal" size={18} />
+                             <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
                           </View>
                         </TouchableOpacity>
                         <View style={styles.previewRow}>
