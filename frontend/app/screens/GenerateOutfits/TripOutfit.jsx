@@ -7,6 +7,7 @@ import { useTheme } from "@react-navigation/native";
 import React, { useEffect } from "react";
 import { apiClient } from "../../../scripts/apiClient";
 import Entypo from "@expo/vector-icons/Entypo";
+import OutfitCoverImage from "../../closet/outfit-cover-image";
 
 const formatEnum = (str) => {
   if (!str) return "";
@@ -342,6 +343,7 @@ export default function TripOutfit() {
   // COPIED AND SIMILAR VERSION OF REGULAR GENERATE CALL, PROBABLY WILL BE DIFFERENT ENDPOINT AND/OR PAYLOAD
   const handleAction = async (actionType, editedItemIds = null) => {
     if (!selectedOutfit || !activeDate) return;
+
     try {
       await apiClient.post(`/api/v1/suggestions/feedback`, {
         userId:          await getUserId(),
@@ -547,9 +549,7 @@ export default function TripOutfit() {
                     style={[styles.outfitCard, { backgroundColor: theme.colors.lightBrown }]}
                     onPress={() => { setSelectedOutfit(item); setActiveDate(iso); setIsModalVisible(true); }}
                   >
-                    <View style={styles.cardImagePlaceholder}>
-                      <ThemedText>Outfit {index + 1}</ThemedText>
-                    </View>
+                    <OutfitCoverImage itemIds={item.itemIds || []} height={120} />
                     <View style={[styles.cardFooter, { backgroundColor: theme.colors.card }]}>
                       <ThemedText>Score: {item.score?.toFixed(1)}</ThemedText>
                     </View>

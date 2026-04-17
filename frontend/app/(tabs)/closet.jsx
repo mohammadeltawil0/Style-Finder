@@ -4,12 +4,26 @@ import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView,
-  Share, StyleSheet, TouchableOpacity, View, } from "react-native";
-import { ClosetToggle, Items,  SearchBar,  ThemedText,  ThemedView, } from "../../components";
+import {
+  FlatList,
+  ActivityIndicator,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  ClosetToggle,
+  Items,
+  SearchBar,
+  ThemedText,
+  ThemedView,
+} from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
+import OutfitCoverImage from "../closet/outfit-cover-image";
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -81,6 +95,7 @@ export default function ClosetScreen() {
               ? outfit.outfitItems.map((oi) => oi.item.itemId)
               : []),
         }));
+
         setDbOutfits(formattedOutfits);
       }
     } catch (error) {
@@ -222,9 +237,18 @@ export default function ClosetScreen() {
     name: `${formatItemType(item.type)} (Item ${index + 1})`,
   }));
 
-  const getOutfitCoverImage = (outfit) => {
-    const firstOutfitItem = outfit?.outfitItems?.[0]?.item;
-    return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
+  const getOutfitCoverImages = (outfit) => {
+    const urlsFromOutfitItems = (outfit?.outfitItems || [])
+      .map((oi) => oi?.item?.imageUrl || oi?.item?.image_url)
+      .filter((url) => typeof url === "string" && url.trim().length > 0)
+      .slice(0, 3);
+
+    if (urlsFromOutfitItems.length > 0) {
+      return urlsFromOutfitItems;
+    }
+
+    const fallback = outfit?.imageUrl || outfit?.image_url;
+    return fallback ? [fallback] : [];
   };
 
   const filteredItems = processedItems.filter((item) => {
@@ -257,6 +281,7 @@ export default function ClosetScreen() {
       <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
             itemId={currItemId}
           />
@@ -444,28 +469,11 @@ export default function ClosetScreen() {
                         <TouchableOpacity
                           onPress={() => openOutfitDetails(item.outfitId)}
                         >
-                          <View style={styles.outfitViewBadge}>
-                            <Ionicons
-                              name="eye-outline"
-                              size={18}
-                              color={theme.colors.text}
-                            />
-                          </View>
-                          {getOutfitCoverImage(item) ? (
-                            <Image
-                              source={{ uri: getOutfitCoverImage(item) }}
-                              style={styles.outfitImage}
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <View style={styles.outfitPlaceholder}>
-                              <ThemedText
-                                style={{ color: "#666", fontSize: 12 }}
-                              >
-                                Items: {item.itemIds?.length || 0}
-                              </ThemedText>
-                            </View>
-                          )}
+                          <OutfitCoverImage
+                            imageUrls={getOutfitCoverImages(item)}
+                            itemIds={item.itemIds || []}
+                            height={175}
+                          />
                         </TouchableOpacity>
 
                         <View style={styles.outfitFooter}>
