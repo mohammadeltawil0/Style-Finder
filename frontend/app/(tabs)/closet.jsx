@@ -1,27 +1,12 @@
-import Feather from "@expo/vector-icons/Feather";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import {
-  ClosetToggle,
-  Items,
-  SearchBar,
-  ThemedText,
-  ThemedView,
-} from "../../components";
+import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView,
+  Share, StyleSheet, TouchableOpacity, View, } from "react-native";
+import { ClosetToggle, Items,  SearchBar,  ThemedText,  ThemedView, } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
@@ -39,7 +24,11 @@ export default function ClosetScreen() {
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOutfit, setSelectedOutfit] = useState(null);
+  
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
+  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] = useState(false);
+  const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
+  const [isDeletingOutfit, setIsDeletingOutfit] = useState(false);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -171,9 +160,52 @@ export default function ClosetScreen() {
         prev.filter((o) => o.outfitId !== outfitId && o.id !== outfitId),
       );
       setIsOutfitModalVisible(false);
+      return true;
     } catch (error) {
       console.error("Failed to delete outfit:", error);
+      return false;
     }
+  };
+
+  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later.... 
+  const handleShareOutfit = async (outfit, index) => {
+    try {
+      const itemCount = outfit?.itemIds?.length || 0;
+      await Share.share({
+        message: `Check out Outfit ${index + 1} from my closet on StyleFinder (${itemCount} item${itemCount === 1 ? "" : "s"})!`,
+      });
+    } catch (error) {
+      console.error("Failed to share outfit:", error);
+    }
+  };
+
+  const requestDeleteOutfit = (outfitId) => {
+    setPendingDeleteOutfitId(outfitId);
+    setIsDeleteOutfitModalVisible(true);
+  };
+
+  const confirmDeleteOutfit = async () => {
+    if (!pendingDeleteOutfitId || isDeletingOutfit) return;
+    try {
+      setIsDeletingOutfit(true);
+      const didDelete = await handleDeleteOutfit(pendingDeleteOutfitId);
+      if (didDelete) {
+        setIsDeleteOutfitModalVisible(false);
+        setPendingDeleteOutfitId(null);
+      }
+    } finally {
+      setIsDeletingOutfit(false);
+    }
+  };
+
+  const openOutfitDetails = (outfitId) => {
+    router.push({
+      pathname: "/closet/outfitsHistory/itemProperty",
+      params: {
+        outfitId,
+        isOutfit: "true",
+      },
+    });
   };
 
   const formatItemType = (type) => {
@@ -390,26 +422,35 @@ export default function ClosetScreen() {
                       width: "100%",
                     }}
                     columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-                    ListEmptyComponent={() => (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        No saved outfits yet.
-                      </ThemedText>
-                    )}
+                    ListEmptyComponent={() =>
+                      isLoading ? (
+                        <View style={styles.centerState}>
+                          <ActivityIndicator
+                            size="large"
+                            color={theme.colors.tabIconSelected}
+                          />
+                          <ThemedText>Loading outfits...</ThemedText>
+                        </View>
+                      ) : (
+                        <ThemedText
+                          style={{ textAlign: "center", marginTop: 20 }}
+                        >
+                          No saved outfits yet.
+                        </ThemedText>
+                      )
+                    }
                     renderItem={({ item, index }) => (
                       <View style={styles.outfitCard}>
                         <TouchableOpacity
-                          onPress={() => {
-                            router.push({
-                              pathname: "/closet/outfitsHistory/itemProperty",
-                              params: {
-                                outfitId: item.outfitId,
-                                isOutfit: "true",
-                              },
-                            });
-                          }}
+                          onPress={() => openOutfitDetails(item.outfitId)}
                         >
+                          <View style={styles.outfitViewBadge}>
+                            <Ionicons
+                              name="eye-outline"
+                              size={18}
+                              color={theme.colors.text}
+                            />
+                          </View>
                           {getOutfitCoverImage(item) ? (
                             <Image
                               source={{ uri: getOutfitCoverImage(item) }}
@@ -429,23 +470,30 @@ export default function ClosetScreen() {
 
                         <View style={styles.outfitFooter}>
                           <ThemedText>Outfit {index + 1}</ThemedText>
-                          <Pressable
-                            onPress={() => {
-                              router.push({
-                                pathname: "/closet/outfitsHistory/itemProperty",
-                                params: {
-                                  outfitId: item.outfitId,
-                                  isOutfit: "true",
-                                },
-                              });
-                            }}
-                          >
-                            <Feather
-                              name="more-horizontal"
-                              size={20}
-                              color={theme.colors.text}
-                            />
-                          </Pressable>
+                          <View style={styles.outfitActions}>
+                            <Pressable
+                              onPress={() => handleShareOutfit(item, index)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="share-social-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                            <Pressable
+                              onPress={() =>
+                                requestDeleteOutfit(item.outfitId || item.id)
+                              }
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                          </View>
                         </View>
                       </View>
                     )}
@@ -500,6 +548,78 @@ export default function ClosetScreen() {
                   onDelete={handleDeleteOutfit}
                   theme={theme}
                 />
+
+                <Modal
+                  visible={isDeleteOutfitModalVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => {
+                    if (isDeletingOutfit) return;
+                    setIsDeleteOutfitModalVisible(false);
+                    setPendingDeleteOutfitId(null);
+                  }}
+                >
+                  <View style={styles.confirmOverlay}>
+                    <View
+                      style={[
+                        styles.confirmCard,
+                        { backgroundColor: theme.colors.card },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: theme.sizes.h2,
+                          fontWeight: "700",
+                          marginBottom: 8,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        Delete this outfit?
+                      </ThemedText>
+                      <ThemedText style={styles.confirmText}>
+                        This action cannot be undone. This outfit will be
+                        removed permanently.
+                      </ThemedText>
+
+                      <View style={styles.confirmActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            { backgroundColor: theme.colors.lightBrown },
+                          ]}
+                          onPress={() => {
+                            if (isDeletingOutfit) return;
+                            setIsDeleteOutfitModalVisible(false);
+                            setPendingDeleteOutfitId(null);
+                          }}
+                          disabled={isDeletingOutfit}
+                        >
+                          <ThemedText>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            {
+                              backgroundColor: theme.colors.tabIconSelected,
+                              opacity: isDeletingOutfit ? 0.7 : 1,
+                            },
+                          ]}
+                          onPress={confirmDeleteOutfit}
+                          disabled={isDeletingOutfit}
+                        >
+                          {isDeletingOutfit ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <ThemedText style={{ color: theme.colors.text }}>
+                              Delete
+                            </ThemedText>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
               </>
             )}
           </View>
@@ -510,8 +630,7 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
-  centerState: {
-    marginTop: 40,
+  centerState: { marginTop: 40,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
@@ -562,6 +681,47 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 10,
     alignItems: "center",
+  },
+  outfitActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  confirmCard: {
+    width: "100%",
+    borderRadius: 16,
+    padding: 18,
+  },
+  confirmText: {
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  outfitViewBadge: {
+    position: "absolute",
+    right: 6,
+    top: 6,
+    borderRadius: 12,
+    padding: 4,
+    backgroundColor: "#fff",
+    zIndex: 2,
   },
   outfitToggle: {
     flexDirection: "row",

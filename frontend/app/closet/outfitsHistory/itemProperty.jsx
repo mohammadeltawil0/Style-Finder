@@ -8,7 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
@@ -39,7 +39,7 @@ const materialMap = {
 export default function ItemProperty() {
   const router = useRouter();
   const theme = useTheme();
-  const { id, outfitId, isOutfit } = useLocalSearchParams();
+  const { id, outfitId, isOutfit, itemIndex } = useLocalSearchParams();
   const isOutfitMode = isOutfit === "true";
 
   const [item, setItem] = useState(null);
@@ -66,7 +66,7 @@ export default function ItemProperty() {
                 ? outfit.outfitItems.map((oi) => oi.item.itemId)
                 : []);
 
-            // Fetch each item
+            // Fetch details for each item
             const itemPromises = itemIds.map((itemId) =>
               apiClient.get(`/api/items/${itemId}`),
             );
@@ -75,6 +75,14 @@ export default function ItemProperty() {
               .filter((result) => result.status === "fulfilled")
               .map((result) => result.value.data);
             setItems(fetchedItems);
+
+            const parsedIndex = Number(itemIndex);
+            if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
+              const safeIndex = Math.min(parsedIndex, fetchedItems.length - 1);
+              setCurrentItemIndex(safeIndex >= 0 ? safeIndex : 0);
+            } else {
+              setCurrentItemIndex(0);
+            }
           }
         } else if (id) {
           // Single item mode
@@ -96,7 +104,7 @@ export default function ItemProperty() {
     if (id || (isOutfitMode && outfitId)) {
       fetchData();
     }
-  }, [id, outfitId, isOutfitMode, isEditModalVisible]);
+  }, [id, outfitId, isOutfitMode, isEditModalVisible, itemIndex]);
 
   const currentItem = isOutfitMode ? items[currentItemIndex] || null : item;
 
@@ -245,8 +253,23 @@ export default function ItemProperty() {
             </View>
 
             <View style={styles.buttons}>
-              {/* Edit Button triggers modal */}
-              {!isOutfitMode && (
+              {isOutfitMode ? (
+                <TouchableOpacity
+                  style={[styles.btn, styles.fullWidthBtn]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/closet/outfitsHistory/itemDetail",
+                      params: {
+                        itemId: currentItem.itemId,
+                        outfitId,
+                        itemIndex: String(currentItemIndex),
+                      },
+                    })
+                  }
+                >
+                  <ThemedText>View Item</ThemedText>
+                </TouchableOpacity>
+              ) : (
                 <TouchableOpacity
                   style={styles.btn}
                   onPress={() => setIsEditModalVisible(true)}
@@ -279,11 +302,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 22,
     marginBottom: 10,
+    fontFamily: "bold",
   },
   label: {
     marginTop: 15,
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 20,
+    fontFamily: "bold",
   },
   tags: {
     flexDirection: "row",
@@ -309,5 +334,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     flex: 0.48,
+  },
+  fullWidthBtn: {
+    flex: 1,
   },
 });
