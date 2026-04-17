@@ -9,6 +9,7 @@ export const Items = ({
   currItemId,
   setEditItemsModalVisible,
   editItemsModalVisible,
+  listHeaderComponent,
   listFooterComponent,
 }) => {
   const theme = useTheme();
@@ -18,6 +19,8 @@ export const Items = ({
       <FlatList
         className="items-list"
         data={paddedItems} // An array of user items
+        ListHeaderComponent={listHeaderComponent || null}
+        ListFooterComponent={listFooterComponent || null}
         keyExtractor={(item, index) =>
           item?.itemId != null ? String(item.itemId) : item?.id != null ? String(item.id) : `item-${index}`
         }
