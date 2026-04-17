@@ -22,7 +22,7 @@ apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
 
-    console.log("TOKEN BEING SENT:", token); 
+    //console.log("TOKEN BEING SENT:", token); 
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
