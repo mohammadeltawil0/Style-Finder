@@ -1,22 +1,53 @@
-import { ScrollView, View, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect } from "react";
+import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
-import { useRouter } from "expo-router";
 import { theme } from "../../../constants";
 import { useSurvey } from "../../../context/SurveyContext";
-import { useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import {apiClient} from "../../../scripts/apiClient";
+import { apiClient } from "../../../scripts/apiClient";
 
 const OPTIONS = {
-  comfort: [ "Comfort is my top priority", "Balanced – style + comfort", "Style over comfort", ],
-  occasion: [ "School/University", "Work/Office", "Going out", "Dates", "Travel", "Gym", "Formal Events", "Casual/everyday outings",],
-  weather: [ "Always prioritize weather", "Balance weather & style", "Style over weather",],
-  style: [ "Casual & Comfortable", "Sporty / Athleisure","Business / Professional", "Minimalist", "Trendy / Fashion-forward", "Streetwear", "Preppy", "Edgy",],
+  comfort: [
+    "Comfort is my top priority",
+    "Balanced – style + comfort",
+    "Style over comfort",
+  ],
+  occasion: [
+    "School/University",
+    "Work/Office",
+    "Going out",
+    "Dates",
+    "Travel",
+    "Gym",
+    "Formal Events",
+    "Casual/everyday outings",
+  ],
+  weather: [
+    "Always prioritize weather",
+    "Balance weather & style",
+    "Style over weather",
+  ],
+  style: [
+    "Casual & Comfortable",
+    "Sporty / Athleisure",
+    "Business / Professional",
+    "Minimalist",
+    "Trendy / Fashion-forward",
+    "Streetwear",
+    "Preppy",
+    "Edgy",
+  ],
 };
 
 export default function Preferences1() {
   const router = useRouter();
   const { answers, setAnswers, resetAnswers } = useSurvey();
+  const params = useLocalSearchParams();
+  const { colors } = useTheme();
+  const isNewUser = params?.isNewUser === "true";
   //saves preferences from previous sessions
   useEffect(() => {
     const loadPreferences = async () => {
@@ -70,39 +101,48 @@ export default function Preferences1() {
 
           tripPriority: data.tripPriority || "",
         }));
-
       } catch (err) {
         if (err.response?.status === 404) {
           console.log("No existing preferences (new user)");
           resetAnswers();
         } else {
           console.error("Error loading preferences:", err);
-        } 
+        }
       }
     };
 
     loadPreferences();
   }, []);
 
-  const selectOne = (key, value) => { setAnswers((prev) => ({ ...prev, [key]: value })); };
+  const selectOne = (key, value) => {
+    setAnswers((prev) => ({ ...prev, [key]: value }));
+  };
 
-    const toggleMulti = (key, value) => {
-        setAnswers((prev) => {
-        const exists = prev[key].includes(value);
-        return {
+  const toggleMulti = (key, value) => {
+    setAnswers((prev) => {
+      const exists = prev[key].includes(value);
+      return {
         ...prev,
         [key]: exists
           ? prev[key].filter((v) => v !== value)
           : [...prev[key], value],
-        };
-        });
-    };
+      };
+    });
+  };
 
-    const renderOptions = (key, list, multi = false) =>
-        list.map((option) => {
-      const selected = multi ? answers[key].includes(option) : answers[key] === option;
+  const renderOptions = (key, list, multi = false) =>
+    list.map((option) => {
+      const selected = multi
+        ? answers[key].includes(option)
+        : answers[key] === option;
       return (
-        <TouchableOpacity key={option} onPress={() => multi ? toggleMulti(key, option) : selectOne(key, option) } style={[styles.option, selected && styles.selected]}>
+        <TouchableOpacity
+          key={option}
+          onPress={() =>
+            multi ? toggleMulti(key, option) : selectOne(key, option)
+          }
+          style={[styles.option, selected && styles.selected]}
+        >
           <ThemedText>{option}</ThemedText>
         </TouchableOpacity>
       );
@@ -111,32 +151,78 @@ export default function Preferences1() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <ThemedView>
-        <View>
-            <ThemedText style={{ fontSize: theme.sizes.h1,  fontFamily: theme.fonts.bold, marginBottom: 20}}>hi, let’s get to know you!! </ThemedText>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+            marginBottom: 20,
+          }}
+        >
+          {!isNewUser && (
+            <ThemedText
+            style={{
+              fontSize: theme.sizes.h2,
+              fontFamily: theme.fonts.bold,
+              fontFamily: theme.fonts.semiBold,
+              flex: 1,
+            }}
+          >
+            let's update your preferences
+          </ThemedText>
+          )}
+          {isNewUser && (
+            <ThemedText
+            style={{
+              fontSize: theme.sizes.h1,
+              fontFamily: theme.fonts.bold,
+              flex: 1,
+            }}
+          >
+            hi, let's get to know you!!
+          </ThemedText>
+          )}
+          
         </View>
 
         <View>
-            <ThemedText style={{fontFamily: theme.fonts.bold, }} >How important is comfort when choosing outfits?</ThemedText>
-            {renderOptions("comfort", OPTIONS.comfort)}
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+            How important is comfort when choosing outfits?
+          </ThemedText>
+          {renderOptions("comfort", OPTIONS.comfort)}
         </View>
 
         <View>
-            <ThemedText style={{fontFamily: theme.fonts.bold, }} >For what occasion will you be using our sytem most?</ThemedText> 
-            {renderOptions("occasion", OPTIONS.occasion, true)}
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+            For what occasion will you be using our sytem most?
+          </ThemedText>
+          {renderOptions("occasion", OPTIONS.occasion, true)}
         </View>
 
         <View>
-            <ThemedText style={{fontFamily: theme.fonts.bold, }} >Weather vs Style?</ThemedText>
-            {renderOptions("weather", OPTIONS.weather)}
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+            Weather vs Style?
+          </ThemedText>
+          {renderOptions("weather", OPTIONS.weather)}
         </View>
 
         {/* DID MULTIPLE, ASK GROUP */}
         <View>
-            <ThemedText style={{fontFamily: theme.fonts.bold, }} >How would you describe your everyday style?</ThemedText>
-            {renderOptions("style", OPTIONS.style, true)}
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+            How would you describe your everyday style?
+          </ThemedText>
+          {renderOptions("style", OPTIONS.style, true)}
         </View>
 
-        <TouchableOpacity style={styles.btn} onPress={() => router.push("screens/survey/preferences2")}>
+        <TouchableOpacity
+          style={styles.btn}
+          onPress={() =>
+            router.push({
+              pathname: "screens/survey/preferences2",
+              params: { isNewUser: isNewUser ? "true" : "false" },
+            })
+          }
+        >
           <ThemedText>Next</ThemedText>
         </TouchableOpacity>
       </ThemedView>
@@ -155,6 +241,5 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  title: { fontSize: theme.sizes.h1 , marginBottom:2 },
+  title: { fontSize: theme.sizes.h1, marginBottom: 2 },
 });
-

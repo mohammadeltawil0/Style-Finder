@@ -72,9 +72,7 @@ function AdminSettings() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {"Account Holder: " + name} 
-            { "\n" } 
-            {"Username: " + username}
+            {name} 
           </ThemedText>
         </View>
 

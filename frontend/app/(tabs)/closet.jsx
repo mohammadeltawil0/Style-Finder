@@ -1,5 +1,4 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
-import Feather from "@expo/vector-icons/Feather";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
@@ -35,13 +34,15 @@ export default function ClosetScreen() {
   const [mode, setMode] = useState("regular");
   const [userId, setUserId] = useState(null);
   const [currItemId, setCurrItemId] = useState(null);
-
   const [dbOutfits, setDbOutfits] = useState([]);
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-
   const [selectedOutfit, setSelectedOutfit] = useState(null);
+  
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
+  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] = useState(false);
+  const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
+  const [isDeletingOutfit, setIsDeletingOutfit] = useState(false);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -174,9 +175,52 @@ export default function ClosetScreen() {
         prev.filter((o) => o.outfitId !== outfitId && o.id !== outfitId),
       );
       setIsOutfitModalVisible(false);
+      return true;
     } catch (error) {
       console.error("Failed to delete outfit:", error);
+      return false;
     }
+  };
+
+  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later.... 
+  const handleShareOutfit = async (outfit, index) => {
+    try {
+      const itemCount = outfit?.itemIds?.length || 0;
+      await Share.share({
+        message: `Check out Outfit ${index + 1} from my closet on StyleFinder (${itemCount} item${itemCount === 1 ? "" : "s"})!`,
+      });
+    } catch (error) {
+      console.error("Failed to share outfit:", error);
+    }
+  };
+
+  const requestDeleteOutfit = (outfitId) => {
+    setPendingDeleteOutfitId(outfitId);
+    setIsDeleteOutfitModalVisible(true);
+  };
+
+  const confirmDeleteOutfit = async () => {
+    if (!pendingDeleteOutfitId || isDeletingOutfit) return;
+    try {
+      setIsDeletingOutfit(true);
+      const didDelete = await handleDeleteOutfit(pendingDeleteOutfitId);
+      if (didDelete) {
+        setIsDeleteOutfitModalVisible(false);
+        setPendingDeleteOutfitId(null);
+      }
+    } finally {
+      setIsDeletingOutfit(false);
+    }
+  };
+
+  const openOutfitDetails = (outfitId) => {
+    router.push({
+      pathname: "/closet/outfitsHistory/itemProperty",
+      params: {
+        outfitId,
+        isOutfit: "true",
+      },
+    });
   };
 
   const formatItemType = (type) => {
@@ -211,8 +255,10 @@ export default function ClosetScreen() {
     let matchesCategory = true;
     if (category === "tops") matchesCategory = item.type === "TOP";
     else if (category === "bottoms") matchesCategory = item.type === "BOTTOM";
-    else if (category === "dresses") matchesCategory = item.type === "FULL_BODY";
-    else if (category === "outerwear") matchesCategory = item.type === "OUTERWEAR";
+    else if (category === "dresses")
+      matchesCategory = item.type === "FULL_BODY";
+    else if (category === "outerwear")
+      matchesCategory = item.type === "OUTERWEAR";
 
     let matchesSearch = true;
     if (activeSearchText) {
@@ -265,9 +311,13 @@ export default function ClosetScreen() {
                 ) : isItemsError ? (
                   <View style={styles.centerState}>
                     <ThemedText style={{ textAlign: "center" }}>
-                      {itemsError?.message || "Could not load items. Please try again."}
+                      {itemsError?.message ||
+                        "Could not load items. Please try again."}
                     </ThemedText>
-                    <Pressable onPress={() => refetch()} style={styles.retryButton}>
+                    <Pressable
+                      onPress={() => refetch()}
+                      style={styles.retryButton}
+                    >
                       <ThemedText>Retry</ThemedText>
                     </Pressable>
                   </View>
@@ -277,10 +327,17 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+                          setCategory((prev) =>
+                            prev === "tops" ? "all" : "tops",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Tops
                         </ThemedText>
                       </Pressable>
@@ -288,10 +345,17 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
+                          setCategory((prev) =>
+                            prev === "bottoms" ? "all" : "bottoms",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Bottoms
                         </ThemedText>
                       </Pressable>
@@ -299,21 +363,32 @@ export default function ClosetScreen() {
                       <Pressable
                         style={styles.categoryBtn}
                         onPress={() =>
-                          setCategory((prev) => (prev === "dresses" ? "all" : "dresses"))
+                          setCategory((prev) =>
+                            prev === "dresses" ? "all" : "dresses",
+                          )
                         }
                       >
-                        <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+                        <ThemedText
+                          style={{
+                            color: theme.colors.text,
+                            fontSize: theme.sizes.text,
+                          }}
+                        >
                           Dresses
                         </ThemedText>
                       </Pressable>
                     </View>
 
                     {isLoading ? (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                      <ThemedText
+                        style={{ textAlign: "center", marginTop: 20 }}
+                      >
                         Loading your closet...
                       </ThemedText>
                     ) : filteredItems.length === 0 ? (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+                      <ThemedText
+                        style={{ textAlign: "center", marginTop: 20 }}
+                      >
                         No items found.
                       </ThemedText>
                     ) : (
@@ -339,13 +414,19 @@ export default function ClosetScreen() {
               <>
                 <View style={styles.outfitToggle}>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]}
+                    style={[
+                      styles.toggleBtn,
+                      mode === "trip" && styles.activeToggle,
+                    ]}
                     onPress={() => setMode("trip")}
                   >
                     <ThemedText>Trip</ThemedText>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.toggleBtn, mode === "regular" && styles.activeToggle]}
+                    style={[
+                      styles.toggleBtn,
+                      mode === "regular" && styles.activeToggle,
+                    ]}
                     onPress={() => setMode("regular")}
                   >
                     <ThemedText>Regular</ThemedText>
@@ -360,20 +441,33 @@ export default function ClosetScreen() {
                       item.outfitId?.toString() || index.toString()
                     }
                     numColumns={2}
-                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
                     columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-                    ListEmptyComponent={() => (
-                      <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
-                        No saved outfits yet.
-                      </ThemedText>
-                    )}
+                    ListEmptyComponent={() =>
+                      isLoading ? (
+                        <View style={styles.centerState}>
+                          <ActivityIndicator
+                            size="large"
+                            color={theme.colors.tabIconSelected}
+                          />
+                          <ThemedText>Loading outfits...</ThemedText>
+                        </View>
+                      ) : (
+                        <ThemedText
+                          style={{ textAlign: "center", marginTop: 20 }}
+                        >
+                          No saved outfits yet.
+                        </ThemedText>
+                      )
+                    }
                     renderItem={({ item, index }) => (
                       <View style={styles.outfitCard}>
                         <TouchableOpacity
-                          onPress={() => {
-                            setSelectedOutfit(item);
-                            setIsOutfitModalVisible(true);
-                          }}
+                          onPress={() => openOutfitDetails(item.outfitId)}
                         >
                           <OutfitCoverImage
                             imageUrls={getOutfitCoverImages(item)}
@@ -384,18 +478,30 @@ export default function ClosetScreen() {
 
                         <View style={styles.outfitFooter}>
                           <ThemedText>Outfit {index + 1}</ThemedText>
-                          <Pressable
-                            onPress={() => {
-                              setSelectedOutfit(item);
-                              setIsOutfitModalVisible(true);
-                            }}
-                          >
-                            <Feather
-                              name="more-horizontal"
-                              size={20}
-                              color={theme.colors.text}
-                            />
-                          </Pressable>
+                          <View style={styles.outfitActions}>
+                            <Pressable
+                              onPress={() => handleShareOutfit(item, index)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="share-social-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                            <Pressable
+                              onPress={() =>
+                                requestDeleteOutfit(item.outfitId || item.id)
+                              }
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                          </View>
                         </View>
                       </View>
                     )}
@@ -407,7 +513,11 @@ export default function ClosetScreen() {
                     className="trip_Oufit_Details"
                     data={trips}
                     keyExtractor={(trip, index) => trip.id || index.toString()}
-                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
+                    style={{
+                      marginVertical: 15,
+                      paddingHorizontal: 30,
+                      width: "100%",
+                    }}
                     renderItem={({ item }) => (
                       <View className="TripOufit" style={styles.tripCard}>
                         <TouchableOpacity
@@ -446,6 +556,78 @@ export default function ClosetScreen() {
                   onDelete={handleDeleteOutfit}
                   theme={theme}
                 />
+
+                <Modal
+                  visible={isDeleteOutfitModalVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => {
+                    if (isDeletingOutfit) return;
+                    setIsDeleteOutfitModalVisible(false);
+                    setPendingDeleteOutfitId(null);
+                  }}
+                >
+                  <View style={styles.confirmOverlay}>
+                    <View
+                      style={[
+                        styles.confirmCard,
+                        { backgroundColor: theme.colors.card },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: theme.sizes.h2,
+                          fontWeight: "700",
+                          marginBottom: 8,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        Delete this outfit?
+                      </ThemedText>
+                      <ThemedText style={styles.confirmText}>
+                        This action cannot be undone. This outfit will be
+                        removed permanently.
+                      </ThemedText>
+
+                      <View style={styles.confirmActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            { backgroundColor: theme.colors.lightBrown },
+                          ]}
+                          onPress={() => {
+                            if (isDeletingOutfit) return;
+                            setIsDeleteOutfitModalVisible(false);
+                            setPendingDeleteOutfitId(null);
+                          }}
+                          disabled={isDeletingOutfit}
+                        >
+                          <ThemedText>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            {
+                              backgroundColor: theme.colors.tabIconSelected,
+                              opacity: isDeletingOutfit ? 0.7 : 1,
+                            },
+                          ]}
+                          onPress={confirmDeleteOutfit}
+                          disabled={isDeletingOutfit}
+                        >
+                          {isDeletingOutfit ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <ThemedText style={{ color: theme.colors.text }}>
+                              Delete
+                            </ThemedText>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
               </>
             )}
           </View>
@@ -456,8 +638,7 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
-  centerState: {
-    marginTop: 40,
+  centerState: { marginTop: 40,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
@@ -508,6 +689,47 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     padding: 10,
     alignItems: "center",
+  },
+  outfitActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  confirmCard: {
+    width: "100%",
+    borderRadius: 16,
+    padding: 18,
+  },
+  confirmText: {
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  outfitViewBadge: {
+    position: "absolute",
+    right: 6,
+    top: 6,
+    borderRadius: 12,
+    padding: 4,
+    backgroundColor: "#fff",
+    zIndex: 2,
   },
   outfitToggle: {
     flexDirection: "row",
