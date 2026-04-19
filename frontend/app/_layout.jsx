@@ -102,18 +102,6 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="screens/GenerateOutfits/EditOutfit"
-              options={{
-                header: () => <CustomHeader page="EditOutfit" />,
-              }}
-            />
-            <Stack.Screen
-              name="screens/GenerateOutfits/ClosetItems"
-              options={{
-                header: () => <CustomHeader page="ClosetItems" />,
-              }}
-            />
-            <Stack.Screen
               name="screens/survey/preferences2"
               options={{
                 header: () => <CustomHeader page="survey" />,
