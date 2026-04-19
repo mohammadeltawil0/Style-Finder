@@ -114,6 +114,38 @@ export const CustomHeader = ({ page }) => {
               GENERATE OUTFITS
             </ThemedText>
           )}
+          {page === "EditOutfit" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "EditOutfit" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              EDIT OUTFITS
+            </ThemedText>
+          )}
+          {page === "ClosetItems" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "ClosetItems" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SELECT ITEM
+            </ThemedText>
+          )}
           {page === "add-item" && (
             <View
               style={{ flexDirection: "row", gap: 20, alignItems: "center" }}

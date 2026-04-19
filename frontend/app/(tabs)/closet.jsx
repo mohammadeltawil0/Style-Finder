@@ -4,9 +4,25 @@ import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView,
-  Share, StyleSheet, TouchableOpacity, View, } from "react-native";
-import { ClosetToggle, Items,  SearchBar,  ThemedText,  ThemedView, } from "../../components";
+import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  ScrollView,
+  Share,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  ClosetToggle,
+  Items,
+  SearchBar,
+  ThemedText,
+  ThemedView,
+} from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
@@ -23,10 +39,12 @@ export default function ClosetScreen() {
   const [dbOutfits, setDbOutfits] = useState([]);
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isOutfitsLoading, setIsOutfitsLoading] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState(null);
-  
+
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
-  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] = useState(false);
+  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] =
+    useState(false);
   const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
   const [isDeletingOutfit, setIsDeletingOutfit] = useState(false);
 
@@ -150,6 +168,18 @@ export default function ClosetScreen() {
   const handleToggleItems = async (value) => {
     setIsItems(value);
     await AsyncStorage.setItem("closetTab", value ? "items" : "outfits");
+
+    // If switching to outfits, fetch them with loading indicator
+    if (!value && userId) {
+      setIsOutfitsLoading(true);
+      try {
+        await Promise.all([fetchUserOutfits(userId), fetchUserTrips(userId)]);
+      } catch (error) {
+        console.error("Failed to reload outfits:", error);
+      } finally {
+        setIsOutfitsLoading(false);
+      }
+    }
   };
 
   const handleSearchSubmit = () => setActiveSearchText(searchText);
@@ -168,7 +198,7 @@ export default function ClosetScreen() {
     }
   };
 
-  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later.... 
+  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later....
   const handleShareOutfit = async (outfit, index) => {
     try {
       const itemCount = outfit?.itemIds?.length || 0;
@@ -250,20 +280,44 @@ export default function ClosetScreen() {
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
   // const trips = dbTrips;
   const dummyTrips = [
-      { id: "t1", name: "NYC Trip", location: "New York City", dates: "03/01/26 - 03/05/26", outfits: [{}, {}, {}, {}] },
-      { id: "t2", name: "Beach Trip", location: "Miami Beach", dates: "04/10/26 - 04/15/26", outfits: [{}, {}, {}] },
-      { id: "t3", name: "Business Trip", location: "San Francisco", dates: "05/02/26 - 05/06/26", outfits: [{}, {}] },
-      { id: "t4", name: "Weekend Getaway", location: "Chicago", dates: "06/14/26 - 06/16/26", outfits: [{}, {}, {}, {}, {}] },
-    ];
+    {
+      id: "t1",
+      name: "NYC Trip",
+      location: "New York City",
+      dates: "03/01/26 - 03/05/26",
+      outfits: [{}, {}, {}, {}],
+    },
+    {
+      id: "t2",
+      name: "Beach Trip",
+      location: "Miami Beach",
+      dates: "04/10/26 - 04/15/26",
+      outfits: [{}, {}, {}],
+    },
+    {
+      id: "t3",
+      name: "Business Trip",
+      location: "San Francisco",
+      dates: "05/02/26 - 05/06/26",
+      outfits: [{}, {}],
+    },
+    {
+      id: "t4",
+      name: "Weekend Getaway",
+      location: "Chicago",
+      dates: "06/14/26 - 06/16/26",
+      outfits: [{}, {}, {}, {}, {}],
+    },
+  ];
 
-    const trips = dummyTrips.filter((trip) => {
-      if (!activeSearchText) return true;
-      const query = activeSearchText.toLowerCase();
-      return (
-        trip.name.toLowerCase().includes(query) ||
-        trip.location.toLowerCase().includes(query)
-      );
-    });
+  const trips = dummyTrips.filter((trip) => {
+    if (!activeSearchText) return true;
+    const query = activeSearchText.toLowerCase();
+    return (
+      trip.name.toLowerCase().includes(query) ||
+      trip.location.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
@@ -426,95 +480,113 @@ export default function ClosetScreen() {
                 </View>
 
                 {mode === "regular" && (
-                  <FlatList
-                    className="regularOutfit-list"
-                    data={dbOutfits}
-                    keyExtractor={(item, index) =>
-                      item.outfitId?.toString() || index.toString()
-                    }
-                    numColumns={2}
-                    style={{
-                      marginVertical: 15,
-                      paddingHorizontal: 30,
-                      width: "100%",
-                    }}
-                    columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-                    ListEmptyComponent={() =>
-                      isLoading ? (
-                        <View style={styles.centerState}>
-                          <ActivityIndicator
-                            size="large"
-                            color={theme.colors.tabIconSelected}
-                          />
-                          <ThemedText>Loading outfits...</ThemedText>
-                        </View>
-                      ) : (
-                        <ThemedText
-                          style={{ textAlign: "center", marginTop: 20 }}
-                        >
-                          No saved outfits yet.
-                        </ThemedText>
-                      )
-                    }
-                    renderItem={({ item, index }) => (
-                      <View style={styles.outfitCard}>
-                        <TouchableOpacity
-                          onPress={() => openOutfitDetails(item.outfitId)}
-                        >
-                          <View style={styles.outfitViewBadge}>
-                            <Ionicons
-                              name="eye-outline"
-                              size={18}
-                              color={theme.colors.text}
-                            />
-                          </View>
-                          {getOutfitCoverImage(item) ? (
-                            <Image
-                              source={{ uri: getOutfitCoverImage(item) }}
-                              style={styles.outfitImage}
-                              resizeMode="cover"
-                            />
-                          ) : (
-                            <View style={styles.outfitPlaceholder}>
-                              <ThemedText
-                                style={{ color: "#666", fontSize: 12 }}
-                              >
-                                Items: {item.itemIds?.length || 0}
-                              </ThemedText>
-                            </View>
-                          )}
-                        </TouchableOpacity>
-
-                        <View style={styles.outfitFooter}>
-                          <ThemedText>Outfit {index + 1}</ThemedText>
-                          <View style={styles.outfitActions}>
-                            <Pressable
-                              onPress={() => handleShareOutfit(item, index)}
-                              hitSlop={8}
-                            >
-                              <Ionicons
-                                name="share-social-outline"
-                                size={19}
-                                color={theme.colors.text}
-                              />
-                            </Pressable>
-                            <Pressable
-                              onPress={() =>
-                                requestDeleteOutfit(item.outfitId || item.id)
-                              }
-                              hitSlop={8}
-                            >
-                              <Ionicons
-                                name="trash-outline"
-                                size={19}
-                                color={theme.colors.text}
-                              />
-                            </Pressable>
-                          </View>
-                        </View>
+                  <>
+                    {isOutfitsLoading && (
+                      <View style={styles.centerState}>
+                        <ActivityIndicator
+                          size="large"
+                          color={theme.colors.tabIconSelected}
+                        />
+                        <ThemedText>Loading outfits...</ThemedText>
                       </View>
                     )}
-                  />
+                    {!isOutfitsLoading && (
+                      <FlatList
+                        className="regularOutfit-list"
+                        data={dbOutfits}
+                        keyExtractor={(item, index) =>
+                          item.outfitId?.toString() || index.toString()
+                        }
+                        numColumns={2}
+                        style={{
+                          marginVertical: 15,
+                          paddingHorizontal: 30,
+                          width: "100%",
+                        }}
+                        columnWrapperStyle={{
+                          justifyContent: "center",
+                          gap: 15,
+                        }}
+                        ListEmptyComponent={() =>
+                          isLoading ? (
+                            <View style={styles.centerState}>
+                              <ActivityIndicator
+                                size="large"
+                                color={theme.colors.tabIconSelected}
+                              />
+                              <ThemedText>Loading outfits...</ThemedText>
+                            </View>
+                          ) : (
+                            <ThemedText
+                              style={{ textAlign: "center", marginTop: 20 }}
+                            >
+                              No saved outfits yet.
+                            </ThemedText>
+                          )
+                        }
+                        renderItem={({ item, index }) => (
+                          <View style={styles.outfitCard}>
+                            <TouchableOpacity
+                              onPress={() => openOutfitDetails(item.outfitId)}
+                            >
+                              <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
+                              {getOutfitCoverImage(item) ? (
+                                <Image
+                                  source={{ uri: getOutfitCoverImage(item) }}
+                                  style={styles.outfitImage}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <View style={styles.outfitPlaceholder}>
+                                  <ThemedText
+                                    style={{ color: "#666", fontSize: 12 }}
+                                  >
+                                    Items: {item.itemIds?.length || 0}
+                                  </ThemedText>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+
+                            <View style={styles.outfitFooter}>
+                              <ThemedText>Outfit {index + 1}</ThemedText>
+                              <View style={styles.outfitActions}>
+                                <Pressable
+                                  onPress={() => handleShareOutfit(item, index)}
+                                  hitSlop={8}
+                                >
+                                  <Ionicons
+                                    name="share-social-outline"
+                                    size={19}
+                                    color={theme.colors.text}
+                                  />
+                                </Pressable>
+                                <Pressable
+                                  onPress={() =>
+                                    requestDeleteOutfit(
+                                      item.outfitId || item.id,
+                                    )
+                                  }
+                                  hitSlop={8}
+                                >
+                                  <Ionicons
+                                    name="trash-outline"
+                                    size={19}
+                                    color={theme.colors.text}
+                                  />
+                                </Pressable>
+                              </View>
+                            </View>
+                          </View>
+                        )}
+                      />
+                    )}
+                  </>
                 )}
 
                 {mode === "trip" && (
@@ -543,13 +615,13 @@ export default function ClosetScreen() {
                               <ThemedText>{item.dates}</ThemedText>
                               <ThemedText># Trip</ThemedText>
                             </View>
-                             <View style={styles.outfitViewBadge}>
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={18}
-                                  color={theme.colors.text}
-                                />
-                              </View>
+                            <View style={styles.outfitViewBadge}>
+                              <Ionicons
+                                name="eye-outline"
+                                size={18}
+                                color={theme.colors.text}
+                              />
+                            </View>
                           </View>
                         </TouchableOpacity>
                         <View style={styles.previewRow}>
@@ -653,7 +725,8 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
-  centerState: { marginTop: 40,
+  centerState: {
+    marginTop: 40,
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
