@@ -7,7 +7,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FeedbackDTO {
+public class FeedbackDto {
     private Long userId;
     private String suggestionId;
     private List<Long> originalItemIds;

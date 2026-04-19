@@ -12,7 +12,7 @@ import { theme } from "../../constants";
 import MaterialIcons from "react-native-vector-icons/MaterialIcons";
 
 // Item Types: Top, Bottom, Full Body, Outerwear
-export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
+export default function CategoryPage({ setPage, goBack, itemType, setItemType, uri, previewMode, setPreviewMode }) {
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
@@ -36,7 +36,7 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View
@@ -195,7 +195,7 @@ export default function CategoryPage({ setPage, itemType, setItemType, uri }) {
         ]}
       >
         <Pressable
-          onPress={() => setPage(1)}
+          onPress={() => goBack()}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,

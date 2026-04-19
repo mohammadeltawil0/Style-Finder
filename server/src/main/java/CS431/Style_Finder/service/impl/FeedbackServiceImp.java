@@ -1,17 +1,15 @@
 package CS431.Style_Finder.service.impl;
 
-import CS431.Style_Finder.dto.FeedbackDTO;
-import CS431.Style_Finder.model.Item;
-import CS431.Style_Finder.model.OutfitCase;
-import CS431.Style_Finder.model.UserWeights;
-import CS431.Style_Finder.repository.ItemRepository;
-import CS431.Style_Finder.repository.OutfitCaseRepository;
-import CS431.Style_Finder.repository.UserWeightsRepository;
+import CS431.Style_Finder.dto.FeedbackDto;
+import CS431.Style_Finder.model.*;
+import CS431.Style_Finder.model.enums.ItemType;
+import CS431.Style_Finder.repository.*;
 import CS431.Style_Finder.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +19,14 @@ public class FeedbackServiceImp implements FeedbackService {
     private final OutfitCaseRepository cbrDb;
     private final ItemRepository wardrobeDb;
     private final UserWeightsRepository weightsDb;
+    private final OutfitRepository outfitRepository;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
 
     @Transactional
-    public void processFeedback(FeedbackDTO feedback) {
-        UserWeights vw = weightsDb.findById(feedback.getUserId()).orElseThrow(() -> new RuntimeException("User weights not found."));
+    public void processFeedback(FeedbackDto feedback) {
+        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(feedback.getUserId())
+                .orElseThrow(() -> new RuntimeException("User weights not found."));
 
         // EXPLICIT MEMORY: Create a new CBR Case
         if (feedback.getAction().equals("SAVE") || feedback.getAction().equals("EDIT_SAVE")) {
@@ -35,6 +37,20 @@ public class FeedbackServiceImp implements FeedbackService {
             newMemory.setItemIds(feedback.getFinalItemIds());
             newMemory.setRating(5);
             cbrDb.save(newMemory);
+
+            Outfit outfit = new Outfit();
+            outfit.setSaved(true);
+            ArrayList<OutfitItem> outfitItems = new ArrayList<>();
+            for (int i = 0; i < feedback.getOriginalItemIds().size(); i++) {
+                OutfitItem outfitItem = new OutfitItem();
+                outfitItem.setItem(itemRepository.
+                        findById(feedback.getOriginalItemIds().get(i)).orElse(null));
+                outfitItem.setOutfit(outfit);
+                outfitItems.add(outfitItem);
+            }
+            outfit.setOutfitItems(outfitItems);
+            outfit.setUser(userRepository.findById(feedback.getUserId()).orElse(null));
+            outfitRepository.save(outfit);
         }
 
         // IMPLICIT MEMORY: Gradient Descent
@@ -52,20 +68,21 @@ public class FeedbackServiceImp implements FeedbackService {
     }
 
     private void applyGradientDescent(UserWeights vw, List<Item> suggested, List<Item> actual, double delta) {
-        Item suggestedTop = suggested.stream().filter(i -> "TOP".equals(i.getType().name())).findFirst().orElse(null);
-        Item actualTop = (actual != null) ? actual.stream().filter(i -> "TOP".equals(i.getType().name())).findFirst().orElse(null) : null;
+        // Enums allow us to use == instead of .equals() for the filter
+        Item suggestedTop = suggested.stream().filter(i -> i.getType() == ItemType.TOP).findFirst().orElse(null);
+        Item actualTop = (actual != null) ? actual.stream().filter(i -> i.getType() == ItemType.TOP).findFirst().orElse(null) : null;
 
         if (suggestedTop != null) {
             // Adjust Fit Weights
-            if (actualTop != null && !suggestedTop.getFit().equals(actualTop.getFit())) {
-                adjustWeight(vw.getFitWeights(), suggestedTop.getFit().toString(), -delta);
-                adjustWeight(vw.getFitWeights(), String.valueOf(actualTop.getFit()), delta);
+            if (actualTop != null && suggestedTop.getFit() != actualTop.getFit()) {
+                adjustWeight(vw.getFitWeights(), suggestedTop.getFit(), -delta);
+                adjustWeight(vw.getFitWeights(), actualTop.getFit(), delta);
             } else if (actualTop == null) {
-                adjustWeight(vw.getFitWeights(), String.valueOf(suggestedTop.getFit()), delta);
+                adjustWeight(vw.getFitWeights(), suggestedTop.getFit(), delta);
             }
 
             // Adjust Color Weights
-            if (actualTop != null && !suggestedTop.getColorCategory().equals(actualTop.getColorCategory())) {
+            if (actualTop != null && suggestedTop.getColorCategory() != actualTop.getColorCategory()) {
                 adjustWeight(vw.getColorWeights(), suggestedTop.getColorCategory(), -delta);
                 adjustWeight(vw.getColorWeights(), actualTop.getColorCategory(), delta);
             } else if (actualTop == null) {
@@ -73,16 +90,25 @@ public class FeedbackServiceImp implements FeedbackService {
             }
 
             // Adjust Pattern Weights
-            if (actualTop != null && !suggestedTop.getPattern().equals(actualTop.getPattern())) {
-                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern().name(), -delta);
-                adjustWeight(vw.getPatternWeights(), actualTop.getPattern().name(), delta);
+            if (actualTop != null && suggestedTop.getPattern() != actualTop.getPattern()) {
+                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern(), -delta);
+                adjustWeight(vw.getPatternWeights(), actualTop.getPattern(), delta);
             } else if (actualTop == null) {
-                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern().name(), delta);
+                adjustWeight(vw.getPatternWeights(), suggestedTop.getPattern(), delta);
+            }
+
+            // Adjust Material Weights
+            if (actualTop != null && suggestedTop.getMaterial() != actualTop.getMaterial()) {
+                adjustWeight(vw.getMaterialWeights(), suggestedTop.getMaterial(), -delta);
+                adjustWeight(vw.getMaterialWeights(), actualTop.getMaterial(), delta);
+            } else if (actualTop == null) {
+                adjustWeight(vw.getMaterialWeights(), suggestedTop.getMaterial(), delta);
             }
         }
     }
 
-    private void adjustWeight(Map<String, Double> map, String key, double delta) {
+    // Generic Enum setter
+    private <T extends Enum<T>> void adjustWeight(Map<T, Double> map, T key, double delta) {
         if (key == null) return;
         double current = map.getOrDefault(key, 1.0);
         double newWeight = Math.max(0.1, Math.min(2.0, current + delta));

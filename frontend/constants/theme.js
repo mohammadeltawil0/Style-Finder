@@ -30,12 +30,15 @@ export const theme = {
     ...DefaultTheme.colors,
     background: "#EDEDE9", 
     card: "#D5BDAF",       
-    border: "#B4907B",  // to be changed
+    border: "#B4907B", 
     lightBrown: "#E3D5CA",
     text: "#4A3A33",
-    // text: "#000000",
+    lightText: "#7B6B63",
     tabIconDefault: "#EDEDE9",
-    tabIconSelected: "#B4907B"  
+    tabIconSelected: "#B4907B",
+    success: "#34D399", // Green for success messages
+    error: "#F87171",   // Red for error messages
+    info: "#60A5FA",    // Blue for informational messages  
   },
   fonts: Fonts, 
   sizes: {

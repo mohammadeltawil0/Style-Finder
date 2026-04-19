@@ -9,7 +9,7 @@ import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 import Slider from "@react-native-community/slider";
 
-export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
+export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
 
   const { width } = useWindowDimensions();
@@ -17,6 +17,8 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
 
+  const showNext = fit !== null && fit !== undefined;
+  const isUpperBodyItem = itemType === "Top" || itemType === "Full Body" || itemType === "TOP" || itemType === "FULL_BODY";
   const upperOptions = ["Skinny", "Regular", "Loose"];
 
   const lowerOptions = [
@@ -44,7 +46,7 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
           <View className="mainContent" style={styles.mainContent}>
             <View
@@ -95,18 +97,17 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
                   alignItems: "flex-end",
                 }}
               >
-                {itemType === "Top" ||
-                itemType === "Full Body"
+                {isUpperBodyItem
                   ? upperOptions.map((option, index) => (
-                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                        {option}
-                      </ThemedText>
-                    ))
+                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                      {option}
+                    </ThemedText>
+                  ))
                   : lowerOptions.map((option, index) => (
-                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                        {option}
-                      </ThemedText>
-                    ))}
+                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
+                      {option}
+                    </ThemedText>
+                  ))}
               </View>
               <View className="sliderView" style={styles.sliderView}>
                 <Slider
@@ -117,10 +118,9 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
                   minimumValue={0}
                   maximumValue={2}
                   step={0.1}
-                  value={fit}
+                  value={fit ?? 1}
                   onValueChange={(value) => {
                     setFit(value);
-                    console.log("fit", value);
                   }}
                 />
               </View>
@@ -129,26 +129,31 @@ export default function FitPage({ setPage, itemType, fit, setFit, uri }) {
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
-          onPress={() => setPage(5)}
-          //TO DO: if next is not visible, make this flex-start or figure it out
+          onPress={() => goBack()}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {fit !== null && fit !== undefined && (
+        {showNext && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: buttonWidth,
             }}
             onPress={() => setPage(7)}
           >
@@ -259,6 +264,6 @@ const styles = {
     justifyContent: "center",
     alignItems: "center",
     transform: [{ rotate: "90deg" }],
-    width: "fit-content",
+    width: 220,
   },
 };

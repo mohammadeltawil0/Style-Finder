@@ -1,6 +1,7 @@
 import {
   ActivityIndicator,
   InteractionManager,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -15,22 +16,19 @@ import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs(['Animated: `useNativeDriver`']);
 
-const getContrastColor = (hex) => {
-  const r = parseInt(hex.substring(1, 3), 16);
-  const g = parseInt(hex.substring(3, 5), 16);
-  const b = parseInt(hex.substring(5, 7), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness > 125 ? '#000000' : '#FFFFFF';
-};
-
-export default function ColorPage({ setPage, color, setColor, pattern, setPattern, uri, isSolid, setIsSolid }) {
+export default function ColorPage({ setPage, goBack, color, setColor, pattern, setPattern, uri, isSolid, setIsSolid, previewMode, setPreviewMode }) {
   const [tempColor, setTempColor] = useState(color || '#74512D');
   const [isReady, setIsReady] = useState(false);
 
   const theme = useTheme();
   const { width } = useWindowDimensions();
+  const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+  const showNext =
+    ((color && pattern === "SOLID" && isSolid) ||
+      (!color && pattern !== "SOLID" && pattern.length > 0)) ||
+    (pattern === "SOLID" && !isSolid);
 
   const patternOptions = [
     {
@@ -65,7 +63,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     },
     {
       id: "GEOMETRIC_OR_ABSTRACT",
-      label: "Geometric / Abstract",
+      label: "Geometric/Abstract",
       emoji: "🔷",
       subheader: "Polka dots or repeating abstract shapes",
     },
@@ -79,6 +77,18 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     });
     return () => { isMounted = false; };
   }, []);
+
+  const handleBack = () => {
+    // If user is on the Solid color picker step, go back to pattern selection first.
+    if (pattern === "SOLID" && isSolid) {
+      setIsSolid(false);
+      return;
+    }
+
+    if (typeof goBack === "function") {
+      goBack();
+    }
+  };
 
   if (!isReady && pattern === "SOLID") {
     return (
@@ -95,7 +105,6 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
     <ThemedView gradient={true} style={styles.page}>
       <ScrollView
         style={styles.scrollView}
-        // scrollEnabled={!isSolid}
         contentContainerStyle={[
           styles.scrollContent,
           isWide && styles.scrollContentWide,
@@ -104,7 +113,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View style={styles.mainContent}>
@@ -112,27 +121,12 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
               <>
                 <View style={styles.textContainer}>
                   <ThemedText style={{ fontSize: theme.sizes.h1, color: theme.colors.text, fontFamily: theme.fonts.bold, }}>
-                    {"What color does \n this item have?"}
+                    {"What color does \nthis item have?"}
                   </ThemedText>
                   <ThemedText style={{ fontSize: theme.sizes.text, color: theme.colors.text, marginTop: 8, }}>
                     {"Use the color wheel to select the closest match."}
                   </ThemedText>
                 </View>
-
-                <View>
-                  <Pressable
-                    onPress={() => {
-                      setPattern("");
-                      setColor("");
-                      setIsSolid(false);
-                    }}
-                  >
-                    <ThemedText style={{ backgroundColor: theme.colors.card, textAlign: "center", fontSize: theme.sizes.h3, marginTop: 20, color: theme.colors.text, padding: 10, borderRadius: 10, paddingHorizontal: 20, }}>
-                      Change Pattern
-                    </ThemedText>
-                  </Pressable>
-                </View>
-
                 <View style={styles.pickerSection}>
                   <View style={styles.wheelContainer}>
 
@@ -152,17 +146,11 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                       </View>
                     )}
                   </View>
-
-                  <View style={[styles.previewBadge, { backgroundColor: tempColor }]}>
-                    <ThemedText style={{ color: getContrastColor(tempColor), fontWeight: 'bold' }}>
-                      {tempColor.toUpperCase()}
-                    </ThemedText>
-                  </View>
                 </View>
               </>
             )}
           </View>
-          
+
           {/* Pattern Options */}
           {!isSolid && (
             <>
@@ -187,8 +175,11 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                             setIsSolid(false);
                           } else {
                             setPattern(option.id);
-                            setIsSolid(false);
-                            if (option.id !== "SOLID") {
+                            if (option.id === "SOLID") {
+                              // Enter color picker immediately when Solid is chosen.
+                              setIsSolid(true);
+                            } else {
+                              setIsSolid(false);
                               setColor("");
                             }
                           }
@@ -211,7 +202,6 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
                           style={{
                             color: theme.colors.text,
                             fontSize: theme.sizes.h3,
-                            color: theme.colors.text,
                             fontFamily: theme.fonts.bold,
                           }}
                         >
@@ -233,9 +223,15 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
           )}
         </View>
       </ScrollView>
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
-          onPress={() => setPage(2)}
+          onPress={handleBack}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
@@ -245,7 +241,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {((color && pattern === "SOLID") || (!color && pattern !== "SOLID" && pattern.length > 0)) && (
+        {((color && pattern === "SOLID" && isSolid) || (!color && pattern !== "SOLID" && pattern.length > 0)) && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -258,7 +254,7 @@ export default function ColorPage({ setPage, color, setColor, pattern, setPatter
             <ThemedText style={{ textAlign: "center" }}>Next</ThemedText>
           </Pressable>
         )}
-        {pattern === "SOLID" && color === "" && (
+        {pattern === "SOLID" && !isSolid && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
@@ -329,27 +325,30 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     letterSpacing: 1,
   },
-  previewBadge: {
-    marginTop: 20,
-    paddingHorizontal: 25,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.1)',
-  },
   navigationButtons: {
+    alignItems: "center",
     flexDirection: 'row',
-    justifyContent: 'center',
     gap: 40,
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    paddingTop: 8,
     paddingBottom: 30,
-    paddingHorizontal: 20,
+    width: "100%",
+    flexWrap: "wrap",
+  },
+  navigationButtonsWeb: {
+    paddingBottom: 28,
+    marginLeft: 10,
+  },
+  navigationButtonsSingle: {
+    justifyContent: "center",
   },
   togglePreviewContainer: {
-    position: 'relative',
-    top: 10,
-    left: 0,
-    right: 0,
-    zIndex: 10,
+    // position: "relative",
+    // top: 0,
+    // left: 0,
+    // right: 0,
+    // zIndex: 20,
   },
   absoluteLoader: {
     position: 'absolute', // Sits on top of the hidden picker

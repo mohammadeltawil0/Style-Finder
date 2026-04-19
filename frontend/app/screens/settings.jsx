@@ -39,7 +39,7 @@ export default function Settings(){
 
             <TouchableOpacity
                 // TODO: once we have login page ready then just link here
-                onPress={() => router.replace("/auth/logIn")}
+                onPress={() => router.replace("/")}
                 activeOpacity={0.7}
                 style={{
                 backgroundColor: "#B49480",

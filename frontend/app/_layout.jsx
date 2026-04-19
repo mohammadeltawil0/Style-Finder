@@ -6,19 +6,23 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import Toast from "react-native-toast-message";
 import { CustomHeader } from "../components";
 import { theme } from "../constants";
+import { useToastConfig } from "../constants/toastConfig";
 import { SurveyProvider } from "../context/SurveyContext";
-
-// Create a client
-const queryClient = new QueryClient();
 
 // Prevent the splash screen from auto-hiding
 SplashScreen.preventAutoHideAsync();
+const queryClient = new QueryClient();
+
+function ThemedToast() {
+  const toastConfig = useToastConfig();
+  return <Toast config={toastConfig} />;
+}
 
 export const unstable_settings = {
-  initialRouteName: "auth/logIn",
-  anchor: "(tabs)",
+  initialRouteName: "index",
 };
 
 export default function RootLayout() {
@@ -44,20 +48,29 @@ export default function RootLayout() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider value={theme}>
         <SurveyProvider>
-          <Stack initialRouteName="auth/logIn">
+          <Stack initialRouteName="index">
             <Stack.Screen
-              name="auth/logIn"
+              name="index"
               options={{
                 header: () => <CustomHeader page="logIn" />,
+                gestureEnabled: false,
+                headerShown: false,
               }}
             />
             <Stack.Screen
               name="auth/register"
               options={{
                 header: () => <CustomHeader page="register" />,
+                gestureEnabled: false,
               }}
             />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="(tabs)"
+              options={{
+                headerShown: false,
+                gestureEnabled: false,
+              }}
+            />
             <Stack.Screen
               name="screens/settings"
               options={{
@@ -71,19 +84,19 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="screens/GenerateOutfits/AdditionalConstraints"
+              name="screens/AdditionalConstraints"
               options={{
                 header: () => <CustomHeader page="AdditionalConstraints" />,
               }}
             />
             <Stack.Screen
-              name="screens/GenerateOutfits/OutfitswaitingScreen"
+              name="screens/OutfitswaitingScreen"
               options={{
                 header: () => <CustomHeader page="OutfitswaitingScreen" />,
               }}
             />
             <Stack.Screen
-              name="screens/GenerateOutfits/DisplayOutfits"
+              name="screens/DisplayOutfits"
               options={{
                 header: () => <CustomHeader page="AdditionalConstraints" />,
               }}
@@ -106,10 +119,6 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="survey" />,
               }}
             />
-            {/* <Stack.Screen
-            name="modal"
-            options={{ presentation: "modal", title: "Modal" }}
-          /> */}
             <Stack.Screen
               name="closet/add-item"
               options={{
@@ -123,13 +132,74 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="closet/outfitsHistory/itemDetail"
+              options={{
+                header: () => <CustomHeader page="Item" />,
+              }}
+            />
+            <Stack.Screen
               name="closet/outfitsHistory/tripOutfits"
               options={{
                 header: () => <CustomHeader page="TripOutfitDetail" />,
               }}
             />
+            <Stack.Screen
+              name="settings/Profile"
+              options={{
+                header: () => <CustomHeader page="Profile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/EditProfile"
+              options={{
+                header: () => <CustomHeader page="EditProfile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/UpdatePassword"
+              options={{
+                header: () => <CustomHeader page="UpdatePassword" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminSettings"
+              options={{
+                header: () => <CustomHeader page="adminSettings" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminEditProfile"
+              options={{
+                header: () => <CustomHeader page="adminEditProfile" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUsers"
+              options={{
+                header: () => <CustomHeader page="AdminPortal" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUpdatePassword"
+              options={{
+                header: () => <CustomHeader page="AdminChangePassword" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminLanding"
+              options={{
+                header: () => <CustomHeader page="adminwelcomepage" />,
+              }}
+            />
+            <Stack.Screen
+              name="settings/adminFolder/adminUserDetail"
+              options={{
+                header: () => <CustomHeader page="adminUserDetail" />,
+              }}
+            />
           </Stack>
           <StatusBar style="auto" />
+          <ThemedToast />
         </SurveyProvider>
       </ThemeProvider>
     </QueryClientProvider>

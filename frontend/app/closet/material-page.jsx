@@ -8,52 +8,23 @@ import {
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
 
-export default function MaterialPage({ setPage, material, setMaterial, uri }) {
+export default function MaterialPage({ setPage, goBack, material, setMaterial, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
   const materialOptions = [
-    {
-      id: 1,
-      label: "Cotton",
-      subheader: "Soft, breathable, and great for everyday wear",
-    },
-    {
-      id: 2,
-      label: "Linen/Hemp",
-      subheader: "Lightweight and breathable for hot weather",
-    },
-    {
-      id: 3,
-      label: "Wool/Fleece",
-      subheader: "Warm and insulating for sweaters and coats",
-    },
-    {
-      id: 4,
-      label: "Silk/Satin",
-      subheader: "Smooth, lightweight, and luxurious",
-    },
-    {
-      id: 5,
-      label: "Leather/Faux Leather",
-      subheader: "Durable hide or leather alternative",
-    },
-    {
-      id: 6,
-      label: "Synthetics",
-      subheader:
-        "Strong, flexible, and common in activewear like Polyster, Nylon, and Spandex",
-    },
-    {
-      // TO DO: figure out how to handle other?
-      id: 7,
-      label: "Other",
-      subheader: "Materials not listed above",
-    },
+    { id: "COTTON", label: "Cotton", subheader: "Soft, breathable, and great for everyday wear" },
+    { id: "LINEN", label: "Linen/Hemp", subheader: "Lightweight and breathable for hot weather" },
+    { id: "WOOL", label: "Wool/Fleece", subheader: "Warm and insulating for sweaters and coats" },
+    { id: "SILK", label: "Silk/Satin", subheader: "Smooth, lightweight, and luxurious" },
+    { id: "LEATHER", label: "Leather/Faux Leather", subheader: "Durable hide or leather alternative" },
+    { id: "POLYESTER", label: "Synthetics", subheader: "Strong, flexible, and common in activewear" },
+    { id: "ACRYLIC", label: "Other", subheader: "Materials not listed above" },
   ];
 
   const { width } = useWindowDimensions();
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
+  const showNext = Boolean(material);
 
   return (
     <ThemedView
@@ -72,7 +43,7 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
       >
         <View style={[styles.contentContainer]}>
           <View style={styles.togglePreviewContainer} pointerEvents="box-none">
-            <TogglePreview setPage={setPage} uri={uri} />
+            <TogglePreview uri={uri} previewMode={previewMode} setPreviewMode={setPreviewMode} />
           </View>
 
           <View className="mainContent" style={styles.mainContent}>
@@ -162,26 +133,31 @@ export default function MaterialPage({ setPage, material, setMaterial, uri }) {
         </View>
       </ScrollView>
 
-      <View style={styles.navigationButtons}>
+      <View
+        style={[
+          styles.navigationButtons,
+          isWeb && styles.navigationButtonsWeb,
+          !showNext && styles.navigationButtonsSingle,
+        ]}
+      >
         <Pressable
-          onPress={() => setPage(4)}
-          //TO DO: if next is not visible, make this flex-start or figure it out
+          onPress={() => goBack()}
           style={{
             backgroundColor: theme.colors.card,
             borderRadius: 10,
             padding: 10,
-            width: "35%",
+            width: buttonWidth,
           }}
         >
           <ThemedText style={{ textAlign: "center" }}>Back</ThemedText>
         </Pressable>
-        {material && (
+        {showNext && (
           <Pressable
             style={{
               backgroundColor: theme.colors.card,
               borderRadius: 10,
               padding: 10,
-              width: "35%",
+              width: buttonWidth,
             }}
             onPress={() => setPage(6)}
           >

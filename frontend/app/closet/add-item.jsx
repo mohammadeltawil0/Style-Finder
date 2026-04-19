@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";
 import ColorPage from "./color-page.jsx";
@@ -11,49 +12,134 @@ import LengthPage from "./length-page.jsx";
 import BulkPage from "./bulk-page.jsx";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { apiClient } from "../../scripts/apiClient";
+import * as FileSystem from 'expo-file-system/legacy';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import Toast from 'react-native-toast-message';
 
+const PREVIEW_MODE_STORAGE_KEY = "addItemPreviewMode";
 
 export default function AddItemScreen() {
-  const [page, setPage] = useState(1);
+  const [navigation, setNavigation] = useState({
+    currentPage: 1,
+    nextPage: 2,
+    previousPage: null,
+  });
   const [uri, setUri] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // These states now natively hold Java Enum strings from their child pages
   const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
-  const [formality, setFormality] = useState(""); 
+  const [formality, setFormality] = useState("");
   const [isSolid, setIsSolid] = useState(false); // handle in root so global; true if pressed next after "solid" button
   const [material, setMaterial] = useState("");
-  const [fit, setFit] = useState(1); // default to middle value of 1, range from 0-2 (0: skinny, 1: regular, 2: loose)
-  const [season, setSeason] = useState(""); 
+  const [fit, setFit] = useState(null); // null means unselected; user must move slider before continuing
+  const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
-  const [bulk, setBulk] = useState(1); // default to middle value of 1, range from 0-2 (0: thin, 1: medium, 2: thick)
+  const [bulk, setBulk] = useState(null); // null means unselected; user must move slider before continuing
+  const [editing, setEditing] = useState(false); // track if user is editing an existing item or adding new
+  const [previewMode, setPreviewMode] = useState(false); // track if user is in review mode to conditionally show "Edit" buttons
+  const [isPreviewModeHydrated, setIsPreviewModeHydrated] = useState(false);
 
   const router = useRouter();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const loadPreviewMode = async () => {
+      try {
+        const storedPreviewMode = await AsyncStorage.getItem(PREVIEW_MODE_STORAGE_KEY);
+        if (storedPreviewMode === "true" || storedPreviewMode === "false") {
+          setPreviewMode(storedPreviewMode === "true");
+        }
+      } catch (error) {
+        console.error("Failed to load preview mode:", error);
+      } finally {
+        setIsPreviewModeHydrated(true);
+      }
+    };
+
+    loadPreviewMode();
+  }, []);
+
+  useEffect(() => {
+    if (!isPreviewModeHydrated) return;
+
+    const persistPreviewMode = async () => {
+      try {
+        await AsyncStorage.setItem(PREVIEW_MODE_STORAGE_KEY, String(previewMode));
+      } catch (error) {
+        console.error("Failed to save preview mode:", error);
+      }
+    };
+
+    persistPreviewMode();
+  }, [previewMode, isPreviewModeHydrated]);
+
+  // Navigation helpers
+  const goToPage = (pageNum, fromPage = null) => {
+    setNavigation({
+      currentPage: pageNum,
+      nextPage: pageNum + 1,
+      previousPage: fromPage !== null ? fromPage : navigation.currentPage,
+    });
+  };
+
+  const goNext = () => {
+    // If editing, go back to review and stop editing
+    if (editing) {
+      setNavigation({
+        currentPage: 10,
+        nextPage: 11,
+        previousPage: 9,
+      });
+      setEditing(false);
+      return;
+    }
+
+    setNavigation((prev) => ({
+      currentPage: prev.nextPage,
+      nextPage: prev.nextPage + 1,
+      previousPage: prev.currentPage,
+    }));
+  };
+
+  const goBack = () => {
+    setNavigation((prev) => ({
+      currentPage: prev.previousPage,
+      nextPage: prev.currentPage,
+      previousPage: prev.previousPage > 1 ? prev.previousPage - 1 : null,
+    }));
+  };
 
   // Convert states to match backend
   //1. Convert fit
-  // TO DO: convert 0.1 steps to enums to match our Fit Model
-  let convertedBulk = 0;
 
   const convertFit = (fit) => {
+    if (fit === null || fit === undefined) return null;
     if (fit < 0.5) return "SLIM";
     if (fit < 1.5) return "REGULAR";
     return "LOOSE";
   };
 
-  bulk >= 0 && bulk <= 0.50
-    ? (convertedBulk = 0)
-    : bulk >= 0.51 && bulk < 1.49
-      ? (convertedBulk = 1)
-      : (convertedBulk = 2);
-  
+  const convertedBulk =
+    bulk === null || bulk === undefined
+      ? null
+      : bulk <= 0.5
+        ? 0
+        : bulk < 1.49
+          ? 1
+          : 2;
+
   const convertPattern = (pattern) => {
     const map = {
       "Solid": "SOLID",
       "Striped": "STRIPED",
       "Plaid": "PLAID_OR_FLANNEL",
       "Floral": "FLORAL",
-      "GRAPHIC": "GRAPHIC",
-      "GEOMETRIC": "GEOMETRIC",
+      "Graphic": "GRAPHIC",
+      "Geometric": "GEOMETRIC_OR_ABSTRACT",
     };
     return map[pattern] || pattern;
   };
@@ -66,7 +152,11 @@ export default function AddItemScreen() {
       "Outerwear": "OUTERWEAR",
     };
     return map[itemType] || itemType;
-  }
+  };
+
+  const convertMaterial = (material) => {
+    return material ? Number(material) : null; // Convert material to number or return null if not set
+  };
 
   const convertFormality = (formality) => {
     const map = {
@@ -80,108 +170,109 @@ export default function AddItemScreen() {
     return map[formality] || formality;
   }
 
-  // const convertLength = (length) => {
-  //   const map = {
-  //   "Sleeveless": "SLEEVELESS",
-  //   "Cap": "CAP",
-  //   "Short-Sleeve": "SHORT_SLEEVE",
-  //   "Three-Quarter": "THREE_QUARTER",
-  //   "Long-Sleeve": "LONG_SLEEVE",
-  //   "Above-Knee": "ABOVE_KNEE",
-  //   "Knee-Length-Bermuda": "KNEE_LENGTH_OR_BERMUDA",
-  //   "Midi-Capri": "MIDI_or_CAPRI",
-  //   "Full-Length-Maxi": "MAXI_OR_FULL_LENGTH",
-  // };
-
-  //   return map[length] || null;
-  // };
-
-  // const convertSeason = (season) => {
-  // const map = {
-  //   "All-Seasons": "ALL_SEASONS",
-  //   "Winter": "WINTER",
-  //   "Spring": "SPRING",
-  //   "Summer": "SUMMER",
-  //   "Fall": "FALL",
-  // };
-
-  // return map[season] || null;
-  // };    
-
-  const convertMaterial = (material) => {
-    return material ? Number(material) : null; // Convert material to number or return null if not set
+  const normalizeEnum = (value) => {
+    if (value === "" || value === undefined) return null;
+    return value;
   };
 
-  let convertedFit = convertFit(fit);
+  const buildItemPayload = (userId) => ({
+    userId,
+    type: normalizeEnum(convertItemType(itemType)),
+    color: color || null,
+    pattern: normalizeEnum(convertPattern(pattern)),
+    length: normalizeEnum(length),
+    material: convertMaterial(material),
+    bulk: convertedBulk,
+    seasonWear: normalizeEnum(season),
+    formality: normalizeEnum(convertFormality(formality)),
+    fit: normalizeEnum(convertFit(fit)),
+    // removed imageUrl here since we set it after base64 conversion
+  });
+
+  const convertToBase64 = async (uri) => {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: 'base64',  // ✅ use string instead of FileSystem.EncodingType.Base64
+    });
+    return `data:image/jpeg;base64,${base64}`;
+  };
+
+  const submitItem = async (payload) => {
+    const response = await apiClient.post("/api/items", payload);
+    console.log("Submission response:", response.data);
+    return response;
+  };
+
+  // Use useMutation to handle item submission with automatic loading and error states
+  const { mutate, isPending } = useMutation({
+    mutationFn: submitItem,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['items'] });
+      Toast.show({ type: 'success', text1: 'Item added!' });
+      console.log("✅ onSuccess fired:", data);
+      router.replace({ pathname: "/(tabs)/closet", params: { tab: "items" } });
+    },
+    onError: (error) => {
+      const status = error.response?.status;
+      console.log("❌ onError fired:", error);
+      const messages = {
+        400: 'Invalid item data.',
+        422: 'Image format not supported.',
+        500: 'Server error. Please try again.',
+      };
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to add item',
+        text2: messages[status] || 'Something went wrong.',
+      });
+    },
+  });
 
   const handleSubmit = async () => {
-    // TO DO: submit to backend, and navigate to inventory page!
-    // router.push({
-    //   pathname: "/closet",
-    //   params: { tab: "inventory" },
-    // });
-
     try {
-      const userId = await AsyncStorage.getItem("userId");
-      const itemData = {
-        userId: Number(userId),
-        type: convertItemType(itemType),
-        color: color || null,
-        pattern: convertPattern(pattern),
-        length: length ? length : null, // Handle optional length
-        material: convertMaterial(material),
-        bulk: convertedBulk,
-        seasonWear: season || null, // Handle optional season
-        formality: convertFormality(formality),
-        fit: convertFit(fit),
-        imageUrl: uri ? uri : null, // Handle optional image
-      };
-      
-      console.log("Submitting item data:", itemData); // Log the data being submitted
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const userId = Number(storedUserId);
 
-      const response = await fetch(`http://localhost:8080/api/items`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(itemData),
-      });
+      if (!Number.isInteger(userId) || userId <= 0) {
+        Toast.show({ type: 'error', text1: 'Please log in again.' });
+        return;
+      }
 
-      if (!response.ok) {
-        alert("Failed to submit item. Please try again." + JSON.stringify(itemData));
-        throw new Error("Failed to submit item");
-      } 
-      
-      alert("Item submitted successfully!");
-      router.push({
-        pathname: "/closet",
-        params: { tab: "inventory" },
-      });
-
+      const imageData = uri ? await convertToBase64(uri) : null;
+      const payload = { ...buildItemPayload(userId), imageUrl: imageData };
+      mutate(payload); // useMutation handles everything from here
     } catch (error) {
-      console.error("Error submitting item:", error);
+      console.log("❌ handleSubmit crashed:", error);
+      Toast.show({
+        type: 'error',
+        text1: 'Failed to prepare item',
+        text2: 'Please try another image or try again.',
+      });
     }
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       {/* First Page: camera */}
-      {page === 1 && <CameraPage setUri={setUri} setPage={setPage} uri={uri} />}
+      {navigation.currentPage === 1 && <CameraPage setUri={setUri} setPage={goNext} uri={uri} />}
 
       {/* Second Page: Item Type */}
-      {page === 2 && (
+      {navigation.currentPage === 2 && (
         <CategoryPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           setItemType={setItemType}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Third Page: Color */}
-      {page === 3 && (
+      {navigation.currentPage === 3 && (
         <ColorPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           color={color}
           setColor={setColor}
           pattern={pattern}
@@ -189,74 +280,103 @@ export default function AddItemScreen() {
           uri={uri}
           isSolid={isSolid}
           setIsSolid={setIsSolid}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Fourth Page: Formality */}
-      {page === 4 && (
+      {navigation.currentPage === 4 && (
         <EventPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           formality={formality}
           setFormality={setFormality}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Fifth Page: Material  */}
-      {page === 5 && (
+      {navigation.currentPage === 5 && (
         <MaterialPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           material={material}
           setMaterial={setMaterial}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
       {/* Sixth Page: Fit */}
-      {page === 6 && (
+      {navigation.currentPage === 6 && (
         <FitPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           fit={fit}
           setFit={setFit}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* OPTIONAL PARAMETERS: Season */}
-      {page === 7 && (
+      {navigation.currentPage === 7 && (
         <SeasonPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           season={season}
           setSeason={setSeason}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* OPTIONAL PARAMETERS: Length */}
-      {page === 8 && (
+      {navigation.currentPage === 8 && (
         <LengthPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           itemType={itemType}
           length={length}
           setLength={setLength}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* OPTIONAL PARAMETERS: Bulk */}
-      {page === 9 && (
+      {navigation.currentPage === 9 && (
         <BulkPage
-          setPage={setPage}
+          setPage={goNext}
+          goBack={goBack}
           bulk={bulk}
           setBulk={setBulk}
           uri={uri}
+          previewMode={previewMode}
+          setPreviewMode={setPreviewMode}
         />
       )}
 
       {/* Eleventh Page: Review */}
-      {page === 10 && (
+      {navigation.currentPage === 10 && (
         <ReviewPage
-          setPage={setPage}
+          goBack={goBack}
+          setItemType={setItemType}
+          setPattern={setPattern}
+          setColor={setColor}
+          setFormality={setFormality}
+          setMaterial={setMaterial}
+          setFit={setFit}
+          setSeason={setSeason}
+          setLength={setLength}
+          setBulk={setBulk}
           uri={uri}
           formality={formality}
           pattern={pattern}
@@ -266,15 +386,23 @@ export default function AddItemScreen() {
           fit={fit}
           season={season}
           length={length}
-          bulk={convertedBulk}
+          bulk={bulk}
           handleSubmit={handleSubmit}
+          isPending={isPending}
+          setUri={setUri}
         />
       )}
-    </>
+      {isUploading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#b49480" />
+          <Text style={styles.loadingText}>Uploading to Wardrobe...</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   navigationButtons: {
     alignItems: "center",
     flexDirection: "row",
@@ -300,4 +428,17 @@ const styles = {
     bottom: 0,
     zIndex: 10,
   },
-};
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999, // Ensure it sits on top of everything
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: "bold",
+  }
+});

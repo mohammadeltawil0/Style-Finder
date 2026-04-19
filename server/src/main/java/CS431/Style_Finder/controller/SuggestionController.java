@@ -1,8 +1,8 @@
 package CS431.Style_Finder.controller;
 
-import CS431.Style_Finder.dto.FeedbackDTO;
-import CS431.Style_Finder.dto.FilterRequestDTO;
-import CS431.Style_Finder.dto.OutfitSuggestionDTO;
+import CS431.Style_Finder.dto.FeedbackDto;
+import CS431.Style_Finder.dto.FilterRequestDto;
+import CS431.Style_Finder.dto.OutfitSuggestionDto;
 import CS431.Style_Finder.service.AlgorithmService;
 import CS431.Style_Finder.service.FeedbackService;
 import lombok.RequiredArgsConstructor;
@@ -19,14 +19,16 @@ public class SuggestionController {
     private final FeedbackService feedbackService;
 
     @PostMapping("/hub/{userId}")
-    public ResponseEntity<List<OutfitSuggestionDTO>> getHub(
+    public ResponseEntity<List<OutfitSuggestionDto>> getHub(
             @PathVariable Long userId,
-            @RequestBody FilterRequestDTO filter) {
-        return ResponseEntity.ok(algorithmService.generateSuggestionHub(userId, filter.getLocation(), filter.getEvent()));
+            @RequestBody FilterRequestDto filter) {
+        return ResponseEntity.ok(
+                algorithmService.generateSuggestionHub(userId, filter.getLocation(),
+                        filter.getEvent(), filter.isMemory()));
     }
 
     @PostMapping("/feedback")
-    public ResponseEntity<Void> submitFeedback(@RequestBody FeedbackDTO feedback) {
+    public ResponseEntity<Void> submitFeedback(@RequestBody FeedbackDto feedback) {
         feedbackService.processFeedback(feedback);
         System.out.println("Feedback received: " + feedback.getSuggestionId());
         return ResponseEntity.ok().build();

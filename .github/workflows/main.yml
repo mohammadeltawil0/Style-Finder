@@ -2,7 +2,7 @@ name: Deploy Spring Boot to EC2
 
 on:
   push:
-    branches: [ "A_Local"]
+    branches: [ "Beta_Release_Images"]
     paths:
       - 'server/**'
   pull_request:

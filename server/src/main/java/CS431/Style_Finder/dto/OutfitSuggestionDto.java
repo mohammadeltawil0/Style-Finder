@@ -7,7 +7,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class OutfitSuggestionDTO {
+public class OutfitSuggestionDto {
     private String suggestionId;
     private List<Long> itemIds;
     private double score;
