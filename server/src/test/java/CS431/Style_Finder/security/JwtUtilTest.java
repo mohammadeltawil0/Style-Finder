@@ -9,16 +9,19 @@ class JwtUtilTest {
     private final JwtUtil jwtUtil = new JwtUtil();
 
     @Test
-    void testGenerateAndExtractUsername() {
-        String username = "stella1234";
+    void testGenerateAndExtractUsernameAndRole() {
+        String username = "stella123";
+        String role = "USER";
 
-        String token = jwtUtil.generateToken(username);
+        String token = jwtUtil.generateToken(username, role);
 
         assertNotNull(token);
 
         String extractedUsername = jwtUtil.extractUsername(token);
+        String extractedRole = jwtUtil.extractRole(token);
 
         assertEquals(username, extractedUsername);
+        assertEquals(role, extractedRole);
     }
 
     @Test

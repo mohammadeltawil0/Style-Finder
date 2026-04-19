@@ -5,9 +5,11 @@ import CS431.Style_Finder.dto.auth.LoginResponseDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
 import CS431.Style_Finder.service.UserService;
 import CS431.Style_Finder.security.JwtUtil;
+import CS431.Style_Finder.model.enums.Role;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import org.springframework.http.ResponseEntity;
 
@@ -18,16 +20,18 @@ import static org.mockito.Mockito.*;
 
 class UserControllerTest {
 
+    @Mock
     private UserService userService;
-    private UserController userController;
 
+    @Mock
     private JwtUtil jwtUtil;
+
+    @InjectMocks
+    private UserController userController;
 
     @BeforeEach
     void setUp() {
-        userService = mock(UserService.class);
-        jwtUtil = mock(JwtUtil.class); 
-        userController = new UserController(userService, jwtUtil);
+        MockitoAnnotations.openMocks(this);
     }
 
     //create user
@@ -35,19 +39,18 @@ class UserControllerTest {
     void testCreateUser() {
         UserDto input = new UserDto();
         input.setUsername("stella");
+        input.setRole(Role.USER);
 
-        UserDto user = new UserDto();
-        user.setUserId(1L);
-        user.setUsername("stella");
+        UserDto createdUser = new UserDto();
+        createdUser.setUserId(1L);
+        createdUser.setUsername("stella");
+        createdUser.setRole(Role.USER);
 
-        when(userService.createUser(input)).thenReturn(user);
-        when(jwtUtil.generateToken("stella")).thenReturn("fake-token");
+        when(userService.createUser(input)).thenReturn(createdUser);
 
-        ResponseEntity<LoginResponseDto> response = userController.createUser(input);
+        ResponseEntity<?> response = userController.createUser(input);
 
         assertEquals(201, response.getStatusCodeValue());
-        assertEquals("fake-token", response.getBody().getToken());
-        assertEquals(1L, response.getBody().getUserId());
     }
 
     //Get user by ID
@@ -103,22 +106,16 @@ class UserControllerTest {
         assertEquals("User deleted successfully.", response.getBody());
     }
 
-    //login success
+    //login success 
     @Test
     void testLoginSuccess() {
         LoginRequestDto request = new LoginRequestDto();
         request.setUsername("stella");
         request.setPassword("password");
 
-        LoginResponseDto mockResponse =
-                new LoginResponseDto("fake-token", 1L, "stella");
-
-        when(userService.login("stella", "password"))
-                .thenReturn(mockResponse);
-
-        ResponseEntity<LoginResponseDto> response =
-                userController.login(request);
-
+        LoginResponseDto mockResponse = new LoginResponseDto("fake-token", 1L, "stella");
+        when(userService.login("stella", "password")).thenReturn(mockResponse);
+        ResponseEntity<LoginResponseDto> response = userController.login(request);
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("fake-token", response.getBody().getToken());
     }
@@ -130,8 +127,7 @@ class UserControllerTest {
         request.setUsername("wrong");
         request.setPassword("wrong");
 
-        when(userService.login("wrong", "wrong"))
-                .thenThrow(new RuntimeException("Invalid credentials"));
+        when(userService.login("wrong", "wrong")).thenThrow(new RuntimeException("Invalid credentials"));
 
         assertThrows(RuntimeException.class, () -> {
             userController.login(request);

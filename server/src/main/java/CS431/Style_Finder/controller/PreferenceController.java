@@ -12,6 +12,11 @@ public class PreferenceController {
 
     private final PreferenceService preferenceService;
 
+    @GetMapping("/test")
+    public String userEndpoint() {
+        return "User access granted";
+    }
+
     @GetMapping("/{userId}")
     public PreferenceDto getPreference(@PathVariable Long userId) {
         return preferenceService.getPreferenceByUserId(userId);

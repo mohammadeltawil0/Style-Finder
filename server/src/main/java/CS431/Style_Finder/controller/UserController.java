@@ -26,7 +26,7 @@ public class UserController {
 
         UserDto user = userService.createUser(dto);
 
-        String token = jwtUtil.generateToken(user.getUsername());
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
 
         LoginResponseDto response = new LoginResponseDto(
             token,

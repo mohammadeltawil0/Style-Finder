@@ -6,6 +6,7 @@ import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.security.JwtUtil;
 import CS431.Style_Finder.service.impl.UserServiceImpl;
+import CS431.Style_Finder.model.enums.Role;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,6 +51,7 @@ class UserServiceImplTest {
         user.setUserId(1L);
         user.setUsername("stella");
         user.setPassword(passwordEncoder.encode("password"));
+        user.setRole(Role.USER);
 
         when(userRepository.findByUsername("stella"))
                 .thenReturn(Optional.of(user));
