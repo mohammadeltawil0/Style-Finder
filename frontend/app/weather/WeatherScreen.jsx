@@ -1,0 +1,113 @@
+import { useWeather } from '../../hooks/useWeather';
+import { View, ActivityIndicator } from 'react-native';
+import { ThemedText } from '../../components';
+import { useTheme } from '@react-navigation/native';
+import { getWeatherIcon, getWeatherDescription, getColorForWeather } from '../../constants/weatherCodes';
+
+export default function WeatherScreen() {
+    const theme = useTheme();
+    const { weather, location, loading, error } = useWeather();
+
+    const cardStyle = {
+        backgroundColor: theme.colors.lightBrown,
+        borderRadius: 10,
+        paddingHorizontal: 20,
+        paddingVertical: 20,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3.5,
+        elevation: 5,
+        flexDirection: "row",
+        alignSelf: "stretch",
+    };
+
+    if (loading) return <ActivityIndicator size="large" />;
+    if (error) return (
+        <View style={cardStyle}>
+            <ThemedText>Cannot fetch weather data</ThemedText>
+        </View>
+    );
+    if (!weather?.current) return <ThemedText>No weather data</ThemedText>;
+
+    const { temperature_2m, weather_code, wind_speed_10m } = weather.current;
+    const now = new Date();
+    const day = now.toLocaleDateString(undefined, { weekday: 'short' });
+    const date = now.toLocaleDateString();
+    const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+
+    return (
+        <View style={cardStyle}>
+
+            {/* Left — icon, description, temperature */}
+            <View style={{
+                flex: 1,
+                flexDirection: "column",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                alignSelf: "stretch",
+            }}>
+                <View style={{
+                    flexDirection: "row",
+                    alignItems: "flex-start",  
+                    gap: 5,
+                }}>
+                    <ThemedText style={{ fontSize: theme.sizes.h2, lineHeight: theme.sizes.h2 }}>
+                        {getWeatherIcon(weather_code)}
+                    </ThemedText>
+                    <ThemedText style={{ fontSize: theme.sizes.h3, lineHeight: theme.sizes.h2, flexShrink: 1 }}>
+                        {getWeatherDescription(weather_code)}
+                    </ThemedText>
+                </View>
+                <ThemedText style={{
+                    fontSize: 35,
+                    lineHeight: 35,
+                }}>
+                    {`${Math.round(temperature_2m)}°F`}
+                </ThemedText>
+            </View>
+
+            {/* Right — time, date, location */}
+            <View style={{
+                flex: 1,
+                flexDirection: "column",
+                alignItems: "flex-end",
+                justifyContent: "space-between",
+                alignSelf: "stretch",
+            }}>
+                <View style={{
+                    flexDirection: "column",
+                    alignItems: "flex-end",
+                }}>
+                    <ThemedText style={{
+                        fontSize: theme.sizes.h2,
+                        color: theme.colors.text,
+                    }}>
+                        {time}
+                    </ThemedText>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+                        <ThemedText style={{
+                            fontSize: theme.sizes.regular,
+                            color: theme.colors.text,
+                        }}>
+                            {day.toUpperCase()}
+                        </ThemedText>
+                        <ThemedText style={{
+                            fontSize: theme.sizes.regular,
+                            color: theme.colors.text,
+                        }}>
+                            {date}
+                        </ThemedText>
+                    </View>
+                </View>
+                <ThemedText style={{
+                    fontSize: theme.sizes.regular,
+                    lineHeight: theme.sizes.regular,
+                }}>
+                    {location?.city}, {location?.region}
+                </ThemedText>
+            </View>
+
+        </View>
+    );
+}
