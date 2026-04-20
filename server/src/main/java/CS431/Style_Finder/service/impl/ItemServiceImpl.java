@@ -73,6 +73,14 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
+    public List<ItemDto> getLeastWornItemsByUserId(Long userId) {
+           return itemRepository.findTop3ByUser_UserIdOrderByTimesWornAscItemIdAsc(userId)
+                .stream()
+                .map(itemMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public ItemDto updateItem(Long itemId, ItemDto dto) {
         Item item = itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));

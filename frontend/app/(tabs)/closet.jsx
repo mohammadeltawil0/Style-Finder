@@ -316,23 +316,48 @@ export default function ClosetScreen() {
     return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
   };
 
-  const filteredItems = processedItems.filter((item) => {
-    let matchesCategory = true;
-    if (category === "tops") matchesCategory = item.type === "TOP";
-    else if (category === "bottoms") matchesCategory = item.type === "BOTTOM";
-    else if (category === "dresses")
-      matchesCategory = item.type === "FULL_BODY";
-    else if (category === "outerwear")
-      matchesCategory = item.type === "OUTERWEAR";
+  const filteredItems = items.filter((item) => {
+    //category filter
+    if (category !== "all") {
+      const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        full_body: "FULL_BODY",
+        outerwear: "OUTERWEAR",
+      };
 
-    let matchesSearch = true;
-    if (activeSearchText) {
-      matchesSearch = item.name
-        .toLowerCase()
-        .includes(activeSearchText.toLowerCase());
+      if (item.type !== typeMap[category]) {
+        return false;
+      }
     }
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
 
-    return matchesCategory && matchesSearch;
+    //search filter
+    if (terms.length > 0) {
+      const searchableText = [
+        normalize(item.type),
+        normalize(item.color),
+        normalize(item.seasonWear),
+        normalize(item.formality),
+        normalize(item.fit),
+        normalize(item.pattern),
+
+        materialMap[item.material],
+        patternMap[item.pattern],
+        eventMap[item.formality],
+        fitMap[item.fit],
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const words = searchableText.split(" ");
+      console.log("SEARCH TERMS:", terms);
+      console.log("ITEM TEXT:", searchableText);
+      const matches = terms.every((term) =>
+        words.some((word) => word.startsWith(term)),
+      );
+      if (!matches) return false;
+    }
+    return true;
   });
 
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
@@ -365,28 +390,165 @@ export default function ClosetScreen() {
     );
   });
 
+  const itemsListHeader = (
+    <>
+      <SearchBar
+        value={searchText}
+        onChangeText={(text) => setSearchText(text)}
+        onSubmit={handleSearchSubmit}
+      />
+      <View
+        className="item-categories"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 10,
+          justifyContent: "flex-start",
+          paddingVertical: 15,
+        }}
+      >
+        <Pressable
+          className="tops-category"
+          style={{
+            backgroundColor:
+              category === "tops"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Tops
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="bottoms-category"
+          style={{
+            backgroundColor:
+              category === "bottoms"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "bottoms" ? "all" : "bottoms",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Bottoms
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="full-body-category"
+          style={{
+            backgroundColor:
+              category === "full_body"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "full_body" ? "all" : "full_body",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Full Body
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="outerwear-category"
+          style={{
+            backgroundColor:
+              category === "outerwear"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "outerwear" ? "all" : "outerwear",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Outerwear
+          </ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       {!editItemsModalVisible && (
         <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
       )}
 
-      <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            itemId={currItemId}
           />
         ) : (
-          <View style={{ width: "100%", flex: 1 }}>
-            {isItems && (
+          <View style={{ flex: 1, width: "100%" }}>
+            {!isItems && mode === "trip" && (
               <SearchBar
                 value={searchText}
-                onChangeText={(text) => {
-                  setSearchText(text);
-                  if (text === "") setActiveSearchText("");
-                }}
-                placeholder="Search items inventory..."
+                onChangeText={(text) => setSearchText(text)}
                 onSubmit={handleSearchSubmit}
               />
             )}
@@ -394,7 +556,14 @@ export default function ClosetScreen() {
             {isItems ? (
               <>
                 {isItemsLoading ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
                     <ActivityIndicator
                       size="large"
                       color={theme.colors.tabIconSelected}
@@ -402,97 +571,40 @@ export default function ClosetScreen() {
                     <ThemedText>Loading your items...</ThemedText>
                   </View>
                 ) : isItemsError ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
                     <ThemedText style={{ textAlign: "center" }}>
-                      {itemsError?.message ||
-                        "Could not load items. Please try again."}
+                      {itemsError?.message || "Could not load items. Please try again."}
                     </ThemedText>
                     <Pressable
                       onPress={() => refetch()}
-                      style={styles.retryButton}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
                     >
                       <ThemedText>Retry</ThemedText>
                     </Pressable>
                   </View>
                 ) : (
                   <>
-                    <View style={styles.categoryRow}>
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "tops" ? "all" : "tops",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Tops
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "bottoms" ? "all" : "bottoms",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Bottoms
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "dresses" ? "all" : "dresses",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Dresses
-                        </ThemedText>
-                      </Pressable>
-                    </View>
-
-                    {isLoading ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        Loading your closet...
-                      </ThemedText>
-                    ) : filteredItems.length === 0 ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        No items found.
-                      </ThemedText>
-                    ) : (
-                      <Items
-                        items={filteredItems}
-                        setCurrItemId={setCurrItemId}
-                        currItemId={currItemId}
-                        setEditItemsModalVisible={setEditItemsModalVisible}
-                        editItemsModalVisible={editItemsModalVisible}
-                      />
-                    )}
+                    <Items
+                      items={filteredItems}
+                      setCurrItemId={setCurrItemId}
+                      currItemId={currItemId}
+                      setEditItemsModalVisible={setEditItemsModalVisible}
+                      editItemsModalVisible={editItemsModalVisible}
+                      listHeaderComponent={itemsListHeader}
+                    />
 
                     <Pressable
                       style={styles.fab}

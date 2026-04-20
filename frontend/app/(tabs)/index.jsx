@@ -1,59 +1,97 @@
 import AntDesign from "@expo/vector-icons/AntDesign";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
+import EditItemsModal from "../closet/edit-items-modal";
+import WeatherScreen from "../weather/WeatherScreen";
 
 export default function HomeScreen() {
-  // TO DO: fetch data for unworn items from backend; for now using mock data to test the UI
-  const [unwornItems, setUnwornItems] = useState([
-    { id: "1", name: "Item 1" },
-    { id: "2", name: "Item 2" },
-    { id: "3", name: "Item 3" },
-    { id: "4", name: "Item 4" },
-  ]);
-
   const theme = useTheme();
   const router = useRouter();
-  const [name, setName] = useState("");
+  const [userId, setUserId] = useState(null);
+  const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
 
-  const loadUserData = useCallback(async () => {
-    try {
-      const userId = await AsyncStorage.getItem("userId");
+  const {
+    data: name = "",
+    refetch: refetchName,
+  } = useQuery({
+    queryKey: ["homeName", userId],
+    enabled: !!userId,
+    queryFn: async () => {
       const storedName = await AsyncStorage.getItem("name");
 
-      if (userId) {
-        try {
-          const response = await apiClient.get(`/api/users/${userId}`);
-          const firstName = response?.data?.firstName?.trim();
+      try {
+        const response = await apiClient.get(`/api/users/${userId}`);
+        const firstName = response?.data?.firstName?.trim();
 
-          if (firstName) {
-            setName(firstName);
-            await AsyncStorage.setItem("name", firstName);
-            return;
-          }
-        } catch (error) {
-          console.error("Error loading first name:", error);
+        if (firstName) {
+          await AsyncStorage.setItem("name", firstName);
+          return firstName;
         }
+      } catch (error) {
+        console.error("Error loading first name:", error);
       }
 
-      setName(storedName || "");
-    } catch (error) {
-      console.error("Error loading user data:", error);
-    }
-  }, []);
+      return storedName || "";
+    },
+  });
+
+  const {
+    data: unwornItems = [],
+    isLoading: isUnwornItemsLoading,
+    refetch: refetchLeastWorn,
+  } = useQuery({
+    queryKey: ["leastWornItems", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      // DEBUGGING LOGS FOR API CALL
+      const start = Date.now();
+      console.log('[least-worn] API call start:', new Date(start).toISOString());
+      const response = await apiClient.get(`/api/items/user/${userId}/least-worn`);
+      const end = Date.now();
+      console.log('[least-worn] API call end:', new Date(end).toISOString(), 'Duration:', (end - start) + 'ms');
+      const items = Array.isArray(response?.data) ? response.data : [];
+
+      return items.map((item, index) => ({
+        id: String(item?.itemId ?? item?.id ?? index),
+        name: item?.type ? String(item.type).replace(/_/g, " ") : "Item",
+        imageUrl: item?.imageUrl || null,
+      }));
+    },
+  });
 
   useEffect(() => {
-    loadUserData();
+    const loadUserId = async () => {
+      try {
+        const storedUserId = await AsyncStorage.getItem("userId");
+        const parsedUserId = Number(storedUserId);
+        if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+          setUserId(parsedUserId);
+        } else {
+          setUserId(null);
+        }
+      } catch (error) {
+        console.error("Error loading user id:", error);
+        setUserId(null);
+      }
+    };
+
+    loadUserId();
   }, []);
 
   useFocusEffect(
     useCallback(() => {
-      loadUserData();
-    }, [loadUserData]),
+      if (userId) {
+        refetchName();
+        refetchLeastWorn();
+      }
+    }, [userId, refetchName, refetchLeastWorn]),
   );
 
   const handleNavigate = (target) => {
@@ -75,160 +113,143 @@ export default function HomeScreen() {
         gradient={false}
         style={{
           flex: 1,
-          gap: 50,
+          gap: 30,
           justifyContent: "center",
-          paddingHorizontal: 30,
         }}
       >
-        <View
-          className="header-text"
-          style={{ flexDirection: "row", gap: 10, width: "100%" }}
-        >
-          <View style={{ width: "70%" }}>
-            <ThemedText
-              style={{
-                fontSize: theme.sizes.h1,
-                fontFamily: theme.fonts.bold,
-              }}
-            >
-              Hello, {name}!{" "}
-            </ThemedText>
-          </View>
-        </View>
-        <View
-          className="not-worn-items"
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: 10,
-            height: 150,
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            paddingVertical: 20,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3.5,
-            elevation: 5,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-              textAlign: "left",
-            }}
-          >
-            You haven't worn these in a while
-          </ThemedText>
-          <View
-            style={{ justifyContent: "center", flexDirection: "row", gap: 10 }}
-          >
-            {unwornItems.map((item) => (
-              <Pressable
-                key={item.id}
-                style={{
-                  backgroundColor: theme.colors.lightBrown,
-                  borderRadius: 10,
-                  height: 70,
-                  width: "22%",
-                }}
-                onPress={() => console.log("pressed item", item.name)} // TO DO: link this to item details page
-              ></Pressable>
-            ))}
-          </View>
-        </View>
-        <View
-          className="past-outfits"
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: 10,
-            flexDirection: "row",
-            paddingHorizontal: 20,
-            paddingVertical: 20,
-            justifyContent: "space-between",
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3.5,
-            elevation: 5,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-            }}
-          >
-            Look at past outfits
-          </ThemedText>
-          <AntDesign
-            name="right"
-            size={24}
-            color={theme.colors.card}
-            onPress={() => handleNavigate("outfits")}
-            // TO DO: create logic where if user has no past outfits vs a grid of past outfits!
+        {editItemsModalVisible ? (
+          <EditItemsModal
+            item={selectedItem}
+            setModalVisible={() => setEditItemsModalVisible(false)}
           />
-        </View>
-        <View
-          className="manage-closet"
-          style={{
-            backgroundColor: "#ffffff",
-            borderRadius: 10,
-            paddingHorizontal: 20,
-            paddingVertical: 20,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 5 },
-            shadowOpacity: 0.3,
-            shadowRadius: 3.5,
-            elevation: 5,
-          }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-            }}
-          >
-            Manage your closet
-          </ThemedText>
-          <View
-            className="manage-closet-options"
-            style={{
-              flexDirection: "row",
-              gap: 20,
-              justifyContent: "space-between",
-              marginTop: 20,
-            }}
-          >
-            <Pressable
-              onPress={() => handleNavigate("items")}
+        ) : (
+          <>
+            <View
+              className="header-text"
+              style={{ flexDirection: "row", width: "100%"}}
+            >
+              <View style={{ width: "70%" }}>
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h1,
+                    fontFamily: theme.fonts.bold,
+                  }}
+                >
+                  Hello,
+                </ThemedText>
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h1,
+                    fontFamily: theme.fonts.bold,
+                  }}
+                >
+                  {name}!{" "}
+                </ThemedText>
+              </View>
+            </View>
+            <View
+              className="not-worn-items"
               style={{
                 backgroundColor: theme.colors.lightBrown,
+                width: "80%",
                 borderRadius: 10,
-                paddingVertical: 10,
-                width: "45%",
+                height: 150,
+                justifyContent: "space-between",
+                paddingVertical: 20,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3.5,
+                elevation: 5,
+                alignSelf: "center",
+                paddingHorizontal: 20,
               }}
             >
               <ThemedText
-                style={{ color: theme.colors.text, textAlign: "center" }}
+                style={{
+                  fontSize: theme.sizes.h3,
+                  textAlign: "left",
+                }}
               >
-                Items
+                Haven't worn these in a while
               </ThemedText>
-            </Pressable>
-            <Pressable
-              onPress={() => handleNavigate("outfits")}
+              <View
+                style={{ justifyContent: "center", flexDirection: "row", gap: 10, marginTop: 8 }}
+              >
+                {isUnwornItemsLoading ? (
+                  <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
+                ) : unwornItems.length === 0 ? (
+                  <ThemedText style={{ opacity: 0.7 }}>No items found.</ThemedText>
+                ) : (
+                  unwornItems.map((item) => (
+                    <Pressable
+                      key={item.id}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        height: "90%",
+                        width: "30%",
+                        overflow: "hidden",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                      onPress={() => {
+                        setSelectedItem(item);
+                        setEditItemsModalVisible(true);
+                      }}
+                    >
+                      {item.imageUrl ? (
+                        <Image
+                          source={{ uri: item.imageUrl }}
+                          style={{ width: "100%", height: "100%" }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <ThemedText style={{ fontSize: 11, textAlign: "center", paddingHorizontal: 4 }}>
+                          {item.name}
+                        </ThemedText>
+                      )}
+                    </Pressable>
+                  ))
+                )}
+              </View>
+            </View>
+            <View
+              className="past-outfits"
               style={{
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
-                paddingVertical: 10,
-                width: "45%",
+                flexDirection: "row",
+                paddingHorizontal: 20,
+                paddingVertical: 20,
+                justifyContent: "space-between",
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 5 },
+                shadowOpacity: 0.3,
+                shadowRadius: 3.5,
+                elevation: 5,
+                width: "80%",
+                alignSelf: "center",
               }}
             >
               <ThemedText
-                style={{ color: theme.colors.text, textAlign: "center" }}
+                style={{
+                  fontSize: theme.sizes.h3,
+                }}
               >
-                Outfits
+                Look at past outfits
               </ThemedText>
-            </Pressable>
-          </View>
-        </View>
+              <AntDesign
+                name="right"
+                size={24}
+                color={theme.colors.card}
+                onPress={() => handleNavigate("outfits")}
+              // TO DO: create logic where if user has no past outfits vs a grid of past outfits!
+              />
+            </View>
+            <WeatherScreen />
+          </>
+        )}
       </ThemedView>
     </ScrollView>
   );

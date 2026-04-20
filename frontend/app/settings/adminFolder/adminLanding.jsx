@@ -11,7 +11,7 @@ export default function AdminLanding() {
   useEffect(() => {
     const timer = setTimeout(() => {
       router.replace("/settings/adminFolder/adminUsers");
-    }, 5000);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 

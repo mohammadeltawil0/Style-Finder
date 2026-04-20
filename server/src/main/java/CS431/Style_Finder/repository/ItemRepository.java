@@ -4,6 +4,8 @@ import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.enums.ItemType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,4 +19,7 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
 
     @EntityGraph(attributePaths = {"user"})
     Optional<Item> findByItemId(Long itemId);
+    
+    List<Item> findByUser_UserIdAndType(Long userId, String type);
+    List<Item> findTop3ByUser_UserIdOrderByTimesWornAscItemIdAsc(Long userId);
 }
