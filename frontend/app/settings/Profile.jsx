@@ -11,19 +11,26 @@ function Profile() {
   const theme = useTheme();
   const router = useRouter();  
   const { resetAnswers } = useSurvey();
+  const [name, setName] = useState("");
   const [username, setUsername] = useState("");
 
   const handleLogout = async () => {
     resetAnswers();
-    await AsyncStorage.multiRemove(["username", "userId", "profileImageUrl"]);
-    router.replace("/auth/logIn");
+    await AsyncStorage.multiRemove(["username", "userId", "profileImageUrl", "role"]);
+    router.replace("/");
   };
 
   useEffect(() => {
     const loadUsername = async () => {
       const storedUsername = await AsyncStorage.getItem("username");
+      const storedName = await AsyncStorage.getItem("name");
+
       if (storedUsername) {
         setUsername(storedUsername);
+      }
+
+      if (storedName) {
+        setName(storedName);
       }
     };
 
@@ -68,7 +75,7 @@ function Profile() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {username}
+            {name} 
           </ThemedText>
         </View>
 

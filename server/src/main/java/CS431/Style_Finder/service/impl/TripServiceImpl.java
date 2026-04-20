@@ -1,6 +1,5 @@
 package CS431.Style_Finder.service.impl;
 
-import CS431.Style_Finder.dto.OutfitDto;
 import CS431.Style_Finder.dto.TripDto;
 import CS431.Style_Finder.exception.ResourceNotFoundException;
 import CS431.Style_Finder.mapper.TripMapper;
@@ -9,9 +8,7 @@ import CS431.Style_Finder.repository.*;
 import CS431.Style_Finder.service.TripService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import CS431.Style_Finder.model.enums.ItemType;
 import java.util.List;
 
 @RestController
@@ -19,15 +19,15 @@ public class ItemController {
     // POST /api/items
     // Body: { "userId":1, "type":"TOP", "color":"black", "formality":"CASUAL",
     //         "seasonWear":"SUMMER", "fit":"SLIM", "material":2 }
-    @PostMapping
+    @PostMapping({"", "/add"})
     public ResponseEntity<ItemDto> createItem(@RequestBody ItemDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body(itemService.createItem(dto));
     }
 
     // GET /api/items/{id}
     @GetMapping("/{id}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable Long id) {
-        return ResponseEntity.ok(itemService.getItemById(id));
+    public ResponseEntity<ItemDto> getItemsByItemId(@PathVariable Long id) {
+        return ResponseEntity.ok(itemService.getItemsByItemId(id));
     }
 
     // GET /api/items/user/{userId}
@@ -54,5 +54,14 @@ public class ItemController {
     public ResponseEntity<String> markWorn(@PathVariable Long id) {
         itemService.incrementTimesWorn(id);
         return ResponseEntity.ok("Times worn updated.");
+    }
+
+    //GET /api/items/filter -- to filter backend
+    @GetMapping("/filter")
+    public List<ItemDto> filterItems(@RequestParam(required = false) String search, @RequestParam(required = false) ItemType type, @RequestParam(required = false) Long userId) {
+        System.out.println("SEARCH: " + search);
+        System.out.println("TYPE: " + type);
+        System.out.println("USERID: " + userId);
+        return itemService.searchItems(search, type, userId);
     }
 }

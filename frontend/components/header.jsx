@@ -1,31 +1,70 @@
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useGlobalSearchParams, useRouter } from "expo-router";
 import { TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ThemedText } from "./themed-text";
 import ProfilePic from "./profile-pic";
-import { FontAwesome } from '@expo/vector-icons';
+import { ThemedText } from "./themed-text";
 
 export const CustomHeader = ({ page }) => {
   const theme = useTheme();
   const router = useRouter();
+  const params = useGlobalSearchParams();
+  const isNewUserSurveyFlow = params?.isNewUser === "true";
 
   const hideSettingsIcon =
     page === "Profile" ||
     page === "logIn" ||
     page === "register" ||
     page === "add-item" ||
+    page === "Item" ||
     page === "survey" ||
     page === "EditProfile" ||
-    page === "UpdatePassword";
+    page === "UpdatePassword" ||
+    page === "adminSettings" ||
+    page === "AdminChangePassword" ||
+    page === "adminwelcomepage" ||
+    page === "adminEditProfile" ||
+    page === "adminUserDetail";
 
+  const handleProfilePress = async () => {
+    const role = await AsyncStorage.getItem("role");
+    if (role === "ADMIN") {
+      router.push("/settings/adminFolder/adminSettings");
+      return;
+    }
+    router.push("/settings/Profile");
+  };
+
+  const handleSafeBack = (fallbackRoute = "/(tabs)") => {
+    if (typeof router.canGoBack === "function" && router.canGoBack()) {
+      router.back();
+      return;
+    }
+    router.replace(fallbackRoute);
+  };
 
   return (
-    <SafeAreaView style={{ flex: 0, backgroundColor: page === "Profile" || page === "EditProfile" || page === "UpdatePassword" ? theme.colors.background : theme.colors.card }}>
+    <SafeAreaView
+      style={{
+        flex: 0,
+        backgroundColor:
+          page === "Profile" ||
+          page === "EditProfile" ||
+          page === "UpdatePassword"
+            ? theme.colors.background
+            : theme.colors.card,
+      }}
+    >
       <View
         style={{
-          backgroundColor: page === "Profile" || page === "EditProfile" || page === "UpdatePassword" ? theme.colors.background : theme.colors.card,
+          backgroundColor:
+            page === "Profile" ||
+            page === "EditProfile" ||
+            page === "UpdatePassword"
+              ? theme.colors.background
+              : theme.colors.card,
           alignItems: "center",
           flexDirection: "row",
           justifyContent: "space-between",
@@ -75,8 +114,42 @@ export const CustomHeader = ({ page }) => {
               GENERATE OUTFITS
             </ThemedText>
           )}
+          {page === "EditOutfit" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "EditOutfit" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              EDIT OUTFITS
+            </ThemedText>
+          )}
+          {page === "ClosetItems" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "ClosetItems" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SELECT ITEM
+            </ThemedText>
+          )}
           {page === "add-item" && (
-            <View style={{ flexDirection: "row", gap: 20, alignItems: "center" }}>
+            <View
+              style={{ flexDirection: "row", gap: 20, alignItems: "center" }}
+            >
               <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
@@ -131,12 +204,131 @@ export const CustomHeader = ({ page }) => {
                   fontSize: theme.sizes.h2,
                   fontFamily: theme.fonts.bold,
                   color: theme.colors.text,
-                  marginLeft: 10
+                  marginLeft: 10,
                 }}
               >
                 MANAGE ACCOUNT
               </ThemedText>
             </>
+          )}
+          {page === "AdminPortal" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              ADMIN PORTAL
+            </ThemedText>
+          )}
+          {page === "adminSettings" && (
+            <>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace("/settings/adminFolder/adminUsers")
+                }
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                ADMIN SETTINGS
+              </ThemedText>
+            </>
+          )}
+          {page === "adminEditProfile" && (
+            <>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace("/settings/adminFolder/adminSettings")
+                }
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                EDIT ACCOUNT
+              </ThemedText>
+            </>
+          )}
+          {page === "AdminChangePassword" && (
+            <>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace("/settings/adminFolder/adminSettings")
+                }
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                CHANGE PASSWORD
+              </ThemedText>
+            </>
+          )}
+          {page === "adminwelcomepage" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              ADMIN WELCOME PAGE
+            </ThemedText>
+          )}
+          {page === "adminUserDetail" && (
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <TouchableOpacity
+                onPress={() => router.back()}
+                style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h3,
+                    fontFamily: theme.fonts.bold,
+                    color: theme.colors.text,
+                  }}
+                >
+                  Back
+                </ThemedText>
+              </TouchableOpacity>
+            </View>
           )}
           {page === "AdditionalConstraints" && (
             <>
@@ -164,9 +356,16 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "RegularOutfitDetail" && (
+          {page === "OutfitDetail" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace({
+                    pathname: "/(tabs)/closet",
+                    params: { tab: "outfits" },
+                  })
+                }
+              >
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -180,7 +379,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Regular Outfit Details
+                Outfit Details
               </ThemedText>
             </>
           )}
@@ -204,9 +403,34 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "survey" && (
+          {page === "Item" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity
+                onPress={() => {
+                  const parentOutfitId = params?.outfitId;
+                  const parentItemIndex = params?.itemIndex;
+
+                  if (parentOutfitId) {
+                    router.replace({
+                      pathname: "/closet/outfitsHistory/itemProperty",
+                      params: {
+                        outfitId: String(parentOutfitId),
+                        isOutfit: "true",
+                        itemIndex:
+                          parentItemIndex !== undefined
+                            ? String(parentItemIndex)
+                            : "0",
+                      },
+                    });
+                    return;
+                  }
+
+                  router.replace({
+                    pathname: "/(tabs)/closet",
+                    params: { tab: "outfits" },
+                  });
+                }}
+              >
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -220,13 +444,37 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
+                ITEM
+              </ThemedText>
+            </>
+          )}
+          {page === "survey" && (
+            <>
+              {!isNewUserSurveyFlow && (
+                <TouchableOpacity
+                  onPress={() => handleSafeBack("/settings/Profile")}
+                >
+                  <Ionicons
+                    name="arrow-back"
+                    size={24}
+                    color={theme.colors.text}
+                  />
+                </TouchableOpacity>
+              )}
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
                 PREFERENCE SURVEY
               </ThemedText>
             </>
           )}
           {page === "EditProfile" && (
             <>
-              <TouchableOpacity onPress={() => router.replace("/(tabs)")}>
+              <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -246,7 +494,7 @@ export const CustomHeader = ({ page }) => {
           )}
           {page === "UpdatePassword" && (
             <>
-              <TouchableOpacity onPress={() => router.replace("/settings/Profile")}>
+              <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -266,12 +514,11 @@ export const CustomHeader = ({ page }) => {
           )}
         </View>
         {!hideSettingsIcon && (
-          <ProfilePic
-            onPress={() => router.push("/settings/Profile")}
-            style={{
-              borderColor: theme.colors.text,
-            }}
-          />
+          <TouchableOpacity onPress={handleProfilePress}>
+            <ProfilePic
+              style={{ borderColor: theme.colors.text, width: 36, height: 36 }}
+            />
+          </TouchableOpacity>
         )}
       </View>
     </SafeAreaView>

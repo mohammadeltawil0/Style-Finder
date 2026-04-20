@@ -1,13 +1,14 @@
 package CS431.Style_Finder.dto;
-import lombok.*;
 import java.util.List;
+
+import lombok.*;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class FeedbackDTO {
+public class FeedbackDto {
     private Long userId;
     private String suggestionId;
     private List<Long> originalItemIds;

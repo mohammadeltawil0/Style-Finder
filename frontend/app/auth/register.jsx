@@ -1,15 +1,21 @@
-import React, { useState, useEffect, use } from "react";
-import { ThemedText, ThemedView } from "../../components";
-import { useRouter } from "expo-router";
-import { useTheme } from "@react-navigation/native";
-import {
-  View, Text, TextInput, ScrollView, TouchableOpacity,
-  KeyboardAvoidingView, Platform, StyleSheet
-} from "react-native";
-import { apiClient } from "../../scripts/apiClient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import Toast from 'react-native-toast-message';
+import { useTheme } from "@react-navigation/native";
+import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
+import {
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import Toast from "react-native-toast-message";
+import { ThemedText, ThemedView } from "../../components";
+import { apiClient } from "../../scripts/apiClient";
 
 function LiveTyping({ text }) {
   const [displayed, setDisplayed] = useState("");
@@ -43,7 +49,9 @@ function LiveTyping({ text }) {
   }, [index, deleting, text]);
 
   return (
-    <Text style={{ fontSize: 26, fontWeight: "bold", color: theme.colors.text }}>
+    <Text
+      style={{ fontSize: 26, fontWeight: "bold", color: theme.colors.text }}
+    >
       {displayed}
       <Text style={{ opacity: 0.8 }}>|</Text>
     </Text>
@@ -53,16 +61,95 @@ function LiveTyping({ text }) {
 function PasswordRules({ password }) {
   const rules = [
     { label: "At least 6 characters", pass: password.length >= 6 },
-    { label: "One special character (@, #, $, &)", pass: /[@#$&]/.test(password) },
+    {
+      label: "One special character (@, #, $, &)",
+      pass: /[@#$&]/.test(password),
+    },
     { label: "One number", pass: /[0-9]/.test(password) },
   ];
-  
+
   return (
-    <View style={{ backgroundColor: "#ffffff", borderRadius: 10, borderWidth: 1, borderColor: "#ddd", padding: 10, marginBottom: 15 }}>
+    <View
+      style={{
+        backgroundColor: "#ffffff",
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        padding: 10,
+        marginBottom: 15,
+      }}
+    >
       {rules.map((rule, i) => (
-        <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingVertical: 3 }}>
-          <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: rule.pass ? "#43a047" : "#e53935" }} />
-          <Text style={{ fontSize: 13, color: rule.pass ? "#2e7d32" : "#c62828" }}>{rule.label}</Text>
+        <View
+          key={i}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingVertical: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: rule.pass ? "#43a047" : "#e53935",
+            }}
+          />
+          <Text
+            style={{ fontSize: 13, color: rule.pass ? "#2e7d32" : "#c62828" }}
+          >
+            {rule.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+function UsernameRules({ username }) {
+  const rules = [
+    {
+      label: "At least 5 letters",
+      pass: username.length >= 5 && /[a-zA-Z]/.test(username),
+    },
+  ];
+
+  return (
+    <View
+      style={{
+        backgroundColor: "#ffffff",
+        borderRadius: 10,
+        borderWidth: 1,
+        borderColor: "#ddd",
+        padding: 10,
+        marginBottom: 15,
+      }}
+    >
+      {rules.map((rule, i) => (
+        <View
+          key={i}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingVertical: 3,
+          }}
+        >
+          <View
+            style={{
+              width: 8,
+              height: 8,
+              borderRadius: 4,
+              backgroundColor: rule.pass ? "#43a047" : "#e53935",
+            }}
+          />
+          <Text
+            style={{ fontSize: 13, color: rule.pass ? "#2e7d32" : "#c62828" }}
+          >
+            {rule.label}
+          </Text>
         </View>
       ))}
     </View>
@@ -70,7 +157,7 @@ function PasswordRules({ password }) {
 }
 
 export default function Register() {
-  const router = useRouter(); // updated to take user to the survey 
+  const router = useRouter(); // updated to take user to the survey
   const { colors } = useTheme();
   const [firstName, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -80,16 +167,15 @@ export default function Register() {
 
   const theme = useTheme();
 
-  // validate correct email format 
+  // validate correct email format
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
-  
   // if returns true, we want to fail the sign up process and show error toast that username is taken
   const duplicateUsernameCheck = async (username) => {
-      console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
+    console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
 
   try {
     //await apiClient.get(`/api/users/check-username?username=${username.trim()}`);
@@ -102,45 +188,102 @@ export default function Register() {
     return false;
   }
 };
+    try {
+      await apiClient.get(`/api/users/check-username?username=${username}`);
+      return false; // 200 = username is available
+    } catch (error) {
+      if (error.response?.status === 409) {
+        return true; // 409 = username is taken
+      }
+      console.error("Error checking username:", error);
+      return false;
+    }
+  };
 
   const handleSignUp = async () => {
-    if (!firstName || !email || !username || !password || !confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Missing Fields', text2: 'Please fill in all fields.' });
+    const trimmedFirstName = firstName.trim();
+    const trimmedEmail = email.trim();
+    const trimmedUsername = username.trim();
+
+    if (
+      !trimmedFirstName ||
+      !trimmedEmail ||
+      !trimmedUsername ||
+      !password ||
+      !confirmPassword
+    ) {
+      Toast.show({
+        type: "error",
+        text1: "Missing Fields",
+        text2: "Please fill in all fields.",
+      });
       return;
     }
 
-    if (!isValidEmail(email)) {
-      Toast.show({ type: 'error', text1: 'Invalid Email', text2: 'Please enter a valid email address.' });
+    if (!isValidEmail(trimmedEmail)) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Email",
+        text2: "Please enter a valid email address.",
+      });
+      return;
+    }
+
+    const usernameRules = [
+      trimmedUsername.length >= 5 && /[a-zA-Z]/.test(trimmedUsername),
+    ];
+    if (!usernameRules.every(Boolean)) {
+      Toast.show({
+        type: "error",
+        text1: "Invalid Username",
+        text2: "Username must be at least 5 letters.",
+      });
       return;
     }
 
     if (password !== confirmPassword) {
-      Toast.show({ type: 'error', text1: 'Password Mismatch', text2: 'Passwords do not match.' });
+      Toast.show({
+        type: "error",
+        text1: "Password Mismatch",
+        text2: "Passwords do not match.",
+      });
       return;
     }
 
     const passwordRules = [
-    password.length >= 6,
+      password.length >= 6,
       /[@#$&]/.test(password),
       /[0-9]/.test(password),
     ];
 
     if (!passwordRules.every(Boolean)) {
-      Toast.show({ type: 'error', text1: 'Weak Password', text2: 'Password must meet all requirements.' });
+      Toast.show({
+        type: "error",
+        text1: "Weak Password",
+        text2: "Password must meet all requirements.",
+      });
       return;
     }
 
-    const isDuplicate = await duplicateUsernameCheck(username);
+    const isDuplicate = await duplicateUsernameCheck(trimmedUsername);
     if (isDuplicate) {
-      Toast.show({ type: 'error', text1: 'Username Taken', text2: 'Please choose a different username.' });
+      Toast.show({
+        type: "error",
+        text1: "Username Taken",
+        text2: "Please choose a different username.",
+      });
       return;
     }
 
-    processSignUp();
+    processSignUp({
+      firstName: trimmedFirstName,
+      email: trimmedEmail,
+      username: trimmedUsername,
+      password,
+    });
   };
 
-
-  const processSignUp = async () => {
+  const processSignUp = async ({ firstName, email, username, password }) => {
     try {
       const response = await apiClient.post("/api/users/register", {
         firstName,
@@ -153,49 +296,93 @@ export default function Register() {
       console.log("REGISTER RESPONSE:", response.data);
       console.log("Saved token:", await AsyncStorage.getItem("token"));
 
-      Toast.show({ type: 'success', text1: 'Welcome!', text2: 'Account created successfully.' });
+      Toast.show({
+        type: "success",
+        text1: "Welcome!",
+        text2: "Account created successfully.",
+      });
 
       await AsyncStorage.multiSet([
         ["token", response.data.token],
         ["userId", String(response.data.userId)],
         ["username", response.data.username || username],
         ["profileImageUrl", response.data.profileImageUrl || ""],
+        ["role", response.data.role || "USER"],
       ]);
 
-
-      router.replace("/screens/survey/preferences1"); //reroute to survey
-
+      router.replace({
+        pathname: "/screens/survey/preferences1",
+        params: { isNewUser: "true" },
+      }); //reroute to survey
     } catch (error) {
       const status = error.response?.status;
       const serverMessage = error.response?.data?.message;
 
       // map each status code to a user-friendly message
       const messages = {
-        400: serverMessage || 'Invalid data. Please check your inputs.',
-        409: 'Username or email is already taken.',
-        500: 'Server error. Please try again later.',
+        400: serverMessage || "Invalid data. Please check your inputs.",
+        409: "Username or email is already taken.",
+        500: "Server error. Please try again later.",
       };
 
       Toast.show({
-        type: 'error',
-        text1: 'Sign Up Failed',
-        text2: messages[status] || 'Something went wrong. Please try again.',
+        type: "error",
+        text1: "Sign Up Failed",
+        text2: messages[status] || "Something went wrong. Please try again.",
       });
     }
   };
 
   return (
-    <ThemedView gradient={true} style={{ flex: 1, alignItems: "center", justifyContent: "center" }} >
-      <KeyboardAvoidingView style={{ flex: 1 , justifyContent: "center", alignItems: "center", padding: 16 }} behavior={Platform.OS === "ios" ? "padding" : "height"} keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}>
-        <ScrollView contentContainerStyle={{ flexGrow: 1 , justifyContent: "center", alignItems: "center", padding: 16, }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-
+    <ThemedView
+      gradient={true}
+      style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+    >
+      <KeyboardAvoidingView
+        style={{
+          flex: 1,
+          justifyContent: "center",
+          alignItems: "center",
+          padding: 16,
+        }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+      >
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            alignItems: "center",
+            padding: 16,
+          }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
           <LiveTyping text="Let's get started!" />
-          <ThemedText style={{ fontSize: 20, marginBottom: 40 }}> Sign-up To Plan For Outfits</ThemedText>
+          <ThemedText style={{ fontSize: 20, marginBottom: 40 }}>
+            {" "}
+            Sign-up To Plan For Outfits
+          </ThemedText>
 
-          <View style={styles.card} >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 20 }}>
-              <Ionicons onPress={() => router.replace("/auth/logIn")} name="chevron-back" size={20} color={colors.text} />
-              <ThemedText style={{ fontSize: 28, fontWeight: 'bold' }}> Create An Account </ThemedText>
+          <View style={styles.card}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 8,
+                marginBottom: 20,
+              }}
+            >
+              <Ionicons
+                onPress={() => router.replace("/")}
+                name="chevron-back"
+                size={20}
+                color={colors.text}
+              />
+              <ThemedText style={{ fontSize: 28, fontWeight: "bold" }}>
+                {" "}
+                Create An Account{" "}
+              </ThemedText>
             </View>
             <TextInput
               placeholder="First Name"
@@ -218,6 +405,9 @@ export default function Register() {
               onChangeText={setUserName}
               style={[styles.input, { color: theme.colors.text }]}
             />
+            {username.trim().length > 0 && (
+              <UsernameRules username={username.trim()} />
+            )}
             <TextInput
               placeholder="Password"
               placeholderTextColor={theme.colors.lightText}
@@ -250,7 +440,13 @@ export default function Register() {
                 paddingVertical: 10,
               }}
             >
-              <ThemedText style={{ fontSize: 18, fontWeight: 'bold', fontFamily: 'Helvetica' }}>
+              <ThemedText
+                style={{
+                  fontSize: 18,
+                  fontWeight: "bold",
+                  fontFamily: "Helvetica",
+                }}
+              >
                 Sign Up
               </ThemedText>
             </TouchableOpacity>
@@ -272,7 +468,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 5 },
     shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 8
+    elevation: 8,
   },
   input: {
     backgroundColor: "#ffffff",

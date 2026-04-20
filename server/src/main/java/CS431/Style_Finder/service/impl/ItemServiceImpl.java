@@ -8,6 +8,7 @@ import CS431.Style_Finder.exception.ItemCreationException;
 import CS431.Style_Finder.mapper.ItemMapper;
 import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.User;
+import CS431.Style_Finder.model.enums.ItemType;
 
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitItemRepository;
@@ -55,13 +56,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId)
+    @Transactional(readOnly = true)
+    public ItemDto getItemsByItemId(Long itemId) {
+        Item item = itemRepository.findByItemId(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         return itemMapper.toDto(item);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDto> getItemsByUserId(Long userId) {
         return itemRepository.findByUser_UserId(userId)
                 .stream()
@@ -75,8 +78,10 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         item.setType(dto.getType());
         item.setColor(dto.getColor());
+        item.setPattern(dto.getPattern());
         item.setLength(dto.getLength());
         item.setMaterial(dto.getMaterial());
+        item.setBulk(dto.getBulk());
         item.setSeasonWear(dto.getSeasonWear());
         item.setFormality(dto.getFormality());
         item.setFit(dto.getFit());
@@ -101,5 +106,25 @@ public class ItemServiceImpl implements ItemService {
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         item.setTimesWorn(item.getTimesWorn() == null ? 1 : item.getTimesWorn() + 1);
         itemRepository.save(item);
+    }
+
+    @Override
+    public List<ItemDto> searchItems(String search, ItemType type, Long userId) {
+        return itemRepository.findAll().stream()
+        .filter(item -> userId == null || item.getUser().getUserId().equals(userId))
+        .filter(item -> type == null || item.getType() == type)
+        .filter(item -> {
+            if (search == null || search.isBlank()) return true;
+
+            String text = (
+                item.getType() + " " +
+                item.getColor() + " " +
+                item.getSeasonWear() + " " +
+                item.getFormality()
+            ).toLowerCase();
+            return text.contains(search.toLowerCase());
+        })
+        .map(itemMapper::toDto)
+        .toList();
     }
 }

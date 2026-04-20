@@ -1,7 +1,7 @@
-import { FlatList, Image, Pressable, View } from "react-native";
+import { FlatList, Image, TouchableOpacity, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
-import { ThemedText } from "./themed-text";
+import { Ionicons } from "@expo/vector-icons";
 
 export const Items = ({
   items,
@@ -32,7 +32,7 @@ export const Items = ({
             return <View style={{ width: "48%" }} />;
           }
           return (
-            <View
+            <TouchableOpacity
               className="item"
               style={{
                 borderColor: theme.colors.border,
@@ -41,6 +41,10 @@ export const Items = ({
                 marginBottom: 20, // space between rows
                 overflow: "hidden", // clips image to borderRadius
                 width: "48%",
+              }}
+              onPress={() => {
+                setCurrItemId(item.itemId);
+                setEditItemsModalVisible(!editItemsModalVisible);
               }}
             >
               <View className="item-image" style={{ height: 175 }}>
@@ -63,29 +67,23 @@ export const Items = ({
                   </View>
                 )}
               </View>
-
               <View
-                className="item-footer"
                 style={{
-                  backgroundColor: theme.colors.card,
-                  borderTopColor: theme.colors.border,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  padding: 10,
-                  alignItems: "center",
+                  position: "absolute",
+                  right: 6,
+                  top: 6,
+                  borderRadius: 12,
+                  padding: 4,
+                  backgroundColor: theme.colors.background,
                 }}
               >
-                {/* <ThemedText>{item.name}</ThemedText> */}
-                <Pressable
-                  onPress={() => {
-                    setCurrItemId(item.itemId);
-                    setEditItemsModalVisible(!editItemsModalVisible);
-                  }}
-                >
-                  <Feather name="more-horizontal" size={20} color={theme.colors.text} />
-                </Pressable>
+                <Ionicons
+                  name="eye-outline"
+                  size={18}
+                  color={theme.colors.text}
+                />
               </View>
-            </View>
+            </TouchableOpacity>
           )
         }}
       />

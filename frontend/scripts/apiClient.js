@@ -5,17 +5,22 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // 1. Verify the URL loaded correctly (Debugging)
 // const API_URL = "https://api.stylefinder.tech";
+
+// If using web 
 // const API_URL = "http://localhost:8080";
-const API_URL = "http://{Your-IP-Address}:8080"; // Use your machine's local IP address for Android emulator
+
+// If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
+const API_URL = "http://{IP_ADDRESS}:8080";
+
 console.log("Connecting to Backend at:", API_URL);
 
-// 2. Create a global Axios instance
+// Create a global Axios instance
 export const apiClient = axios.create({
     baseURL: API_URL || 'http://10.0.2.2:8080',
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000 // Stop trying if the backend takes longer than 10 seconds
+    timeout: 20000 // Stop trying if the backend takes longer than 10 seconds
 });
 
 apiClient.interceptors.request.use(
@@ -34,11 +39,27 @@ apiClient.interceptors.request.use(
 );
 
 export const describeApiError = (error) => {
-  return {
-    status: error?.response?.status || error?.status || null,
-    message:
-      error?.response?.data?.message ||
-      error?.message ||
-      "Unknown error",
-  };
+   // Normalize axios/network/runtime errors into one shape for UI messaging.
+    if (axios.isAxiosError(error)) {
+        const status = error.response?.status ?? null;
+        const data = error.response?.data;
+
+        const message =
+            data?.message ||
+            data?.error ||
+            error.message ||
+            'Request failed. Please try again.';
+
+        return {
+            status,
+            message,
+            data: data ?? null,
+        };
+    }
+
+    return {
+        status: null,
+        message: error?.message || 'Unexpected error occurred.',
+        data: null,
+    };
 };

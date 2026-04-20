@@ -13,6 +13,7 @@ public class UserMapper {
                 .firstName(user.getFirstName())
                 .username(user.getUsername())
                 .email(user.getEmail())
+                .password(user.getPassword())
                 .profileImageUrl(user.getProfileImageUrl())
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())

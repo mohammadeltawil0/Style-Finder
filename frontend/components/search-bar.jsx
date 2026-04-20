@@ -1,11 +1,36 @@
 import { View, StyleSheet, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from "@react-navigation/native";
+import { useEffect, useState } from "react";
 
-export const SearchBar = ({ value, onChangeText, onSubmit }) => {
+export const SearchBar = ({ value, onChangeText, onSubmit, placeholder  }) => {
     const theme = useTheme();
+    const [localText, setLocalText] = useState(value);
+    useEffect(() => {
+        const delay = setTimeout(() => {onChangeText(localText); }, 300);
+        return () => clearTimeout(delay);
+    }, [localText]);
 
     //TO DO: implement search backend/api here!
+    const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        dresses: "DRESS",
+        outerwear: "OUTERWEAR",
+    };
+    const fetchFilteredItems = async () => {
+        if (!userId) return [];
+
+        const response = await apiClient.get("/api/items/filter", {
+            params: {
+            userId,
+            search: searchText || null,
+            type:
+                category !== "all" ? typeMap[category] : null
+            },
+        });
+        return response.data;
+    };
 
     return (
         <View style={{
@@ -31,9 +56,9 @@ export const SearchBar = ({ value, onChangeText, onSubmit }) => {
                     paddingLeft: 0,
                     width: "100%",
                 }}
-                placeholder="Search items inventory..."
-                value={value}
-                onChangeText={onChangeText}
+                placeholder={placeholder}
+                value={localText}
+                onChangeText={setLocalText}
                 onSubmitEditing={onSubmit}
                 underlineColorAndroid="transparent"
             />
