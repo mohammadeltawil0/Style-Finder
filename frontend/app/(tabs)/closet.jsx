@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -54,6 +54,8 @@ export default function ClosetScreen() {
     useState(false);
   const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
   const [isDeletingTrip, setIsDeletingTrip] = useState(false);
+
+  const [autoOpenOutfitId, setAutoOpenOutfitId] = useState(null);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -181,6 +183,24 @@ export default function ClosetScreen() {
       loadTabStateAndData();
     }, [params.tab, refetch]),
   );
+
+  const handledOutfitId = useRef(null);
+
+  // Replace your openOutfitId effect with this
+  useEffect(() => {
+    if (!params.openOutfitId) return;
+    if (handledOutfitId.current === params.openOutfitId) return; // ✅ skip if already handled
+    if (dbOutfits.length === 0) return;
+
+    const outfit = dbOutfits.find(
+      (o) => String(o.outfitId || o.id) === String(params.openOutfitId)
+    );
+
+    if (outfit) {
+      handledOutfitId.current = params.openOutfitId; // ✅ mark as handled
+      openOutfitDetails(outfit.outfitId);
+    }
+  }, [params.openOutfitId, dbOutfits]);
 
   const handleToggleItems = async (value) => {
     setIsItems(value);
@@ -668,7 +688,7 @@ export default function ClosetScreen() {
                         setTripSearchText(text);
                       }}
                       placeholder="Search by trip location"
-                      onSubmit={() => {}}
+                      onSubmit={() => { }}
                     />
                     <FlatList
                       className="trip_Oufit_Details"
@@ -708,14 +728,14 @@ export default function ClosetScreen() {
                           </TouchableOpacity>
 
                           <View style={styles.previewRow}>
-                              <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator
-                              >
-                                {(item.outfits || []).map((outfit, index) => (
-                                  <View key={index} style={styles.previewBox} />
-                                ))}
-                              </ScrollView>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator
+                            >
+                              {(item.outfits || []).map((outfit, index) => (
+                                <View key={index} style={styles.previewBox} />
+                              ))}
+                            </ScrollView>
                           </View>
                           <View style={styles.tripFooter}>
                             <Pressable

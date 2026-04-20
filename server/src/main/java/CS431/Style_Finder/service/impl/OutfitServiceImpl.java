@@ -95,7 +95,7 @@ public class OutfitServiceImpl implements OutfitService {
         outfitRepository.deleteById(outfitId);
     }
 
-     @Override
+    @Override
     public List<OutfitDto> find3Outfits(Long userId) {
         List<Outfit> allOutfits = outfitRepository.findByUser_UserId(userId);
         Collections.shuffle(allOutfits);

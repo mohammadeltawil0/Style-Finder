@@ -6,6 +6,7 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
+import OutfitCoverImage from '../closet/outfit-cover-image';
 
 export default function HomeScreen() {
   // TO DO: fetch data for unworn items from backend; for now using mock data to test the UI
@@ -56,8 +57,17 @@ export default function HomeScreen() {
       try {
         const userId = await AsyncStorage.getItem("userId");
         if (userId) {
-          const response = await apiClient.get(`/api/outfits/user/${userId}`);
-          setPastOutfits(Array.isArray(response?.data) ? response.data : []);
+          const response = await apiClient.get(`/api/outfits/user/${userId}/random3`);
+          const data = Array.isArray(response?.data) ? response.data : [];  
+          const formatted = data.map((outfit) => ({
+            ...outfit,
+            itemIds:
+              outfit.itemIds ||
+              (outfit.outfitItems
+                ? outfit.outfitItems.map((oi) => oi.item.itemId)
+                : []),
+          }));
+          setPastOutfits(formatted);
         } else {
           setPastOutfits([]);
         }
@@ -168,7 +178,7 @@ export default function HomeScreen() {
             shadowOpacity: 0.3,
             shadowRadius: 3.5,
             elevation: 5,
-            height: 150,
+            height: 170,
           }}
         >
           <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
@@ -181,45 +191,38 @@ export default function HomeScreen() {
               No past outfits found.
             </ThemedText>
           ) : (
-            <FlatList
-              data={pastOutfits.slice(0, 4)}
-              keyExtractor={(item) => String(item.outfitId || item.id)}
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              renderItem={({ item }) => (
-                <Pressable
-                  style={{
-                    marginRight: 12,
-                    alignItems: "center",
-                  }}
-                  // TO DO: link this to outfit details page
-                  onPress={() => console.log("past outfit pressed", item.outfitId || item.id)}
-                >
-                  {item.imageUrl ? (
-                    <Image
-                      source={{ uri: item.imageUrl }}
-                      style={{ width: 70, height: 70, borderRadius: 8, backgroundColor: '#eee' }}
-                      resizeMode="cover"
+            <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{
+                  flexGrow: 1,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                {pastOutfits.slice(0, 3).map((item) => (
+                  <Pressable
+                    key={String(item.outfitId || item.id)}
+                    style={{ width: 90, height: 90 }}
+                    onPress={() => router.navigate({
+                      pathname: "/(tabs)/closet",
+                      params: {
+                        tab: "outfits",
+                        openOutfitId: String(item.outfitId || item.id)
+                      }
+                    })}
+                  >
+                    <OutfitCoverImage
+                      itemIds={item.itemIds || []}
+                      height={90}
                     />
-                  ) : (
-                    <View
-                      style={{
-                        width: 70,
-                        height: 70,
-                        borderRadius: 8,
-                        backgroundColor: '#eee',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <ThemedText style={{ fontSize: 11, textAlign: 'center', color: '#888' }}>
-                        No Image
-                      </ThemedText>
-                    </View>
-                  )}
-                </Pressable>
-              )}
-            />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
           )}
         </View>
         <View
