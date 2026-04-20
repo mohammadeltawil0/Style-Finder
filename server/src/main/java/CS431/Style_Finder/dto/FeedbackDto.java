@@ -1,6 +1,7 @@
 package CS431.Style_Finder.dto;
-import lombok.*;
 import java.util.List;
+
+import lombok.*;
 
 @Getter
 @Setter

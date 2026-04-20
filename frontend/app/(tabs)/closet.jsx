@@ -732,12 +732,72 @@ export default function ClosetScreen() {
                               onPress={() => requestDeleteTrip(item.id)}
                               hitSlop={8}
                             >
-                              <Ionicons
-                                name="trash-outline"
-                                size={19}
-                                color={theme.colors.text}
-                              />
-                            </Pressable>
+                              <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
+                              {getOutfitCoverImage(item) ? (
+                                <Image
+                                  source={{ uri: getOutfitCoverImage(item) }}
+                                  style={styles.outfitImage}
+                                  resizeMode="cover"
+                                />
+                              ) : (
+                                <View style={styles.outfitPlaceholder}>
+                                  <ThemedText
+                                    style={{ color: "#666", fontSize: 12 }}
+                                  >
+                                    Items: {item.itemIds?.length || 0}
+                                  </ThemedText>
+                                </View>
+                              )}
+                            </TouchableOpacity>
+
+                            <View style={styles.outfitFooter}>
+                              <View>
+                                <ThemedText
+                                  style={{ fontSize: 13, fontWeight: "600" }}
+                                >
+                                  Outfit {index + 1}
+                                </ThemedText>
+                                {item.createdAt && (
+                                  <ThemedText
+                                    style={{ fontSize: 11, color: "#888" }}
+                                  >
+                                    {formatOutfitDate(item.createdAt)}
+                                  </ThemedText>
+                                )}
+                              </View>
+                              <View style={styles.outfitActions}>
+                                <Pressable
+                                  onPress={() => handleShareOutfit(item, index)}
+                                  hitSlop={8}
+                                >
+                                  <Ionicons
+                                    name="share-social-outline"
+                                    size={19}
+                                    color={theme.colors.text}
+                                  />
+                                </Pressable>
+                                <Pressable
+                                  onPress={() =>
+                                    requestDeleteOutfit(
+                                      item.outfitId || item.id,
+                                    )
+                                  }
+                                  hitSlop={8}
+                                >
+                                  <Ionicons
+                                    name="trash-outline"
+                                    size={19}
+                                    color={theme.colors.text}
+                                  />
+                                </Pressable>
+                              </View>
+                            </View>
                           </View>
                         </View>
                       )}
