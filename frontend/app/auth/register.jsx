@@ -177,17 +177,6 @@ export default function Register() {
   const duplicateUsernameCheck = async (username) => {
     console.log(">>> checking username:", JSON.stringify(username)); // shows if it's empty/null
 
-  try {
-    //await apiClient.get(`/api/users/check-username?username=${username.trim()}`);
-    return false; // 200 = username is available
-  } catch (error) {
-    if (error.response?.status === 409) {
-      return true; // 409 = username is taken
-    }
-    console.error("Error checking username:", error);
-    return false;
-  }
-};
     try {
       await apiClient.get(`/api/users/check-username?username=${username}`);
       return false; // 200 = username is available
