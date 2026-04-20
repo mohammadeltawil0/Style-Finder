@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // const API_URL = "http://localhost:8080";
 
 // If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
-const API_URL = "http://192.168.1.31:8080";
+const API_URL = "http://{localhost}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 
@@ -27,10 +27,17 @@ apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
 
-    //console.log("TOKEN BEING SENT:", token); 
+    //only attach token for protected routes
+    const isPublicRoute =
+      config.url.includes("/login") ||
+      config.url.includes("/register") ||
+      config.url.includes("/check-username") ||
+      config.url.includes("/reset-password");
 
-    if (token) {
+    if (token && !isPublicRoute) {
       config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization; // 🔥 remove bad header
     }
 
     return config;

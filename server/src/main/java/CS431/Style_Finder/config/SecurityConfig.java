@@ -24,11 +24,25 @@ public class SecurityConfig {
         .csrf(csrf -> csrf.disable())
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-            .requestMatchers("/api/users/login", "/api/users/register").permitAll()
-            //admin only
+            //PUBLIC (no token required)
+            .requestMatchers(
+                "/api/users/login",
+                "/api/users/register",
+                "/api/users/check-username",
+                "/api/users/reset-password"
+            ).permitAll()
+
+            //ADMIN ONLY
             .requestMatchers("/api/admin/**").hasRole("ADMIN")
-            //admin or usr
-            .requestMatchers("/api/preferences/**").hasAnyRole("USER", "ADMIN")
+
+            //USER + ADMIN
+            .requestMatchers(
+                "/api/preferences/**",
+                "/api/items/**",
+                "/api/outfits/**"
+            ).hasAnyRole("USER", "ADMIN")
+
+            //EVERYTHING ELSE
             .anyRequest().authenticated()
         )
         .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
