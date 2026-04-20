@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 
