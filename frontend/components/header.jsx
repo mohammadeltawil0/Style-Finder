@@ -18,6 +18,7 @@ export const CustomHeader = ({ page }) => {
     page === "logIn" ||
     page === "register" ||
     page === "add-item" ||
+    page === "Item" ||
     page === "survey" ||
     page === "EditProfile" ||
     page === "UpdatePassword" ||
@@ -111,6 +112,38 @@ export const CustomHeader = ({ page }) => {
               }}
             >
               GENERATE OUTFITS
+            </ThemedText>
+          )}
+          {page === "EditOutfit" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "EditOutfit" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              EDIT OUTFITS
+            </ThemedText>
+          )}
+          {page === "ClosetItems" && (
+            <TouchableOpacity onPress={() => router.back()}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
+            </TouchableOpacity>
+          )}
+          {page === "ClosetItems" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              SELECT ITEM
             </ThemedText>
           )}
           {page === "add-item" && (
@@ -323,9 +356,16 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "RegularOutfitDetail" && (
+          {page === "OutfitDetail" && (
             <>
-              <TouchableOpacity onPress={() => router.back()}>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace({
+                    pathname: "/(tabs)/closet",
+                    params: { tab: "outfits" },
+                  })
+                }
+              >
                 <Ionicons
                   name="arrow-back"
                   size={24}
@@ -339,7 +379,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Regular Outfit Details
+                Outfit Details
               </ThemedText>
             </>
           )}
@@ -360,6 +400,51 @@ export const CustomHeader = ({ page }) => {
                 }}
               >
                 Trip Outfit Details
+              </ThemedText>
+            </>
+          )}
+          {page === "Item" && (
+            <>
+              <TouchableOpacity
+                onPress={() => {
+                  const parentOutfitId = params?.outfitId;
+                  const parentItemIndex = params?.itemIndex;
+
+                  if (parentOutfitId) {
+                    router.replace({
+                      pathname: "/closet/outfitsHistory/itemProperty",
+                      params: {
+                        outfitId: String(parentOutfitId),
+                        isOutfit: "true",
+                        itemIndex:
+                          parentItemIndex !== undefined
+                            ? String(parentItemIndex)
+                            : "0",
+                      },
+                    });
+                    return;
+                  }
+
+                  router.replace({
+                    pathname: "/(tabs)/closet",
+                    params: { tab: "outfits" },
+                  });
+                }}
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                ITEM
               </ThemedText>
             </>
           )}

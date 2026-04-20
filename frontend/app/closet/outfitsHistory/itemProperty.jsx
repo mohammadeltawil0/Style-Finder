@@ -1,9 +1,17 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity, View, Image } from "react-native";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
-import { useTheme } from "@react-navigation/native";
 import EditItemsModal from "../edit-items-modal";
 
 // Helper to format backend Enums (e.g. "FULL_BODY" -> "Full Body", "PARTY_OR_NIGHT_OUT" -> "Party / Night Out")
@@ -11,129 +19,269 @@ const formatEnum = (str) => {
   if (!str) return "";
   let cleanStr = str.replace(/_OR_/g, " / ");
   cleanStr = cleanStr.replace(/_/g, " ");
-  return cleanStr.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return cleanStr.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+  );
 };
 
 // Material mapping to match the frontend selection options
 const materialMap = {
-  1: "Cotton", 2: "Linen/Hemp", 3: "Wool/Fleece", 4: "Silk/Satin",
-  5: "Leather/Faux Leather", 6: "Synthetics", 7: "Other"
+  1: "Cotton",
+  2: "Linen/Hemp",
+  3: "Wool/Fleece",
+  4: "Silk/Satin",
+  5: "Leather/Faux Leather",
+  6: "Synthetics",
+  7: "Other",
 };
 
 export default function ItemProperty() {
-
   const router = useRouter();
   const theme = useTheme();
-  const { id } = useLocalSearchParams();
+  const { id, outfitId, isOutfit, itemIndex } = useLocalSearchParams();
+  const isOutfitMode = isOutfit === "true";
 
   const [item, setItem] = useState(null);
+  const [items, setItems] = useState([]); // For outfit mode
   const [isLoading, setIsLoading] = useState(true);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
   // State to control the Edit Modal
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-  // Fetch the item data from the database
+  // Fetch the item(s) data from the database
   useEffect(() => {
-    const fetchItem = async () => {
+    const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await apiClient.get(`/api/items/${id}`);
-        if (response.status === 200) {
-          setItem(response.data);
+        if (isOutfitMode && outfitId) {
+          // Fetch all items in the outfit
+          const response = await apiClient.get(`/api/outfits/${outfitId}`);
+          if (response.status === 200) {
+            const outfit = response.data;
+            const itemIds =
+              outfit.itemIds ||
+              (outfit.outfitItems
+                ? outfit.outfitItems.map((oi) => oi.item.itemId)
+                : []);
+
+            // Fetch details for each item
+            const itemPromises = itemIds.map((itemId) =>
+              apiClient.get(`/api/items/${itemId}`),
+            );
+            const results = await Promise.allSettled(itemPromises);
+            const fetchedItems = results
+              .filter((result) => result.status === "fulfilled")
+              .map((result) => result.value.data);
+            setItems(fetchedItems);
+
+            const parsedIndex = Number(itemIndex);
+            if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
+              const safeIndex = Math.min(parsedIndex, fetchedItems.length - 1);
+              setCurrentItemIndex(safeIndex >= 0 ? safeIndex : 0);
+            } else {
+              setCurrentItemIndex(0);
+            }
+          }
+        } else if (id) {
+          // Single item mode
+          const response = await apiClient.get(`/api/items/${id}`);
+          if (response.status === 200) {
+            setItem(response.data);
+          }
         }
       } catch (error) {
-        console.error("Failed to fetch item details:", error?.response?.data || error);
+        console.error(
+          "Failed to fetch item details:",
+          error?.response?.data || error,
+        );
       } finally {
         setIsLoading(false);
       }
     };
 
-        if (id) {
-      fetchItem();
+    if (id || (isOutfitMode && outfitId)) {
+      fetchData();
     }
-  }, [id, isEditModalVisible]); // Re-fetch if the modal closes in case data was updated!
+  }, [id, outfitId, isOutfitMode, isEditModalVisible, itemIndex]);
+
+  const currentItem = isOutfitMode ? items[currentItemIndex] || null : item;
 
   if (isLoading) {
     return (
-        <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ActivityIndicator size="large" color={theme.colors.text} />
-          <ThemedText style={{ marginTop: 10 }}>Loading Item Details...</ThemedText>
-        </ThemedView>
+      <ThemedView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color={theme.colors.text} />
+        <ThemedText style={{ marginTop: 10 }}>
+          Loading Item Details...
+        </ThemedText>
+      </ThemedView>
     );
   }
 
-  if (!item) {
+  if (!currentItem || (isOutfitMode && items.length === 0)) {
     return (
-        <ThemedView style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <ThemedText>Item not found.</ThemedText>
-          <TouchableOpacity style={[styles.btn, { marginTop: 20 }]} onPress={() => router.back()}>
-            <ThemedText>Go Back</ThemedText>
-          </TouchableOpacity>
-        </ThemedView>
+      <ThemedView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ThemedText>Item not found.</ThemedText>
+        <TouchableOpacity
+          style={[styles.btn, { marginTop: 20 }]}
+          onPress={() => router.back()}
+        >
+          <ThemedText>Go Back</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
     );
   }
-    
+
   return (
     <>
       <ScrollView showsVerticalScrollIndicator={true}>
         <ThemedView>
-          {item?.imageUrl ? (
-            <Image source={{ uri: item.imageUrl }} style={styles.imagePlaceholder} resizeMode="cover" />
+          {/* Outfit Navigation Header */}
+          {isOutfitMode && items.length > 1 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: theme.colors.card,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() =>
+                  setCurrentItemIndex(Math.max(0, currentItemIndex - 1))
+                }
+                disabled={currentItemIndex === 0}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={currentItemIndex === 0 ? "#ccc" : theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText style={{ fontWeight: "bold" }}>
+                Item {currentItemIndex + 1} of {items.length}
+              </ThemedText>
+              <TouchableOpacity
+                onPress={() =>
+                  setCurrentItemIndex(
+                    Math.min(items.length - 1, currentItemIndex + 1),
+                  )
+                }
+                disabled={currentItemIndex === items.length - 1}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={
+                    currentItemIndex === items.length - 1
+                      ? "#ccc"
+                      : theme.colors.text
+                  }
+                />
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {currentItem?.imageUrl ? (
+            <Image
+              source={{ uri: currentItem.imageUrl }}
+              style={styles.imagePlaceholder}
+              resizeMode="cover"
+            />
           ) : (
             <View style={styles.imagePlaceholder} />
           )}
 
+          <View style={styles.info}>
+            <ThemedText style={styles.title}>
+              {formatEnum(currentItem.type)}
+            </ThemedText>
 
-            <View style={styles.info}>
-              <ThemedText style={styles.title}>{formatEnum(item.type)}</ThemedText>
+            <ThemedText style={styles.label}>Description:</ThemedText>
+            <ThemedText style={{ marginTop: 4 }}>
+              A {currentItem.color ? currentItem.color.toLowerCase() : ""}{" "}
+              {formatEnum(currentItem.fit)} fit{" "}
+              {formatEnum(currentItem.type).toLowerCase()} with a{" "}
+              {formatEnum(currentItem.pattern)} pattern, perfect for{" "}
+              {formatEnum(currentItem.formality).toLowerCase()} occasions.
+            </ThemedText>
 
-              <ThemedText style={styles.label}>Description:</ThemedText>
-              <ThemedText style={{ marginTop: 4 }}>
-                A {item.color ? item.color.toLowerCase() : ""} {formatEnum(item.fit)} fit {formatEnum(item.type).toLowerCase()} with a {formatEnum(item.pattern)} pattern, perfect for {formatEnum(item.formality).toLowerCase()} occasions.
-              </ThemedText>
+            <ThemedText style={styles.label}>Tags:</ThemedText>
+            <View style={styles.tags}>
+              {currentItem.color && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.color)}</ThemedText>
+                </View>
+              )}
+              {currentItem.pattern && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.pattern)}</ThemedText>
+                </View>
+              )}
+              {currentItem.formality && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.formality)}</ThemedText>
+                </View>
+              )}
+              {currentItem.seasonWear && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.seasonWear)}</ThemedText>
+                </View>
+              )}
+              {currentItem.fit && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.fit)} Fit</ThemedText>
+                </View>
+              )}
+              {currentItem.material && materialMap[currentItem.material] && (
+                <View style={styles.tag}>
+                  <ThemedText>{materialMap[currentItem.material]}</ThemedText>
+                </View>
+              )}
+              {currentItem.length && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.length)}</ThemedText>
+                </View>
+              )}
+            </View>
 
-              <ThemedText style={styles.label}>Tags:</ThemedText>
-              <View style={styles.tags}>
-                {item.color &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.color)}</ThemedText>
-                    </View>}
-                {item.pattern &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.pattern)}</ThemedText>
-                    </View>}
-                {item.formality &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.formality)}</ThemedText>
-                    </View>}
-                {item.seasonWear &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.seasonWear)}</ThemedText>
-                    </View>}
-                {item.fit &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.fit)} Fit</ThemedText>
-                    </View>}
-                {item.material && materialMap[item.material] &&
-                    <View style={styles.tag}>
-                      <ThemedText>{materialMap[item.material]}</ThemedText>
-                    </View>}
-                {item.length &&
-                    <View style={styles.tag}>
-                      <ThemedText>{formatEnum(item.length)}</ThemedText>
-                    </View>}
-              </View>
-
-              <View style={styles.buttons}>
-                {/* Edit Button triggers modal */}
-                <TouchableOpacity style={styles.btn} onPress={() => setIsEditModalVisible(true)}>
+            <View style={styles.buttons}>
+              {isOutfitMode ? (
+                <TouchableOpacity
+                  style={[styles.btn, styles.fullWidthBtn]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/closet/outfitsHistory/itemDetail",
+                      params: {
+                        itemId: currentItem.itemId,
+                        outfitId,
+                        itemIndex: String(currentItemIndex),
+                      },
+                    })
+                  }
+                >
+                  <ThemedText>View Item</ThemedText>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.btn}
+                  onPress={() => setIsEditModalVisible(true)}
+                >
                   <ThemedText>Edit Item</ThemedText>
                 </TouchableOpacity>
-              </View>
+              )}
             </View>
-          </ThemedView>
+          </View>
+        </ThemedView>
       </ScrollView>
-      {isEditModalVisible && (
+      {!isOutfitMode && isEditModalVisible && (
         <EditItemsModal setModalVisible={setIsEditModalVisible} itemId={id} />
       )}
     </>
@@ -154,11 +302,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 22,
     marginBottom: 10,
+    fontFamily: "bold",
   },
   label: {
     marginTop: 15,
     fontWeight: "bold",
-    fontSize: 16,
+    fontSize: 20,
+    fontFamily: "bold",
   },
   tags: {
     flexDirection: "row",
@@ -184,5 +334,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     flex: 0.48,
+  },
+  fullWidthBtn: {
+    flex: 1,
   },
 });

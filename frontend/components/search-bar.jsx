@@ -3,7 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 
-export const SearchBar = ({ value, onChangeText, onSubmit }) => {
+export const SearchBar = ({ value, onChangeText, onSubmit, placeholder  }) => {
     const theme = useTheme();
     const [localText, setLocalText] = useState(value);
     useEffect(() => {
@@ -56,7 +56,7 @@ export const SearchBar = ({ value, onChangeText, onSubmit }) => {
                     paddingLeft: 0,
                     width: "100%",
                 }}
-                placeholder="Search items inventory..."
+                placeholder={placeholder}
                 value={localText}
                 onChangeText={setLocalText}
                 onSubmitEditing={onSubmit}

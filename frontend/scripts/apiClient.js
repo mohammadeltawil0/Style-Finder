@@ -8,7 +8,7 @@ import axios from 'axios';
 // const API_URL = "http://localhost:8080";
 
 // If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
-const API_URL = "http://{ip}:8080";
+const API_URL = "http://{IP_ADDRESS}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 
@@ -18,7 +18,7 @@ export const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000 // Stop trying if the backend takes longer than 10 seconds
+    timeout: 20000 // Stop trying if the backend takes longer than 20 seconds
 });
 
 export function describeApiError(error) {
