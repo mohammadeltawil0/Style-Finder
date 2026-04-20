@@ -112,7 +112,7 @@ const materialToLabel = (value) => {
 };
 
 // TO DO: edit item logic
-export default function EditItemsModal({ item, setModalVisible }) {
+export default function EditItemsModal({ item, itemId, setModalVisible }) {
     const [uri, setUri] = useState(null);
     const [category, setCategory] = useState("TOP");
     const [pattern, setPattern] = useState("SOLID");
@@ -395,7 +395,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     });
 
     const handleDeleteItem = () => {
-        const resolvedItemId = item?.itemId ?? item?.id;
+        const resolvedItemId = itemId ?? item?.itemId ?? item?.id;
         if (!resolvedItemId || deleteItemMutation.isPending) {
             console.error("Delete blocked: missing item id", item);
             return;
@@ -1664,4 +1664,3 @@ const styles = {
         height: 400,
     },
 };
-

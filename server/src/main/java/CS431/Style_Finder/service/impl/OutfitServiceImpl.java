@@ -6,7 +6,6 @@ import CS431.Style_Finder.mapper.OutfitMapper;
 import CS431.Style_Finder.model.*;
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitRepository;
-import CS431.Style_Finder.repository.PreferenceRepository;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.service.OutfitService;
 import lombok.RequiredArgsConstructor;

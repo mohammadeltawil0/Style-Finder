@@ -2,8 +2,8 @@ import AntDesign from "@expo/vector-icons/AntDesign";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useFocusEffect, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Pressable, ScrollView, View, Image, FlatList } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Pressable, ScrollView, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 
@@ -22,7 +22,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const [name, setName] = useState("");
 
-  const loadUserData = async () => {
+  const loadUserData = useCallback(async () => {
     try {
       const userId = await AsyncStorage.getItem("userId");
       const storedName = await AsyncStorage.getItem("name");
@@ -46,7 +46,7 @@ export default function HomeScreen() {
     } catch (error) {
       console.error("Error loading user data:", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     loadUserData();
@@ -70,9 +70,11 @@ export default function HomeScreen() {
     fetchPastOutfits();
   }, []);
 
-  useFocusEffect(() => {
-    loadUserData();
-  });
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [loadUserData]),
+  );
 
   const handleNavigate = (target) => {
     router.navigate({

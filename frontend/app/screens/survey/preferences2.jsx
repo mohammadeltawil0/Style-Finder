@@ -124,7 +124,13 @@ export default function Preferences2() {
         tripPriority: answers.tripPriority,
       };
 
-      await apiClient.post("/api/preferences", payload);
+    // ACTION 1: Save to the raw Preferences table
+    await apiClient.post("/api/preferences", payload);
+    console.log("Raw preferences saved successfully.");
+
+    // ACTION 2: Update the UserWeights table for the algorithm
+    await apiClient.post("/api/weights/update", payload);
+    console.log("Algorithm UserWeights updated successfully.");
 
       setTimeout(() => {
         console.log("Successfully saved");

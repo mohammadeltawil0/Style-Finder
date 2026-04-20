@@ -1,4 +1,4 @@
-import { ThemedText, ThemedView } from "components";
+import { ThemedText, ThemedView } from "../../../components";
 import { useTheme } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";

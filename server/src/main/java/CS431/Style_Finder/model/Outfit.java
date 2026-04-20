@@ -25,7 +25,6 @@ public class Outfit {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // false = generated only, true = user explicitly saved it
     @Column(name = "saved", nullable = false)
     private Boolean saved;
 

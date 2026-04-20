@@ -12,7 +12,7 @@ const API_URL = "http://{ip}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 
-// 2. Create a global Axios instance
+// Create a global Axios instance
 export const apiClient = axios.create({
     baseURL: API_URL || 'http://10.0.2.2:8080',
     headers: {

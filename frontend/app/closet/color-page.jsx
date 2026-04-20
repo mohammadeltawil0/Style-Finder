@@ -202,7 +202,6 @@ export default function ColorPage({ setPage, goBack, color, setColor, pattern, s
                           style={{
                             color: theme.colors.text,
                             fontSize: theme.sizes.h3,
-                            color: theme.colors.text,
                             fontFamily: theme.fonts.bold,
                           }}
                         >

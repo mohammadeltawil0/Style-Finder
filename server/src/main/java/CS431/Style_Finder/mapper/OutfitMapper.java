@@ -1,7 +1,7 @@
 package CS431.Style_Finder.mapper;
 
 import CS431.Style_Finder.dto.OutfitDto;
-import CS431.Style_Finder.dto.OutfitSuggestionDTO;
+import CS431.Style_Finder.dto.OutfitSuggestionDto;
 import CS431.Style_Finder.model.Outfit;
 import CS431.Style_Finder.model.OutfitCase;
 import CS431.Style_Finder.model.User;
@@ -32,8 +32,8 @@ public class OutfitMapper {
     }
 
     // New mapper for suggestion dto
-    public OutfitSuggestionDTO toDto(OutfitCase outfitCase) {
-        OutfitSuggestionDTO dto = new OutfitSuggestionDTO();
+    public OutfitSuggestionDto toDto(OutfitCase outfitCase) {
+        OutfitSuggestionDto dto = new OutfitSuggestionDto();
         dto.setSuggestionId(UUID.randomUUID().toString());
         dto.setItemIds(outfitCase.getItemIds());
         dto.setScore(100.0);

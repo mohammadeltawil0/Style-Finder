@@ -56,13 +56,15 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto getItemById(Long itemId) {
-        Item item = itemRepository.findById(itemId)
+    @Transactional(readOnly = true)
+    public ItemDto getItemsByItemId(Long itemId) {
+        Item item = itemRepository.findByItemId(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
         return itemMapper.toDto(item);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ItemDto> getItemsByUserId(Long userId) {
         return itemRepository.findByUser_UserId(userId)
                 .stream()

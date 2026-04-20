@@ -1,11 +1,6 @@
 package CS431.Style_Finder.dto;
 
-import CS431.Style_Finder.model.enums.Fit;
-import CS431.Style_Finder.model.enums.Formality;
-import CS431.Style_Finder.model.enums.ItemType;
-import CS431.Style_Finder.model.enums.Season;
-import CS431.Style_Finder.model.enums.PatternType;
-import CS431.Style_Finder.model.enums.LengthType;
+import CS431.Style_Finder.model.enums.*;
 import lombok.*;
 
 @Getter
@@ -20,7 +15,7 @@ public class ItemDto {
     private String color;
     private PatternType pattern;
     private LengthType length;
-    private String material;
+    private MaterialType material;
     private Double bulk;
     private Season seasonWear;
     private Formality formality;
