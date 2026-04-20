@@ -8,6 +8,7 @@ import { ActivityIndicator, Image, Pressable, ScrollView, View } from "react-nat
 import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
+import WeatherScreen from "../weather/WeatherScreen";
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -112,7 +113,7 @@ export default function HomeScreen() {
         gradient={false}
         style={{
           flex: 1,
-          gap: 50,
+          gap: 30,
           justifyContent: "center",
         }}
       >
@@ -125,7 +126,7 @@ export default function HomeScreen() {
           <>
             <View
               className="header-text"
-              style={{ flexDirection: "row", gap: 10, width: "100%"}}
+              style={{ flexDirection: "row", width: "100%"}}
             >
               <View style={{ width: "70%" }}>
                 <ThemedText
@@ -134,14 +135,22 @@ export default function HomeScreen() {
                     fontFamily: theme.fonts.bold,
                   }}
                 >
-                  Hello, {name}!{" "}
+                  Hello,
+                </ThemedText>
+                <ThemedText
+                  style={{
+                    fontSize: theme.sizes.h1,
+                    fontFamily: theme.fonts.bold,
+                  }}
+                >
+                  {name}!{" "}
                 </ThemedText>
               </View>
             </View>
             <View
               className="not-worn-items"
               style={{
-                backgroundColor: "#ffffff",
+                backgroundColor: theme.colors.lightBrown,
                 width: "80%",
                 borderRadius: 10,
                 height: 150,
@@ -208,7 +217,7 @@ export default function HomeScreen() {
             <View
               className="past-outfits"
               style={{
-                backgroundColor: "#ffffff",
+                backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
                 flexDirection: "row",
                 paddingHorizontal: 20,
@@ -238,71 +247,7 @@ export default function HomeScreen() {
               // TO DO: create logic where if user has no past outfits vs a grid of past outfits!
               />
             </View>
-            <View
-              className="manage-closet"
-              style={{
-                backgroundColor: "#ffffff",
-                borderRadius: 10,
-                paddingHorizontal: 20,
-                paddingVertical: 20,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.3,
-                shadowRadius: 3.5,
-                elevation: 5,
-                width: "80%",
-                alignSelf: "center",
-              }}
-            >
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h3,
-                }}
-              >
-                Manage your closet
-              </ThemedText>
-              <View
-                className="manage-closet-options"
-                style={{
-                  flexDirection: "row",
-                  gap: 20,
-                  justifyContent: "space-between",
-                  marginTop: 20,
-                }}
-              >
-                <Pressable
-                  onPress={() => handleNavigate("items")}
-                  style={{
-                    backgroundColor: theme.colors.lightBrown,
-                    borderRadius: 10,
-                    paddingVertical: 10,
-                    width: "45%",
-                  }}
-                >
-                  <ThemedText
-                    style={{ color: theme.colors.text, textAlign: "center" }}
-                  >
-                    Items
-                  </ThemedText>
-                </Pressable>
-                <Pressable
-                  onPress={() => handleNavigate("outfits")}
-                  style={{
-                    backgroundColor: theme.colors.lightBrown,
-                    borderRadius: 10,
-                    paddingVertical: 10,
-                    width: "45%",
-                  }}
-                >
-                  <ThemedText
-                    style={{ color: theme.colors.text, textAlign: "center" }}
-                  >
-                    Outfits
-                  </ThemedText>
-                </Pressable>
-              </View>
-
-            </View>
+            <WeatherScreen />
           </>
         )}
       </ThemedView>
