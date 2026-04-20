@@ -50,6 +50,10 @@ export default function ClosetScreen() {
     useState(false);
   const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
   const [isDeletingOutfit, setIsDeletingOutfit] = useState(false);
+  const [isDeleteTripModalVisible, setIsDeleteTripModalVisible] =
+    useState(false);
+  const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
+  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -223,6 +227,47 @@ export default function ClosetScreen() {
     }
   };
 
+  const handleShareTrip = async (trip) => {
+    try {
+      await Share.share({
+        message: `Check out my trip to ${trip?.name} from ${trip?.dates} on StyleFinder!`,
+      });
+    } catch (error) {
+      console.error("Failed to share trip:", error);
+    }
+  };
+
+  const handleDeleteTrip = async (tripId) => {
+    try {
+      await apiClient.delete(`/api/trips/${tripId}`);
+      setDbTrips((prev) => prev.filter((t) => t.id !== tripId));
+      setIsDeleteTripModalVisible(false);
+      return true;
+    } catch (error) {
+      console.error("Failed to delete trip:", error);
+      return false;
+    }
+  };
+
+  const requestDeleteTrip = (tripId) => {
+    setPendingDeleteTripId(tripId);
+    setIsDeleteTripModalVisible(true);
+  };
+
+  const confirmDeleteTrip = async () => {
+    if (!pendingDeleteTripId || isDeletingTrip) return;
+    try {
+      setIsDeletingTrip(true);
+      const didDelete = await handleDeleteTrip(pendingDeleteTripId);
+      if (didDelete) {
+        setIsDeleteTripModalVisible(false);
+        setPendingDeleteTripId(null);
+      }
+    } finally {
+      setIsDeletingTrip(false);
+    }
+  };
+
   const requestDeleteOutfit = (outfitId) => {
     setPendingDeleteOutfitId(outfitId);
     setIsDeleteOutfitModalVisible(true);
@@ -306,29 +351,8 @@ export default function ClosetScreen() {
       id: "t1",
       name: "NYC Trip",
       location: "New York City",
-      dates: "03/01/26 - 03/05/26",
+      dates: "04/19/26 - 04/24/26",
       outfits: [{}, {}, {}, {}],
-    },
-    {
-      id: "t2",
-      name: "Beach Trip",
-      location: "Miami Beach",
-      dates: "04/10/26 - 04/15/26",
-      outfits: [{}, {}, {}],
-    },
-    {
-      id: "t3",
-      name: "Business Trip",
-      location: "San Francisco",
-      dates: "05/02/26 - 05/06/26",
-      outfits: [{}, {}],
-    },
-    {
-      id: "t4",
-      name: "Weekend Getaway",
-      location: "Chicago",
-      dates: "06/14/26 - 06/16/26",
-      outfits: [{}, {}, {}, {}, {}],
     },
   ];
 
@@ -362,6 +386,7 @@ export default function ClosetScreen() {
                   setSearchText(text);
                   if (text === "") setActiveSearchText("");
                 }}
+                placeholder="Search items inventory..."
                 onSubmit={handleSearchSubmit}
               />
             )}
@@ -642,7 +667,7 @@ export default function ClosetScreen() {
                       onChangeText={(text) => {
                         setTripSearchText(text);
                       }}
-                      placeholder="Search by location or trip name"
+                      placeholder="Search by trip location"
                       onSubmit={() => {}}
                     />
                     <FlatList
@@ -681,15 +706,38 @@ export default function ClosetScreen() {
                               </View>
                             </View>
                           </TouchableOpacity>
+
                           <View style={styles.previewRow}>
-                            <ScrollView
-                              horizontal
-                              showsHorizontalScrollIndicator
+                              <ScrollView
+                                horizontal
+                                showsHorizontalScrollIndicator
+                              >
+                                {(item.outfits || []).map((outfit, index) => (
+                                  <View key={index} style={styles.previewBox} />
+                                ))}
+                              </ScrollView>
+                          </View>
+                          <View style={styles.tripFooter}>
+                            <Pressable
+                              onPress={() => handleShareTrip(item)}
+                              hitSlop={8}
                             >
-                              {(item.outfits || []).map((outfit, index) => (
-                                <View key={index} style={styles.previewBox} />
-                              ))}
-                            </ScrollView>
+                              <Ionicons
+                                name="share-social-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => requestDeleteTrip(item.id)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
                           </View>
                         </View>
                       )}
@@ -765,6 +813,78 @@ export default function ClosetScreen() {
                           disabled={isDeletingOutfit}
                         >
                           {isDeletingOutfit ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <ThemedText style={{ color: theme.colors.text }}>
+                              Delete
+                            </ThemedText>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+
+                <Modal
+                  visible={isDeleteTripModalVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => {
+                    if (isDeletingTrip) return;
+                    setIsDeleteTripModalVisible(false);
+                    setPendingDeleteTripId(null);
+                  }}
+                >
+                  <View style={styles.confirmOverlay}>
+                    <View
+                      style={[
+                        styles.confirmCard,
+                        { backgroundColor: theme.colors.card },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: theme.sizes.h2,
+                          fontWeight: "700",
+                          marginBottom: 8,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        Delete this trip?
+                      </ThemedText>
+                      <ThemedText style={styles.confirmText}>
+                        This action cannot be undone. This trip and all its
+                        outfits will be removed permanently.
+                      </ThemedText>
+
+                      <View style={styles.confirmActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            { backgroundColor: theme.colors.lightBrown },
+                          ]}
+                          onPress={() => {
+                            if (isDeletingTrip) return;
+                            setIsDeleteTripModalVisible(false);
+                            setPendingDeleteTripId(null);
+                          }}
+                          disabled={isDeletingTrip}
+                        >
+                          <ThemedText>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            {
+                              backgroundColor: theme.colors.tabIconSelected,
+                              opacity: isDeletingTrip ? 0.7 : 1,
+                            },
+                          ]}
+                          onPress={confirmDeleteTrip}
+                          disabled={isDeletingTrip}
+                        >
+                          {isDeletingTrip ? (
                             <ActivityIndicator size="small" color="#fff" />
                           ) : (
                             <ThemedText style={{ color: theme.colors.text }}>
@@ -907,6 +1027,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
+  },
+  tripFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
   },
   previewRow: {
     flexDirection: "row",

@@ -84,24 +84,6 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="screens/AdditionalConstraints"
-              options={{
-                header: () => <CustomHeader page="AdditionalConstraints" />,
-              }}
-            />
-            <Stack.Screen
-              name="screens/OutfitswaitingScreen"
-              options={{
-                header: () => <CustomHeader page="OutfitswaitingScreen" />,
-              }}
-            />
-            <Stack.Screen
-              name="screens/DisplayOutfits"
-              options={{
-                header: () => <CustomHeader page="AdditionalConstraints" />,
-              }}
-            />
-            <Stack.Screen
               name="screens/survey/preferences2"
               options={{
                 header: () => <CustomHeader page="survey" />,
