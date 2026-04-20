@@ -24,30 +24,16 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<LoginResponseDto> createUser(@RequestBody UserDto dto) {
 
-        UserDto user = userService.createUser(dto);
-
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
-
-        LoginResponseDto response = new LoginResponseDto(
-            token,
-            user.getUserId(),
-            user.getUsername()
-        );
+        LoginResponseDto response = userService.createUser(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
-        UserDto user = userService.login(request.getUsername(), request.getPassword());
+        LoginResponseDto response = userService.login(request.getUsername(), request.getPassword());
 
-        LoginResponseDto response = new LoginResponseDto(
-                user.getUserId(),
-                user.getUsername(),
-            user.getRole() != null ? user.getRole().name() : null
-        );
-
-        return ResponseEntity.ok(userService.login(request.getUsername(), request.getPassword()));
+        return ResponseEntity.ok(response);
     }
 
     // GET /api/users/{id}

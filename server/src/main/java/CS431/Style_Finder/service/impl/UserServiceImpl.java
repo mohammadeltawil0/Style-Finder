@@ -18,6 +18,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import CS431.Style_Finder.dto.auth.LoginResponseDto;
+import CS431.Style_Finder.model.enums.Role;
 
 
 import java.util.List;
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDto createUser(UserDto dto) {
+    public LoginResponseDto createUser(UserDto dto) {
         if (dto == null) {
             throw new InvalidUserDataException("User data cannot be null");
         }
@@ -49,14 +50,32 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new DuplicateUsernameException(dto.getUsername());
         }
+
         try {
             User user = userMapper.toEntity(dto);
             user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            if (user.getRole() == null) {
+                user.setRole(Role.USER);
+            }
+            User saved = userRepository.save(user);
+
             UserWeights defaultWeights = new UserWeights();
             defaultWeights.setUser(saved);
             saved.setUserWeights(defaultWeights);
             userWeightsRepository.save(defaultWeights);
-            return userMapper.toDto(saved);
+
+            String token = jwtUtil.generateToken(
+                    saved.getUsername(),
+                    saved.getRole().name()
+            );
+
+            return new LoginResponseDto(
+                    token,
+                    saved.getUserId(),
+                    saved.getUsername(),
+                    saved.getRole().name()
+            );
+
         } catch (Exception e) {
             throw new UserCreationException("Failed to create user", e);
         }
@@ -135,21 +154,21 @@ public class UserServiceImpl implements UserService {
     private final JwtUtil jwtUtil;
 
     public LoginResponseDto login(String username, String password) {
-        //System.out.println("LOGIN HIT with username: " + username);
+        System.out.println("LOGIN HIT with username: " + username);
 
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new InvalidCredentialsException());
 
-        //System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             //System.out.println("PASSWORD MISMATCH");
             throw new InvalidCredentialsException();
         }
-
+        userRepository.save(user);
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
 
-        return new LoginResponseDto(token, user.getUserId(), user.getUsername());
+        return new LoginResponseDto(token, user.getUserId(), user.getUsername(), user.getRole().name());
     }
 
     @Override

@@ -17,9 +17,7 @@
       "^expo-router$": "<rootDir>/__mocks__/expo-router.js",
       "^expo-web-browser$": "<rootDir>/__mocks__/expo-web-browser.js"
     },
-    "setupFiles": [
-      "./jest.setup.js"
-    ]
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.js"]
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

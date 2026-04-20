@@ -104,9 +104,10 @@ describe("Register Screen (JWT)", () => {
     );
 
     //nav
-    expect(mockReplace).toHaveBeenCalledWith(
-      "/screens/survey/preferences1"
-    );
+    expect(mockReplace).toHaveBeenCalledWith({
+    pathname: "/screens/survey/preferences1",
+    params: { isNewUser: "true" },
+  });
 
     //success toast
     expect(Toast.show).toHaveBeenCalledWith(
