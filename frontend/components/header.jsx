@@ -356,7 +356,7 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "RegularOutfitDetail" && (
+          {page === "OutfitDetail" && (
             <>
               <TouchableOpacity
                 onPress={() =>
@@ -379,7 +379,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Regular Outfit Details
+                Outfit Details
               </ThemedText>
             </>
           )}

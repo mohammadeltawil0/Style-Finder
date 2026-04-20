@@ -31,6 +31,9 @@ export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [activeSearchText, setActiveSearchText] = useState("");
+  const [outfitSearchText, setOutfitSearchText] = useState("");
+  const [activeOutfitSearchText, setActiveOutfitSearchText] = useState("");
+  const [tripSearchText, setTripSearchText] = useState("");
   const [category, setCategory] = useState("all");
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [mode, setMode] = useState("regular");
@@ -86,6 +89,16 @@ export default function ClosetScreen() {
     queryFn: fetchItems,
     enabled: !!userId,
   });
+
+  const formatOutfitDate = (createdAt) => {
+    if (!createdAt) return null;
+    const date = new Date(createdAt);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
   const fetchUserOutfits = async (id) => {
     try {
@@ -279,6 +292,15 @@ export default function ClosetScreen() {
 
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
   // const trips = dbTrips;
+
+  // Filter outfits by date search
+  const filteredOutfits = dbOutfits.filter((outfit) => {
+    if (!activeOutfitSearchText) return true;
+    const query = activeOutfitSearchText.toLowerCase();
+    const outfitDate = formatOutfitDate(outfit.createdAt) || "";
+    return outfitDate.toLowerCase().includes(query);
+  });
+
   const dummyTrips = [
     {
       id: "t1",
@@ -311,8 +333,8 @@ export default function ClosetScreen() {
   ];
 
   const trips = dummyTrips.filter((trip) => {
-    if (!activeSearchText) return true;
-    const query = activeSearchText.toLowerCase();
+    if (!tripSearchText) return true;
+    const query = tripSearchText.toLowerCase();
     return (
       trip.name.toLowerCase().includes(query) ||
       trip.location.toLowerCase().includes(query)
@@ -481,6 +503,17 @@ export default function ClosetScreen() {
 
                 {mode === "regular" && (
                   <>
+                    <SearchBar
+                      value={outfitSearchText}
+                      onChangeText={(text) => {
+                        setOutfitSearchText(text);
+                        if (text === "") setActiveOutfitSearchText("");
+                      }}
+                      placeholder="Search by date (e.g., Jan 15, 2026)"
+                      onSubmit={() =>
+                        setActiveOutfitSearchText(outfitSearchText)
+                      }
+                    />
                     {isOutfitsLoading && (
                       <View style={styles.centerState}>
                         <ActivityIndicator
@@ -493,7 +526,7 @@ export default function ClosetScreen() {
                     {!isOutfitsLoading && (
                       <FlatList
                         className="regularOutfit-list"
-                        data={dbOutfits}
+                        data={filteredOutfits}
                         keyExtractor={(item, index) =>
                           item.outfitId?.toString() || index.toString()
                         }
@@ -554,7 +587,20 @@ export default function ClosetScreen() {
                             </TouchableOpacity>
 
                             <View style={styles.outfitFooter}>
-                              <ThemedText>Outfit {index + 1}</ThemedText>
+                              <View>
+                                <ThemedText
+                                  style={{ fontSize: 13, fontWeight: "600" }}
+                                >
+                                  Outfit {index + 1}
+                                </ThemedText>
+                                {item.createdAt && (
+                                  <ThemedText
+                                    style={{ fontSize: 11, color: "#888" }}
+                                  >
+                                    {formatOutfitDate(item.createdAt)}
+                                  </ThemedText>
+                                )}
+                              </View>
                               <View style={styles.outfitActions}>
                                 <Pressable
                                   onPress={() => handleShareOutfit(item, index)}
@@ -590,50 +636,65 @@ export default function ClosetScreen() {
                 )}
 
                 {mode === "trip" && (
-                  <FlatList
-                    className="trip_Oufit_Details"
-                    data={trips}
-                    keyExtractor={(trip, index) => trip.id || index.toString()}
-                    style={{
-                      marginVertical: 15,
-                      paddingHorizontal: 30,
-                      width: "100%",
-                    }}
-                    renderItem={({ item }) => (
-                      <View className="TripOufit" style={styles.tripCard}>
-                        <TouchableOpacity
-                          onPress={() =>
-                            router.push({
-                              pathname: "/closet/outfitsHistory/tripOutfits",
-                              params: { id: item.id },
-                            })
-                          }
-                        >
-                          <View style={styles.tripHeader}>
-                            <View>
-                              <ThemedText> {item.name} </ThemedText>
-                              <ThemedText>{item.dates}</ThemedText>
-                              <ThemedText># Trip</ThemedText>
+                  <>
+                    <SearchBar
+                      value={tripSearchText}
+                      onChangeText={(text) => {
+                        setTripSearchText(text);
+                      }}
+                      placeholder="Search by location or trip name"
+                      onSubmit={() => {}}
+                    />
+                    <FlatList
+                      className="trip_Oufit_Details"
+                      data={trips}
+                      keyExtractor={(trip, index) =>
+                        trip.id || index.toString()
+                      }
+                      style={{
+                        marginVertical: 15,
+                        paddingHorizontal: 30,
+                        width: "100%",
+                      }}
+                      renderItem={({ item }) => (
+                        <View className="TripOufit" style={styles.tripCard}>
+                          <TouchableOpacity
+                            onPress={() =>
+                              router.push({
+                                pathname: "/closet/outfitsHistory/tripOutfits",
+                                params: { id: item.id },
+                              })
+                            }
+                          >
+                            <View style={styles.tripHeader}>
+                              <View>
+                                <ThemedText> {item.name} </ThemedText>
+                                <ThemedText>{item.dates}</ThemedText>
+                                <ThemedText># Trip</ThemedText>
+                              </View>
+                              <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
                             </View>
-                            <View style={styles.outfitViewBadge}>
-                              <Ionicons
-                                name="eye-outline"
-                                size={18}
-                                color={theme.colors.text}
-                              />
-                            </View>
+                          </TouchableOpacity>
+                          <View style={styles.previewRow}>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator
+                            >
+                              {(item.outfits || []).map((outfit, index) => (
+                                <View key={index} style={styles.previewBox} />
+                              ))}
+                            </ScrollView>
                           </View>
-                        </TouchableOpacity>
-                        <View style={styles.previewRow}>
-                          <ScrollView horizontal showsHorizontalScrollIndicator>
-                            {(item.outfits || []).map((outfit, index) => (
-                              <View key={index} style={styles.previewBox} />
-                            ))}
-                          </ScrollView>
                         </View>
-                      </View>
-                    )}
-                  />
+                      )}
+                    />
+                  </>
                 )}
 
                 <OutfitDetailsModal
