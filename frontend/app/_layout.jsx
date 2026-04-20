@@ -116,7 +116,7 @@ export default function RootLayout() {
             <Stack.Screen
               name="closet/outfitsHistory/itemProperty"
               options={{
-                header: () => <CustomHeader page="RegularOutfitDetail" />,
+                header: () => <CustomHeader page="OutfitDetail" />,
               }}
             />
             <Stack.Screen
