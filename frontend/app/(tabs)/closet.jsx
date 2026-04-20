@@ -316,6 +316,40 @@ export default function ClosetScreen() {
     return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
   };
 
+  const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+  const materialMap = {
+    1: "cotton",
+    2: "linen hemp",
+    3: "wool fleece",
+    4: "silk satin",
+    5: "leather faux leather",
+    6: "synthetics polyester nylon spandex",
+    7: "other",
+  };
+
+  const patternMap = {
+    GEOMETRIC_OR_ABSTRACT: "geometric abstract",
+    SOLID: "solid",
+    STRIPED: "striped",
+    GRAPHIC: "graphic",
+    FLORAL: "floral",
+    PLAID_OR_FLANNEL: "plaid flannel",
+  };
+
+  const eventMap = {
+    ACTIVE_OR_SPORT: "sport active gym",
+    FORMAL: "formal dressy",
+    CASUAL: "casual everyday",
+    WORK_OR_SMART: "work",
+    PARTY_OR_NIGHT_OUT: "party night out social",
+  };
+
+  const fitMap = {
+    1: "slim fitted tight",
+    2: "regular normal",
+    3: "loose oversized baggy",
+  };
+
   const filteredItems = items.filter((item) => {
     //category filter
     if (category !== "all") {
@@ -545,14 +579,6 @@ export default function ClosetScreen() {
           />
         ) : (
           <View style={{ flex: 1, width: "100%" }}>
-            {!isItems && mode === "trip" && (
-              <SearchBar
-                value={searchText}
-                onChangeText={(text) => setSearchText(text)}
-                onSubmit={handleSearchSubmit}
-              />
-            )}
-
             {isItems ? (
               <>
                 {isItemsLoading ? (
@@ -640,17 +666,19 @@ export default function ClosetScreen() {
 
                 {mode === "regular" && (
                   <>
-                    <SearchBar
-                      value={outfitSearchText}
-                      onChangeText={(text) => {
-                        setOutfitSearchText(text);
-                        if (text === "") setActiveOutfitSearchText("");
-                      }}
-                      placeholder="Search by date (e.g., Jan 15, 2026)"
-                      onSubmit={() =>
-                        setActiveOutfitSearchText(outfitSearchText)
-                      }
-                    />
+                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                      <SearchBar
+                        value={outfitSearchText}
+                        onChangeText={(text) => {
+                          setOutfitSearchText(text);
+                          if (text === "") setActiveOutfitSearchText("");
+                        }}
+                        placeholder="Search by date (e.g., Jan 15, 2026)"
+                        onSubmit={() =>
+                          setActiveOutfitSearchText(outfitSearchText)
+                        }
+                      />
+                    </View>
                     {isOutfitsLoading && (
                       <View style={styles.centerState}>
                         <ActivityIndicator
@@ -774,14 +802,16 @@ export default function ClosetScreen() {
 
                 {mode === "trip" && (
                   <>
-                    <SearchBar
-                      value={tripSearchText}
-                      onChangeText={(text) => {
-                        setTripSearchText(text);
-                      }}
-                      placeholder="Search by trip location"
-                      onSubmit={() => {}}
-                    />
+                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                      <SearchBar
+                        value={tripSearchText}
+                        onChangeText={(text) => {
+                          setTripSearchText(text);
+                        }}
+                        placeholder="Search by trip location"
+                        onSubmit={() => { }}
+                      />
+                    </View>
                     <FlatList
                       className="trip_Oufit_Details"
                       data={trips}
@@ -790,7 +820,7 @@ export default function ClosetScreen() {
                       }
                       style={{
                         marginVertical: 15,
-                        paddingHorizontal: 30,
+                        paddingHorizontal: 15,
                         width: "100%",
                       }}
                       renderItem={({ item }) => (
@@ -820,14 +850,14 @@ export default function ClosetScreen() {
                           </TouchableOpacity>
 
                           <View style={styles.previewRow}>
-                              <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator
-                              >
-                                {(item.outfits || []).map((outfit, index) => (
-                                  <View key={index} style={styles.previewBox} />
-                                ))}
-                              </ScrollView>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator
+                            >
+                              {(item.outfits || []).map((outfit, index) => (
+                                <View key={index} style={styles.previewBox} />
+                              ))}
+                            </ScrollView>
                           </View>
                           <View style={styles.tripFooter}>
                             <Pressable
@@ -1114,7 +1144,8 @@ const styles = StyleSheet.create({
   },
   outfitToggle: {
     flexDirection: "row",
-    margin: 15,
+    marginHorizontal: 30,
+    marginTop: 15,
     backgroundColor: "#e2d7cd",
     borderRadius: 10,
     alignSelf: "stretch",

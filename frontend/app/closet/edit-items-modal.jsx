@@ -110,6 +110,7 @@ const materialToLabel = (value) => {
 
     return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
 };
+
 export default function EditItemsModal({ item, setModalVisible }) {
 // TO DO: edit item logic
     useEffect(() => {
