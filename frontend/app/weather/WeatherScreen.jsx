@@ -20,6 +20,7 @@ export default function WeatherScreen() {
         elevation: 5,
         flexDirection: "row",
         alignSelf: "stretch",
+        justifyContent: "center",
     };
 
     if (loading) return <ActivityIndicator size="large" />;
@@ -44,24 +45,15 @@ export default function WeatherScreen() {
                 flex: 1,
                 flexDirection: "column",
                 alignItems: "flex-start",
-                justifyContent: "space-between",
+                justifyContent: "center ",
                 alignSelf: "stretch",
+                gap: 10
             }}>
-                <View style={{
-                    flexDirection: "row",
-                    alignItems: "flex-start",  
-                    gap: 5,
-                }}>
-                    <ThemedText style={{ fontSize: theme.sizes.h2, lineHeight: theme.sizes.h2 }}>
-                        {getWeatherIcon(weather_code)}
-                    </ThemedText>
-                    <ThemedText style={{ fontSize: theme.sizes.h3, lineHeight: theme.sizes.h2, flexShrink: 1 }}>
-                        {getWeatherDescription(weather_code)}
-                    </ThemedText>
-                </View>
+                <ThemedText style={{ fontSize: theme.sizes.h3 }}>
+                    {getWeatherIcon(weather_code)} {getWeatherDescription(weather_code)}
+                </ThemedText>
                 <ThemedText style={{
                     fontSize: 35,
-                    lineHeight: 35,
                 }}>
                     {`${Math.round(temperature_2m)}°F`}
                 </ThemedText>
@@ -72,7 +64,7 @@ export default function WeatherScreen() {
                 flex: 1,
                 flexDirection: "column",
                 alignItems: "flex-end",
-                justifyContent: "space-between",
+                gap: 15,
                 alignSelf: "stretch",
             }}>
                 <View style={{
@@ -85,20 +77,12 @@ export default function WeatherScreen() {
                     }}>
                         {time}
                     </ThemedText>
-                    <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-                        <ThemedText style={{
-                            fontSize: theme.sizes.regular,
-                            color: theme.colors.text,
-                        }}>
-                            {day.toUpperCase()}
-                        </ThemedText>
-                        <ThemedText style={{
-                            fontSize: theme.sizes.regular,
-                            color: theme.colors.text,
-                        }}>
-                            {date}
-                        </ThemedText>
-                    </View>
+                    <ThemedText style={{
+                        fontSize: theme.sizes.regular,
+                        color: theme.colors.text,
+                    }}>
+                        {date}
+                    </ThemedText>
                 </View>
                 <ThemedText style={{
                     fontSize: theme.sizes.regular,
