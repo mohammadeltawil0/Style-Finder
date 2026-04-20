@@ -18,7 +18,7 @@ export const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 10000 // Stop trying if the backend takes longer than 10 seconds
+    timeout: 20000 // Stop trying if the backend takes longer than 20 seconds
 });
 
 export function describeApiError(error) {
