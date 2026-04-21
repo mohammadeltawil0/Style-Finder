@@ -1,4 +1,8 @@
 package CS431.Style_Finder.model;
+import CS431.Style_Finder.model.enums.ColorCategory;
+import CS431.Style_Finder.model.enums.Fit;
+import CS431.Style_Finder.model.enums.MaterialType;
+import CS431.Style_Finder.model.enums.PatternType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Map;
@@ -27,32 +31,37 @@ public class UserWeights {
 
     private double thermalBias = 1.0;
     private double colorHarmonyWeight = 1.0;
-    private List<String> dealbreakers;
 
     @ElementCollection
-    @CollectionTable(name="user_weights_fit", joinColumns=@JoinColumn(name="user_id"))
+    @CollectionTable(name="user_weights_dealbreakers", joinColumns=@JoinColumn(name="user_weights_id"))
+    @Column(name="dealbreakers")
+    private List<String> dealbreakers; // e.g., Item IDs or specific tags
+
+    @ElementCollection
+    @CollectionTable(name="user_weights_fit", joinColumns=@JoinColumn(name="user_weights_id"))
+    @MapKeyEnumerated(EnumType.STRING)
     @MapKeyColumn(name="fit_type")
     @Column(name="weight")
-    private Map<String, Double> fitWeights = new HashMap<>();
-    // e.g., {"Oversized": 1.5, "Skinny": 0.2, "Regular": 1.0}
+    private Map<Fit, Double> fitWeights = new HashMap<>();
 
     @ElementCollection
-    @CollectionTable(name="user_weights_pattern", joinColumns=@JoinColumn(name="user_id"))
+    @CollectionTable(name="user_weights_pattern", joinColumns=@JoinColumn(name="user_weights_id"))
+    @MapKeyEnumerated(EnumType.STRING)
     @MapKeyColumn(name="pattern_type")
     @Column(name="weight")
-    private Map<String, Double> patternWeights = new HashMap<>();
-    // e.g., {"Solid": 1.2, "Striped": 0.8, "Floral": 0.0}
+    private Map<PatternType, Double> patternWeights = new HashMap<>();
 
     @ElementCollection
-    @CollectionTable(name="user_weights_color", joinColumns=@JoinColumn(name="user_id"))
+    @CollectionTable(name="user_weights_color", joinColumns=@JoinColumn(name="user_weights_id"))
+    @MapKeyEnumerated(EnumType.STRING)
     @MapKeyColumn(name="color_category_type")
     @Column(name="weight")
-    private Map<String, Double> colorWeights = new HashMap<>();
+    private Map<ColorCategory, Double> colorWeights = new HashMap<>();
 
     @ElementCollection
-    @CollectionTable(name="user_weights_material", joinColumns=@JoinColumn(name="user_id"))
+    @CollectionTable(name="user_weights_material", joinColumns=@JoinColumn(name="user_weights_id"))
+    @MapKeyEnumerated(EnumType.STRING)
     @MapKeyColumn(name="material_type")
     @Column(name="weight")
-    private Map<String, Double> materialWeights = new HashMap<>();
-
+    private Map<MaterialType, Double> materialWeights = new HashMap<>();
 }

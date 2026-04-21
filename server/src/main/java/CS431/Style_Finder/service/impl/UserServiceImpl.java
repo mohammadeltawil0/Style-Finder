@@ -8,7 +8,9 @@ import CS431.Style_Finder.exception.UserCreationException;
 import CS431.Style_Finder.exception.InvalidCredentialsException;
 import CS431.Style_Finder.mapper.UserMapper;
 import CS431.Style_Finder.model.User;
+import CS431.Style_Finder.model.UserWeights;
 import CS431.Style_Finder.repository.UserRepository;
+import CS431.Style_Finder.repository.UserWeightsRepository;
 import CS431.Style_Finder.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserWeightsRepository userWeightsRepository;
     private final UserMapper userMapper;
 
     @Override
@@ -42,9 +45,12 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new DuplicateUsernameException(dto.getUsername());
         }
-
         try {
             User saved = userRepository.save(userMapper.toEntity(dto));
+            UserWeights defaultWeights = new UserWeights();
+            defaultWeights.setUser(saved);
+            saved.setUserWeights(defaultWeights);
+            userWeightsRepository.save(defaultWeights);
             return userMapper.toDto(saved);
         } catch (Exception e) {
             throw new UserCreationException("Failed to create user", e);

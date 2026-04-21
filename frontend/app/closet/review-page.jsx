@@ -179,8 +179,6 @@ export default function ReviewPage({
         ? "Regular"
         : "Oversized";
 
-  const convertedBulk = bulk === 0 ? "Thin" : bulk === 1 ? "Regular" : "Thick";
-
   const getOptionLabel = (options, value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
     return options.find((option) => option.value === value)?.label ?? String(value);
@@ -904,7 +902,7 @@ export default function ReviewPage({
                         },
                       ]}
                     >
-                      {convertedBulk}
+                      {bulk}
                     </ThemedText>
                   </View>
                   <View

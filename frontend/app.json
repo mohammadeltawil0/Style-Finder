@@ -48,7 +48,8 @@
         {
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker"
     ]
   }
 }

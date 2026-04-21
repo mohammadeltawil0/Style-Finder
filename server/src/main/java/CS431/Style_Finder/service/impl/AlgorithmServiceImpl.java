@@ -1,12 +1,13 @@
 package CS431.Style_Finder.service.impl;
 
-import CS431.Style_Finder.dto.OutfitSuggestionDTO;
+import CS431.Style_Finder.dto.OutfitSuggestionDto;
 import CS431.Style_Finder.mapper.OutfitMapper;
-import CS431.Style_Finder.model.Item;
-import CS431.Style_Finder.model.OutfitCase;
-import CS431.Style_Finder.model.UserWeights;
+import CS431.Style_Finder.model.*;
+import CS431.Style_Finder.model.enums.ColorCategory;
+import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitCaseRepository;
+import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.repository.UserWeightsRepository;
 import CS431.Style_Finder.service.AlgorithmService;
 import CS431.Style_Finder.service.WeatherService;
@@ -21,58 +22,95 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     private final OutfitCaseRepository cbrDb;
     private final ItemRepository wardrobeDb;
     private final UserWeightsRepository weightsDb;
+    private final UserRepository userDb;
     private final WeatherService weatherService;
     private final OutfitMapper mapper;
 
     @Override
     // Method to generate a list of outfits based on user weights, weather conditions, and occasion.
-    public List<OutfitSuggestionDTO> generateSuggestionHub(Long userId, String location, String event) {
-        List<OutfitSuggestionDTO> hub = new ArrayList<>();
-        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(userId).orElseThrow(() -> new RuntimeException("User weights not found."));
+    public List<OutfitSuggestionDto> generateSuggestionHub(Long userId, String location, String event, boolean useMemory) {
+        List<OutfitSuggestionDto> hub = new ArrayList<>();
+        UserWeights vw = weightsDb.findUserWeightsByUser_UserId(userId)
+            .orElseGet(() -> createDefaultWeights(userId));
 
         WeatherService.WeatherContext weather = weatherService.getWeatherForLocation(location);
         String occasion = (event != null && !event.isEmpty()) ? event : "Casual";
 
-        // PHASE 1: Episodic Retrieval (CBR)
-        List<OutfitCase> memories = cbrDb.findMatchingMemory(userId, occasion, weather.temp() - 5, weather.temp() + 5);
-        for (OutfitCase memory : memories) {
-            if (hub.size() < 15) {
-                hub.add(mapper.toDto(memory));
+        // PHASE 1: Episodic Retrieval (CBR) - ONLY EXECUTES IF TOGGLE IS ON!
+        if (useMemory) {
+            List<OutfitCase> memories =
+                    cbrDb.findMatchingMemory(userId, occasion,
+                            weather.temp() - 5, weather.temp() + 5);
+            for (OutfitCase memory : memories) {
+                OutfitSuggestionDto dto = mapper.toDto(memory);
+                if (dto.getItemIds() != null && !dto.getItemIds().isEmpty()) {
+                    if (hub.size() < 15) {
+                        hub.add(dto);
+                    }
+                }
             }
         }
 
-        // PHASE 2: Parametric Generation
+        // PHASE 2: Parametric Generation (Fills the rest, or does 100% of the work if useMemory is false)
         if (hub.size() < 15) {
             List<Item> closet = wardrobeDb.findByUser_UserId(userId);
-            List<OutfitSuggestionDTO> generated = runParametricFallback(closet, vw, weather.temp(), occasion, 15 - hub.size());
-            hub.addAll(generated);
+            List<OutfitSuggestionDto> generated = runParametricFallback(closet, vw, weather.temp(), occasion, 15 - hub.size());
+
+            for(OutfitSuggestionDto genDto : generated) {
+                if (genDto.getItemIds() != null && !genDto.getItemIds().isEmpty()) {
+                    hub.add(genDto);
+                }
+            }
         }
         return hub;
     }
 
-    private List<OutfitSuggestionDTO> runParametricFallback(List<Item> closet, UserWeights vw, int targetTemp, String occasion, int limit) {
-        List<OutfitSuggestionDTO> validOutfits = new ArrayList<>();
+    private UserWeights createDefaultWeights(Long userId) {
+        User user = userDb.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found."));
+
+        UserWeights newWeights = new UserWeights();
+        newWeights.setUser(user);
+        user.setUserWeights(newWeights);
+        return weightsDb.save(newWeights);
+    }
+
+    private List<OutfitSuggestionDto> runParametricFallback(List<Item> closet, UserWeights vw, int targetTemp, String occasion, int limit) {
+        List<OutfitSuggestionDto> validOutfits = new ArrayList<>();
         List<OutfitCombo> allCombos = generateCombinations(closet);
 
         for (OutfitCombo combo : allCombos) {
             // 1. HARD CONSTRAINTS
             if (combo.over() != null && combo.over().getBulk() < combo.top().getBulk()) continue;
-            if (getWeight(vw.getFitWeights(), String.valueOf(combo.bottom().getFit())) == 0.0) continue;
-            if (occasion.equals("Formal") && combo.top().getFormality().equals("Casual")) continue;
+            if (combo.bottom() != null && getWeight(vw.getFitWeights(), combo.bottom().getFit()) == 0.0) continue;
+            if (occasion.equals("Formal") && combo.top().getFormality() == Formality.FORMAL) continue;
 
             // 2. THE GRANULAR SCORING FUNCTION
-            double thermalScore = Math.abs(targetTemp - combo.calculateTotalWarmth()) * vw.getThermalBias();
+            double rawThermalDiff = Math.abs(targetTemp - combo.calculateTotalWarmth());
+            double thermalPenalty = (rawThermalDiff / 25.0) * vw.getThermalBias();
 
             double colorHarmonyScore = combo.calculateColorHarmony() * vw.getColorHarmonyWeight();
-            double specificColorScore = evaluateComboAverage(vw.getColorWeights(), combo.top().getColorCategory(), combo.bottom().getColorCategory());
 
-            double fitScore = evaluateComboAverage(vw.getFitWeights(), combo.top().getFit().toString(), combo.bottom().getFit().toString());
-            double patternScore = evaluateComboAverage(vw.getPatternWeights(), combo.top().getPattern().name(), combo.bottom().getPattern().name());
-            double materialScore = evaluateComboAverage(vw.getMaterialWeights(), combo.top().getMaterial().toString(), combo.bottom().getMaterial().toString());
+            double specificColorScore = evaluateComboAverage(vw.getColorWeights(),
+                    combo.top().getColorCategory(),
+                    combo.bottom() != null ? combo.bottom().getColorCategory() : null);
 
-            double finalScore = (fitScore + patternScore + materialScore + colorHarmonyScore + specificColorScore) - thermalScore;
+            double fitScore = evaluateComboAverage(vw.getFitWeights(),
+                    combo.top().getFit(),
+                    combo.bottom() != null ? combo.bottom().getFit() : null);
 
-            OutfitSuggestionDTO dto = new OutfitSuggestionDTO();
+            double patternScore = evaluateComboAverage(vw.getPatternWeights(),
+                    combo.top().getPattern(),
+                    combo.bottom() != null ? combo.bottom().getPattern() : null);
+
+            double materialScore = evaluateComboAverage(vw.getMaterialWeights(),
+                    combo.top().getMaterial(),
+                    combo.bottom() != null ? combo.bottom().getMaterial() : null);
+
+            double finalScore = (fitScore + patternScore +
+                    materialScore + colorHarmonyScore + specificColorScore) - thermalPenalty;
+
+            OutfitSuggestionDto dto = new OutfitSuggestionDto();
             dto.setSuggestionId(UUID.randomUUID().toString());
             dto.setItemIds(combo.getItemIds());
             dto.setScore(finalScore);
@@ -82,31 +120,26 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         }
 
         validOutfits.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
-        return validOutfits.subList(0, Math.min(limit, validOutfits.size()));
+        return validOutfits.subList(1, Math.min(limit, validOutfits.size()));
     }
 
-    private double getWeight(Map<String, Double> weightMap, String attribute) {
+    private <T extends Enum<T>> double getWeight(Map<T, Double> weightMap, T attribute) {
         if (attribute == null) return 1.0;
         return weightMap.getOrDefault(attribute, 1.0);
     }
 
-    private double evaluateComboAverage(Map<String, Double> weightMap, String topAttr, String bottomAttr) {
+    private <T extends Enum<T>> double evaluateComboAverage(Map<T, Double> weightMap, T topAttr, T bottomAttr) {
         if (weightMap == null) return 1.0;
         if (topAttr != null && bottomAttr != null) {
             double topWeight = getWeight(weightMap, topAttr);
             double bottomWeight = getWeight(weightMap, bottomAttr);
 
-            if (topWeight == 0.0 || bottomWeight == 0.0) {
-                return 0.0;
-            }
+            if (topWeight == 0.0 || bottomWeight == 0.0) return 0.0;
             return (topWeight + bottomWeight) / 2.0;
         }
-        if (topAttr != null) {
-            return getWeight(weightMap, topAttr);
-        }
-        if (bottomAttr != null) {
-            return getWeight(weightMap, bottomAttr);
-        }
+        if (topAttr != null) return getWeight(weightMap, topAttr);
+        if (bottomAttr != null) return getWeight(weightMap, bottomAttr);
+
         return 1.0;
     }
 
@@ -126,7 +159,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                 case "BOTTOM": bottoms.add(item); break;
                 case "OVER":
                 case "OUTERWEAR": overs.add(item); break;
-                case "FULLBODY": fullBodies.add(item); break;
+                case "FULL_BODY": fullBodies.add(item); break;
             }
         }
 
@@ -182,9 +215,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             double harmonyScore = 1.0;
 
             // Extract the color strings
-            String topColor = (top != null) ? top.getColorCategory() : ((fullBody != null) ? fullBody.getColorCategory() : null);
-            String bottomColor = (bottom != null) ? bottom.getColorCategory() : null;
-            String overColor = (over != null) ? over.getColorCategory() : null;
+            ColorCategory topColor = (top != null) ? top.getColorCategory() : ((fullBody != null) ? fullBody.getColorCategory() : null);
+            ColorCategory bottomColor = (bottom != null) ? bottom.getColorCategory() : null;
+            ColorCategory overColor = (over != null) ? over.getColorCategory() : null;
 
             // Evaluate Top vs. Bottom (if neither is null)
             if (topColor != null && bottomColor != null) {
@@ -208,63 +241,49 @@ public class AlgorithmServiceImpl implements AlgorithmService {
          * Evaluates two color strings (e.g., "Dark Blue" and "Light Red")
          * Returns a multiplier: > 1.0 is great, 1.0 is neutral, < 1.0 is bad.
          */
-        private double compareTwoColors(String color1, String color2) {
-            if (color1 == null || color2 == null) return 1.0;
+        private double compareTwoColors(ColorCategory c1, ColorCategory c2) {
+            if (c1 == null || c2 == null) return 1.0;
 
-            String[] parts1 = color1.split(" ");
-            String[] parts2 = color2.split(" ");
+            // Define Neutrals using an EnumSet for lightning-fast lookups
+            EnumSet<ColorCategory> neutrals = EnumSet.of(
+                    ColorCategory.BLACK, ColorCategory.WHITE, ColorCategory.GREY,
+                    ColorCategory.BEIGE, ColorCategory.BROWN, ColorCategory.CREAM, ColorCategory.NAVY
+            );
 
-            String base1 = parts1[parts1.length - 1].toLowerCase();
-            String base2 = parts2[parts2.length - 1].toLowerCase();
-
-            List<String> neutrals = Arrays.asList("black", "white", "grey", "gray", "beige", "brown", "cream", "navy");
-
-            // RULE 1: Neutrals matching with Neutrals is very safe and stylish (e.g., Black + Grey)
-            if (neutrals.contains(base1) && neutrals.contains(base2)) {
-                // Minor fashion rule: Black and Brown traditionally clash unless managed well.
-                if ((base1.equals("black") && base2.equals("brown")) || (base1.equals("brown") && base2.equals("black"))) {
-                    return 0.8; // Slight penalty
+            // RULE 1: Neutrals
+            if (neutrals.contains(c1) && neutrals.contains(c2)) {
+                if ((c1 == ColorCategory.BLACK && c2 == ColorCategory.BROWN) ||
+                        (c1 == ColorCategory.BROWN && c2 == ColorCategory.BLACK)) {
+                    return 0.8; // Slight penalty for Black + Brown
                 }
                 return 1.1;
             }
 
             // RULE 2: A Neutral matching with a Bright Color is universally safe (e.g., White + Red)
-            if (neutrals.contains(base1) || neutrals.contains(base2)) {
+            if (neutrals.contains(c1) || neutrals.contains(c2)) {
                 return 1.05;
             }
 
-            // RULE 3: Monochromatic Harmony (Same base color, different shades)
-            // E.g., "Light Blue" + "Dark Blue" looks fantastic.
-            if (base1.equals(base2)) {
-                // If they are the exact same shade and base (e.g., Standard Red + Standard Red)
-                if (color1.equalsIgnoreCase(color2)) {
-                    return 0.9; // Looks a bit like a uniform, slight penalty
-                }
-                return 1.2; // Monochromatic boost!
+            // RULE 3: Monochromatic (Exact same base color)
+            if (c1 == c2) {
+                return 1.1; // Monochromatic boost
             }
 
             // RULE 4: The Clashes (Traditional fashion faux pas)
-            if (isClashing(base1, base2)) {
-                return 0.5; // Heavy penalty. Will likely drop the outfit out of the top 15.
+            if (isClashing(c1, c2)) {
+                return 0.5; // Heavy penalty
             }
 
-            // Default: Two different, non-clashing bright colors (e.g., Blue + Yellow)
-            return 0.95;
+            return 0.95; // Default for non-clashing brights
         }
 
         // Helper to define hardcoded color clashes
-        private boolean isClashing(String base1, String base2) {
-            String pair = base1 + "-" + base2;
-            String reversePair = base2 + "-" + base1;
-
-            List<String> clashingPairs = Arrays.asList(
-                    "red-green",    // Christmas tree effect
-                    "orange-pink",  // Visual vibration
-                    "purple-yellow",// Highly jarring contrast
-                    "red-pink"      // Too close on the color wheel, but not monochromatic
-            );
-
-            return clashingPairs.contains(pair) || clashingPairs.contains(reversePair);
+        private boolean isClashing(ColorCategory c1, ColorCategory c2) {
+            // Evaluates pairs simultaneously regardless of order
+            return (c1 == ColorCategory.RED && c2 == ColorCategory.GREEN) || (c1 == ColorCategory.GREEN && c2 == ColorCategory.RED) ||
+                    (c1 == ColorCategory.ORANGE && c2 == ColorCategory.PINK) || (c1 == ColorCategory.PINK && c2 == ColorCategory.ORANGE) ||
+                    (c1 == ColorCategory.PURPLE && c2 == ColorCategory.YELLOW) || (c1 == ColorCategory.YELLOW && c2 == ColorCategory.PURPLE) ||
+                    (c1 == ColorCategory.RED && c2 == ColorCategory.PINK) || (c1 == ColorCategory.PINK && c2 == ColorCategory.RED);
         }
     }
 }

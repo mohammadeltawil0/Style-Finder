@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";
 import ColorPage from "./color-page.jsx";
@@ -25,6 +26,9 @@ export default function AddItemScreen() {
     previousPage: null,
   });
   const [uri, setUri] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // These states now natively hold Java Enum strings from their child pages
   const [itemType, setItemType] = useState("");
   const [color, setColor] = useState("");
   const [pattern, setPattern] = useState("");
@@ -148,7 +152,11 @@ export default function AddItemScreen() {
       "Outerwear": "OUTERWEAR",
     };
     return map[itemType] || itemType;
-  }
+  };
+
+  const convertMaterial = (material) => {
+    return material ? Number(material) : null; // Convert material to number or return null if not set
+  };
 
   const convertFormality = (formality) => {
     const map = {
@@ -161,10 +169,6 @@ export default function AddItemScreen() {
     };
     return map[formality] || formality;
   }
-
-  const convertMaterial = (material) => {
-    return material ? Number(material) : null; // Convert material to number or return null if not set
-  };
 
   const normalizeEnum = (value) => {
     if (value === "" || value === undefined) return null;
@@ -247,7 +251,7 @@ export default function AddItemScreen() {
   };
 
   return (
-    <>
+    <View style={{ flex: 1 }}>
       {/* First Page: camera */}
       {navigation.currentPage === 1 && <CameraPage setUri={setUri} setPage={goNext} uri={uri} />}
 
@@ -382,17 +386,23 @@ export default function AddItemScreen() {
           fit={fit}
           season={season}
           length={length}
-          bulk={convertedBulk}
+          bulk={bulk}
           handleSubmit={handleSubmit}
           isPending={isPending}
-            setUri={setUri}
-          />
+          setUri={setUri}
+        />
       )}
-    </>
+      {isUploading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#b49480" />
+          <Text style={styles.loadingText}>Uploading to Wardrobe...</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
-const styles = {
+const styles = StyleSheet.create({
   navigationButtons: {
     alignItems: "center",
     flexDirection: "row",
@@ -418,4 +428,17 @@ const styles = {
     bottom: 0,
     zIndex: 10,
   },
-};
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0,0,0,0.7)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 999, // Ensure it sits on top of everything
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 15,
+    fontSize: 16,
+    fontWeight: "bold",
+  }
+});

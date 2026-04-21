@@ -11,43 +11,13 @@ import { ThemedText, ThemedView, TogglePreview } from "../../components";
 export default function MaterialPage({ setPage, goBack, material, setMaterial, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
   const materialOptions = [
-    {
-      id: 1,
-      label: "Cotton",
-      subheader: "Soft, breathable, and great for everyday wear",
-    },
-    {
-      id: 2,
-      label: "Linen/Hemp",
-      subheader: "Lightweight and breathable for hot weather",
-    },
-    {
-      id: 3,
-      label: "Wool/Fleece",
-      subheader: "Warm and insulating for sweaters and coats",
-    },
-    {
-      id: 4,
-      label: "Silk/Satin",
-      subheader: "Smooth, lightweight, and luxurious",
-    },
-    {
-      id: 5,
-      label: "Leather/Faux Leather",
-      subheader: "Durable hide or leather alternative",
-    },
-    {
-      id: 6,
-      label: "Synthetics",
-      subheader:
-        "Strong, flexible, and common in activewear like Polyster, Nylon, and Spandex",
-    },
-    {
-      // TO DO: figure out how to handle other?
-      id: 7,
-      label: "Other",
-      subheader: "Materials not listed above",
-    },
+    { id: "COTTON", label: "Cotton", subheader: "Soft, breathable, and great for everyday wear" },
+    { id: "LINEN", label: "Linen/Hemp", subheader: "Lightweight and breathable for hot weather" },
+    { id: "WOOL", label: "Wool/Fleece", subheader: "Warm and insulating for sweaters and coats" },
+    { id: "SILK", label: "Silk/Satin", subheader: "Smooth, lightweight, and luxurious" },
+    { id: "LEATHER", label: "Leather/Faux Leather", subheader: "Durable hide or leather alternative" },
+    { id: "POLYESTER", label: "Synthetics", subheader: "Strong, flexible, and common in activewear" },
+    { id: "ACRYLIC", label: "Other", subheader: "Materials not listed above" },
   ];
 
   const { width } = useWindowDimensions();

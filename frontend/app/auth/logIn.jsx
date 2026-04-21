@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useSurvey } from "context/SurveyContext";
+import { useSurvey } from "../../context/SurveyContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {

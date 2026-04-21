@@ -1,129 +1,341 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { ScrollView, StyleSheet, TouchableOpacity, View } from "react-native";
+import { useEffect, useState } from "react";
+import {
+  ActivityIndicator,
+  Image,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
+import { apiClient } from "../../../scripts/apiClient";
+import EditItemsModal from "../edit-items-modal";
+
+// Helper to format backend Enums (e.g. "FULL_BODY" -> "Full Body", "PARTY_OR_NIGHT_OUT" -> "Party / Night Out")
+const formatEnum = (str) => {
+  if (!str) return "";
+  let cleanStr = str.replace(/_OR_/g, " / ");
+  cleanStr = cleanStr.replace(/_/g, " ");
+  return cleanStr.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+  );
+};
+
+// Material mapping to match the frontend selection options
+const materialMap = {
+  1: "Cotton",
+  2: "Linen/Hemp",
+  3: "Wool/Fleece",
+  4: "Silk/Satin",
+  5: "Leather/Faux Leather",
+  6: "Synthetics",
+  7: "Other",
+};
 
 export default function ItemProperty() {
   const router = useRouter();
+  const theme = useTheme();
+  const { id, outfitId, isOutfit, itemIndex } = useLocalSearchParams();
+  const isOutfitMode = isOutfit === "true";
 
-  // TODO: Fetch data of the outfit my the id/name whatever we decide
-  // TODO: API call here something like this: just the blue print not sure how backend look like now 
-  // const [outfit, setOutfit] = useState(null);
-  // useEffect(() => {
-  //   const fetchOutfit = async () => {
-  //     setOutfit(data);
-  //   };
-  //   fetchOutfit();
-  // }, [id]); 
+  const [item, setItem] = useState(null);
+  const [items, setItems] = useState([]); // For outfit mode
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentItemIndex, setCurrentItemIndex] = useState(0);
 
-  // For now console 
-  const { id } = useLocalSearchParams();
+  // State to control the Edit Modal
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
 
-  // Duplicate Dummy Data
-  const outfits = [
-    { id: "o1", name: "Outfit1", items: [{}, {}] },
-    { id: "o2", name: "Outfit2", items: [{}] },
-    { id: "o3", name: "Outfit3", items: [{}, {}, {}] },
-    { id: "o4", name: "Outfit4", items: [{}] },
-    { id: "o5", name: "Outfit5", items: [{}, {}] },
-    { id: "o6", name: "Outfit6", items: [{}] },
-  ];
-  const outfit = outfits.find(o => o.id === id);
-  console.log("Clicked Outfit:", outfit);
+  // Fetch the item(s) data from the database
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        if (isOutfitMode && outfitId) {
+          // Fetch all items in the outfit
+          const response = await apiClient.get(`/api/outfits/${outfitId}`);
+          if (response.status === 200) {
+            const outfit = response.data;
+            const itemIds =
+              outfit.itemIds ||
+              (outfit.outfitItems
+                ? outfit.outfitItems.map((oi) => oi.item.itemId)
+                : []);
+
+            // Fetch details for each item
+            const itemPromises = itemIds.map((itemId) =>
+              apiClient.get(`/api/items/${itemId}`),
+            );
+            const results = await Promise.allSettled(itemPromises);
+            const fetchedItems = results
+              .filter((result) => result.status === "fulfilled")
+              .map((result) => result.value.data);
+            setItems(fetchedItems);
+
+            const parsedIndex = Number(itemIndex);
+            if (Number.isInteger(parsedIndex) && parsedIndex >= 0) {
+              const safeIndex = Math.min(parsedIndex, fetchedItems.length - 1);
+              setCurrentItemIndex(safeIndex >= 0 ? safeIndex : 0);
+            } else {
+              setCurrentItemIndex(0);
+            }
+          }
+        } else if (id) {
+          // Single item mode
+          const response = await apiClient.get(`/api/items/${id}`);
+          if (response.status === 200) {
+            setItem(response.data);
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Failed to fetch item details:",
+          error?.response?.data || error,
+        );
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (id || (isOutfitMode && outfitId)) {
+      fetchData();
+    }
+  }, [id, outfitId, isOutfitMode, isEditModalVisible, itemIndex]);
+
+  const currentItem = isOutfitMode ? items[currentItemIndex] || null : item;
+
+  if (isLoading) {
+    return (
+      <ThemedView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ActivityIndicator size="large" color={theme.colors.text} />
+        <ThemedText style={{ marginTop: 10 }}>
+          Loading Item Details...
+        </ThemedText>
+      </ThemedView>
+    );
+  }
+
+  if (!currentItem || (isOutfitMode && items.length === 0)) {
+    return (
+      <ThemedView
+        style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
+      >
+        <ThemedText>Item not found.</ThemedText>
+        <TouchableOpacity
+          style={[styles.btn, { marginTop: 20 }]}
+          onPress={() => router.back()}
+        >
+          <ThemedText>Go Back</ThemedText>
+        </TouchableOpacity>
+      </ThemedView>
+    );
+  }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={true}>
-      <ThemedView>
-        {/* Render images based on number of items */}
-        {outfit?.items.map((item, index) => (
-          <View key={index} style={styles.image} />
-        ))}
-
-
-        <View style={styles.info}>
-          <ThemedText style={styles.title}>OUTFIT NAME</ThemedText>
-          <ThemedText style={styles.label}>Description:</ThemedText>
-          {/* TODO: have a function can be in frontend too, using the tags (color, style) of items 
-            and fillter by user create a descriptions */}
-          <ThemedText>lorem ipsum your figma</ThemedText>
-
-          {/* TODO: Ask group if we have description then we dont need togs and infact the when 
-            user clicks view item, that screen will have tags too */}
-          <ThemedText style={styles.label}>Tags:</ThemedText>
-          <View style={styles.tags}>
-            <View style={styles.tag}>
-              <ThemedText>tag</ThemedText>
+    <>
+      <ScrollView showsVerticalScrollIndicator={true}>
+        <ThemedView>
+          {/* Outfit Navigation Header */}
+          {isOutfitMode && items.length > 1 && (
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                paddingVertical: 12,
+                backgroundColor: theme.colors.card,
+              }}
+            >
+              <TouchableOpacity
+                onPress={() =>
+                  setCurrentItemIndex(Math.max(0, currentItemIndex - 1))
+                }
+                disabled={currentItemIndex === 0}
+              >
+                <Ionicons
+                  name="chevron-back"
+                  size={24}
+                  color={currentItemIndex === 0 ? "#ccc" : theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText style={{ fontWeight: "bold" }}>
+                Item {currentItemIndex + 1} of {items.length}
+              </ThemedText>
+              <TouchableOpacity
+                onPress={() =>
+                  setCurrentItemIndex(
+                    Math.min(items.length - 1, currentItemIndex + 1),
+                  )
+                }
+                disabled={currentItemIndex === items.length - 1}
+              >
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={
+                    currentItemIndex === items.length - 1
+                      ? "#ccc"
+                      : theme.colors.text
+                  }
+                />
+              </TouchableOpacity>
             </View>
-            <View style={styles.tag}>
-              <ThemedText>tag</ThemedText>
+          )}
+
+          {currentItem?.imageUrl ? (
+            <Image
+              source={{ uri: currentItem.imageUrl }}
+              style={styles.imagePlaceholder}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.imagePlaceholder} />
+          )}
+
+          <View style={styles.info}>
+            <ThemedText style={styles.title}>
+              {formatEnum(currentItem.type)}
+            </ThemedText>
+
+            <ThemedText style={styles.label}>Description:</ThemedText>
+            <ThemedText style={{ marginTop: 4 }}>
+              A {currentItem.color ? currentItem.color.toLowerCase() : ""}{" "}
+              {formatEnum(currentItem.fit)} fit{" "}
+              {formatEnum(currentItem.type).toLowerCase()} with a{" "}
+              {formatEnum(currentItem.pattern)} pattern, perfect for{" "}
+              {formatEnum(currentItem.formality).toLowerCase()} occasions.
+            </ThemedText>
+
+            <ThemedText style={styles.label}>Tags:</ThemedText>
+            <View style={styles.tags}>
+              {currentItem.color && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.color)}</ThemedText>
+                </View>
+              )}
+              {currentItem.pattern && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.pattern)}</ThemedText>
+                </View>
+              )}
+              {currentItem.formality && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.formality)}</ThemedText>
+                </View>
+              )}
+              {currentItem.seasonWear && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.seasonWear)}</ThemedText>
+                </View>
+              )}
+              {currentItem.fit && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.fit)} Fit</ThemedText>
+                </View>
+              )}
+              {currentItem.material && materialMap[currentItem.material] && (
+                <View style={styles.tag}>
+                  <ThemedText>{materialMap[currentItem.material]}</ThemedText>
+                </View>
+              )}
+              {currentItem.length && (
+                <View style={styles.tag}>
+                  <ThemedText>{formatEnum(currentItem.length)}</ThemedText>
+                </View>
+              )}
             </View>
-            <View style={styles.tag}>
-              <ThemedText>tag</ThemedText>
+
+            <View style={styles.buttons}>
+              {isOutfitMode ? (
+                <TouchableOpacity
+                  style={[styles.btn, styles.fullWidthBtn]}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/closet/outfitsHistory/itemDetail",
+                      params: {
+                        itemId: currentItem.itemId,
+                        outfitId,
+                        itemIndex: String(currentItemIndex),
+                      },
+                    })
+                  }
+                >
+                  <ThemedText>View Item</ThemedText>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.btn}
+                  onPress={() => setIsEditModalVisible(true)}
+                >
+                  <ThemedText>Edit Item</ThemedText>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
-
-          <View style={styles.buttons}>
-            <TouchableOpacity style={styles.btn}>
-              <ThemedText>View Items</ThemedText>
-            </TouchableOpacity>
-
-            {/* TODO: ASK Group do we even need this, like what insights will we give to user ...  */}
-            <TouchableOpacity style={styles.btn}>
-              <ThemedText>Insights</ThemedText>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </ThemedView>
-    </ScrollView>
+        </ThemedView>
+      </ScrollView>
+      {!isOutfitMode && isEditModalVisible && (
+        <EditItemsModal setModalVisible={setIsEditModalVisible} itemId={id} />
+      )}
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  image: {
+  imagePlaceholder: {
     height: 250,
     margin: 20,
     borderRadius: 14,
     backgroundColor: "#d6c6b8",
   },
-
   info: {
     paddingHorizontal: 20,
   },
-
   title: {
     fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 22,
     marginBottom: 10,
+    fontFamily: "bold",
   },
-
   label: {
-    marginTop: 10,
+    marginTop: 15,
     fontWeight: "bold",
+    fontSize: 20,
+    fontFamily: "bold",
   },
-
   tags: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 8,
-    marginTop: 6,
+    marginTop: 10,
   },
-
   tag: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
     backgroundColor: "#e2d7cd",
   },
-
   buttons: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginTop: 20,
+    marginTop: 30,
   },
-
   btn: {
     backgroundColor: "#e2d7cd",
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 10,
+    alignItems: "center",
+    flex: 0.48,
+  },
+  fullWidthBtn: {
+    flex: 1,
   },
 });
