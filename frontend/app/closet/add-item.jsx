@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { View, ActivityIndicator, Text, StyleSheet } from "react-native";
 import CameraPage from "./camera-page.jsx";
 import CategoryPage from "./category-page.jsx";

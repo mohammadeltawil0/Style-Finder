@@ -57,7 +57,7 @@ export default function OutfitDetailsModal({ visible, outfit, onClose, onDelete,
                     </View>
                 ) : (
                     <ScrollView contentContainerStyle={{ paddingBottom: 40, width: "100%" }}>
-                        <ThemedText style={styles.modalTitle}>Saved Outfit Details</ThemedText>
+                        <ThemedText style={styles.modalTitle}>Outfit Details</ThemedText>
 
                         {items.map((item, index) => (
                             <View key={index} style={[styles.responseContainer, { backgroundColor: theme.colors.card }]}>

@@ -1,15 +1,27 @@
-import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useCallback, useState, useEffect } from "react";
+import Feather from "@expo/vector-icons/Feather";
+import {
+  Pressable,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
+import {
+  ClosetToggle,
+  Items,
+  SearchBar,
+  ThemedText,
+  ThemedView,
+} from "../../components";
 import { useTheme } from "@react-navigation/native";
-import { useQuery } from "@tanstack/react-query";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Image, Modal, Pressable, ScrollView,
-  Share, StyleSheet, TouchableOpacity, View, } from "react-native";
-import { ClosetToggle, Items,  SearchBar,  ThemedText,  ThemedView, } from "../../components";
-import { apiClient } from "../../scripts/apiClient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { ScrollView, Image} from "react-native";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
+import { apiClient } from "../../scripts/apiClient";
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -20,11 +32,15 @@ export default function ClosetScreen() {
   const [mode, setMode] = useState("regular");
   const [userId, setUserId] = useState(null);
   const [currItemId, setCurrItemId] = useState(null);
+
+  // --- Database States ---
+  const [dbItems, setDbItems] = useState([]);
   const [dbOutfits, setDbOutfits] = useState([]);
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // --- Modal States ---
   const [selectedOutfit, setSelectedOutfit] = useState(null);
-  
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
   const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] = useState(false);
   const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
@@ -168,7 +184,7 @@ export default function ClosetScreen() {
     }
   };
 
-  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later.... 
+  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later....
   const handleShareOutfit = async (outfit, index) => {
     try {
       const itemCount = outfit?.itemIds?.length || 0;
