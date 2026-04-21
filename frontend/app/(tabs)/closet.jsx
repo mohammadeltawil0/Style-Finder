@@ -417,13 +417,24 @@ export default function ClosetScreen() {
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
   // const trips = dbTrips;
 
-  // Filter outfits by date search
-  const filteredOutfits = dbOutfits.filter((outfit) => {
-    if (!activeOutfitSearchText) return true;
-    const query = activeOutfitSearchText.toLowerCase();
-    const outfitDate = formatOutfitDate(outfit.createdAt) || "";
-    return outfitDate.toLowerCase().includes(query);
-  });
+  // Filter outfits by date search, then show newest outfits first.
+  const filteredOutfits = dbOutfits
+    .filter((outfit) => {
+      if (!activeOutfitSearchText) return true;
+      const query = activeOutfitSearchText.toLowerCase();
+      const outfitDate = formatOutfitDate(outfit.createdAt) || "";
+      return outfitDate.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+  const paddedOutfits =
+    filteredOutfits.length % 2 !== 0
+      ? [...filteredOutfits, { id: "empty", isEmpty: true }]
+      : filteredOutfits;
 
   const dummyTrips = [
     {
@@ -502,9 +513,7 @@ export default function ClosetScreen() {
             paddingVertical: 10,
           }}
           onPress={() =>
-            setCategory((prev) =>
-              prev === "bottoms" ? "all" : "bottoms",
-            )
+            setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
           }
         >
           <ThemedText
@@ -531,9 +540,7 @@ export default function ClosetScreen() {
             paddingVertical: 10,
           }}
           onPress={() =>
-            setCategory((prev) =>
-              prev === "full_body" ? "all" : "full_body",
-            )
+            setCategory((prev) => (prev === "full_body" ? "all" : "full_body"))
           }
         >
           <ThemedText
@@ -560,9 +567,7 @@ export default function ClosetScreen() {
             paddingVertical: 10,
           }}
           onPress={() =>
-            setCategory((prev) =>
-              prev === "outerwear" ? "all" : "outerwear",
-            )
+            setCategory((prev) => (prev === "outerwear" ? "all" : "outerwear"))
           }
         >
           <ThemedText
@@ -627,7 +632,8 @@ export default function ClosetScreen() {
                     }}
                   >
                     <ThemedText style={{ textAlign: "center" }}>
-                      {itemsError?.message || "Could not load items. Please try again."}
+                      {itemsError?.message ||
+                        "Could not load items. Please try again."}
                     </ThemedText>
                     <Pressable
                       onPress={() => refetch()}
@@ -686,7 +692,13 @@ export default function ClosetScreen() {
 
                 {mode === "regular" && (
                   <>
-                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
+                      }}
+                    >
                       <SearchBar
                         value={outfitSearchText}
                         onChangeText={(text) => {
@@ -711,7 +723,7 @@ export default function ClosetScreen() {
                     {!isOutfitsLoading && (
                       <FlatList
                         className="regularOutfit-list"
-                        data={filteredOutfits}
+                        data={paddedOutfits}
                         keyExtractor={(item, index) =>
                           item.outfitId?.toString() || index.toString()
                         }
@@ -722,7 +734,7 @@ export default function ClosetScreen() {
                           width: "100%",
                         }}
                         columnWrapperStyle={{
-                          justifyContent: "center",
+                          justifyContent: "flex-start",
                           gap: 15,
                         }}
                         ListEmptyComponent={() =>
@@ -742,79 +754,82 @@ export default function ClosetScreen() {
                             </ThemedText>
                           )
                         }
-                        renderItem={({ item, index }) => (
-                          <View style={styles.outfitCard}>
-                            <TouchableOpacity
-                              onPress={() => openOutfitDetails(item.outfitId)}
-                            >
-                              <View style={styles.outfitViewBadge}>
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={18}
-                                  color={theme.colors.text}
-                                />
-                              </View>
-                              {getOutfitCoverImage(item) ? (
-                                <Image
-                                  source={{ uri: getOutfitCoverImage(item) }}
-                                  style={styles.outfitImage}
-                                  resizeMode="cover"
-                                />
-                              ) : (
-                                <View style={styles.outfitPlaceholder}>
-                                  <ThemedText
-                                    style={{ color: "#666", fontSize: 12 }}
-                                  >
-                                    Items: {item.itemIds?.length || 0}
-                                  </ThemedText>
-                                </View>
-                              )}
-                            </TouchableOpacity>
+                        renderItem={({ item, index }) => {
+                          if (item.isEmpty) {
+                            return <View style={styles.outfitSpacer} />;
+                          }
 
-                            <View style={styles.outfitFooter}>
-                              <View>
-                                <ThemedText
-                                  style={{ fontSize: 13, fontWeight: "600" }}
-                                >
-                                  Outfit {index + 1}
-                                </ThemedText>
-                                {item.createdAt && (
-                                  <ThemedText
-                                    style={{ fontSize: 11, color: "#888" }}
-                                  >
-                                    {formatOutfitDate(item.createdAt)}
-                                  </ThemedText>
+                          return (
+                            <View style={styles.outfitCard}>
+                              <TouchableOpacity
+                                onPress={() => openOutfitDetails(item.outfitId)}
+                              >
+                                <View style={styles.outfitViewBadge}>
+                                  <Ionicons
+                                    name="eye-outline"
+                                    size={18}
+                                    color={theme.colors.text}
+                                  />
+                                </View>
+                                {getOutfitCoverImage(item) ? (
+                                  <Image
+                                    source={{ uri: getOutfitCoverImage(item) }}
+                                    style={styles.outfitImage}
+                                    resizeMode="cover"
+                                  />
+                                ) : (
+                                  <View style={styles.outfitPlaceholder}>
+                                    <ThemedText
+                                      style={{ color: "#666", fontSize: 12 }}
+                                    >
+                                      Items: {item.itemIds?.length || 0}
+                                    </ThemedText>
+                                  </View>
                                 )}
-                              </View>
-                              <View style={styles.outfitActions}>
-                                <Pressable
-                                  onPress={() => handleShareOutfit(item, index)}
-                                  hitSlop={8}
-                                >
-                                  <Ionicons
-                                    name="share-social-outline"
-                                    size={19}
-                                    color={theme.colors.text}
-                                  />
-                                </Pressable>
-                                <Pressable
-                                  onPress={() =>
-                                    requestDeleteOutfit(
-                                      item.outfitId || item.id,
-                                    )
-                                  }
-                                  hitSlop={8}
-                                >
-                                  <Ionicons
-                                    name="trash-outline"
-                                    size={19}
-                                    color={theme.colors.text}
-                                  />
-                                </Pressable>
+                              </TouchableOpacity>
+
+                              <View style={styles.outfitFooter}>
+                                <View>
+                                  {item.createdAt && (
+                                    <ThemedText
+                                      style={{ fontSize: 14, color: "#000000" }}
+                                    >
+                                      {formatOutfitDate(item.createdAt)}
+                                    </ThemedText>
+                                  )}
+                                </View>
+                                <View style={styles.outfitActions}>
+                                  <Pressable
+                                    onPress={() =>
+                                      handleShareOutfit(item, index)
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="share-social-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                  <Pressable
+                                    onPress={() =>
+                                      requestDeleteOutfit(
+                                        item.outfitId || item.id,
+                                      )
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="trash-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        )}
+                          );
+                        }}
                       />
                     )}
                   </>
@@ -822,14 +837,20 @@ export default function ClosetScreen() {
 
                 {mode === "trip" && (
                   <>
-                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
+                      }}
+                    >
                       <SearchBar
                         value={tripSearchText}
                         onChangeText={(text) => {
                           setTripSearchText(text);
                         }}
                         placeholder="Search by trip location"
-                        onSubmit={() => { }}
+                        onSubmit={() => {}}
                       />
                     </View>
                     <FlatList
@@ -1098,6 +1119,10 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 20,
     width: "48%",
+  },
+  outfitSpacer: {
+    width: "48%",
+    marginBottom: 20,
   },
   outfitImage: {
     width: "100%",
