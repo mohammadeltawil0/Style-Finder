@@ -3,8 +3,8 @@ import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-  Alert,
   Image,
+  Modal,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +20,7 @@ export default function AdminUserDetail() {
   const router = useRouter();
   const { colors } = useTheme();
   const [user, setUser] = useState(null);
+  const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
   useEffect(() => {
     fetchUser();
@@ -35,26 +36,18 @@ export default function AdminUserDetail() {
   };
 
   const handleDelete = () => {
-    Alert.alert(
-      "Delete Account",
-      `Permanently delete @${user.username}? This cannot be undone.`,
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await apiClient.delete(`/api/admin/users/${userId}`);
-              Toast.show({ type: "success", text1: "Account Deleted" });
-              router.back();
-            } catch {
-              Toast.show({ type: "error", text1: "Failed to delete account" });
-            }
-          },
-        },
-      ],
-    );
+    setIsDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await apiClient.delete(`/api/admin/users/${userId}`);
+      Toast.show({ type: "success", text1: "Account Deleted" });
+      setIsDeleteModalVisible(false);
+      router.back();
+    } catch {
+      Toast.show({ type: "error", text1: "Failed to delete account" });
+    }
   };
 
   if (!user) return null;
@@ -110,6 +103,36 @@ export default function AdminUserDetail() {
           <Text style={styles.deleteText}>Delete Account</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal
+        transparent
+        animationType="fade"
+        visible={isDeleteModalVisible}
+        onRequestClose={() => setIsDeleteModalVisible(false)}
+      >
+        <View style={styles.confirmOverlay}>
+          <View style={[styles.confirmCard, { backgroundColor: colors.card }]}>
+            <Text style={[styles.confirmTitle, { color: colors.text }]}>Delete Account?</Text>
+            <Text style={[styles.confirmText, { color: colors.text }]}>Permanently delete @{user.username}? This action cannot be undone.</Text>
+
+            <View style={styles.confirmActions}>
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.cancelBtn]}
+                onPress={() => setIsDeleteModalVisible(false)}
+              >
+                <Text style={[styles.confirmBtnText, { color: colors.text }]}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.confirmBtn, styles.deleteConfirmBtn]}
+                onPress={confirmDelete}
+              >
+                <Text style={styles.deleteConfirmText}>Delete</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ThemedView>
   );
 }
@@ -158,5 +181,57 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     color: "#e53935",
     textAlign: "center",
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  confirmCard: {
+    width: "100%",
+    borderRadius: 12,
+    padding: 20,
+    alignItems: "center",
+  },
+  confirmTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  confirmText: {
+    textAlign: "center",
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  confirmActions: {
+    marginTop: "10%",
+    width: "100%",
+    flexDirection: "row",
+    gap: 10,
+  },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelBtn: {
+    backgroundColor: "#E3D5CA",
+  },
+  deleteConfirmBtn: {
+    backgroundColor: "#e53935",
+  },
+  confirmBtnText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  deleteConfirmText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#fff",
   },
 });
