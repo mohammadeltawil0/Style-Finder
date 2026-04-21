@@ -170,6 +170,12 @@ export default function RootLayout() {
                 header: () => <CustomHeader page="adminUserDetail" />,
               }}
             />
+            <Stack.Screen
+              name="closet/edit-item-screen"
+              options={{
+                header: () => <CustomHeader page="closet" />,
+              }}
+            />
           </Stack>
           <StatusBar style="auto" />
           <ThemedToast />

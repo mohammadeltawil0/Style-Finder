@@ -336,23 +336,82 @@ export default function ClosetScreen() {
     return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
   };
 
-  const filteredItems = processedItems.filter((item) => {
-    let matchesCategory = true;
-    if (category === "tops") matchesCategory = item.type === "TOP";
-    else if (category === "bottoms") matchesCategory = item.type === "BOTTOM";
-    else if (category === "dresses")
-      matchesCategory = item.type === "FULL_BODY";
-    else if (category === "outerwear")
-      matchesCategory = item.type === "OUTERWEAR";
+  const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+  const materialMap = {
+    1: "cotton",
+    2: "linen hemp",
+    3: "wool fleece",
+    4: "silk satin",
+    5: "leather faux leather",
+    6: "synthetics polyester nylon spandex",
+    7: "other",
+  };
 
-    let matchesSearch = true;
-    if (activeSearchText) {
-      matchesSearch = item.name
-        .toLowerCase()
-        .includes(activeSearchText.toLowerCase());
+  const patternMap = {
+    GEOMETRIC_OR_ABSTRACT: "geometric abstract",
+    SOLID: "solid",
+    STRIPED: "striped",
+    GRAPHIC: "graphic",
+    FLORAL: "floral",
+    PLAID_OR_FLANNEL: "plaid flannel",
+  };
+
+  const eventMap = {
+    ACTIVE_OR_SPORT: "sport active gym",
+    FORMAL: "formal dressy",
+    CASUAL: "casual everyday",
+    WORK_OR_SMART: "work",
+    PARTY_OR_NIGHT_OUT: "party night out social",
+  };
+
+  const fitMap = {
+    1: "slim fitted tight",
+    2: "regular normal",
+    3: "loose oversized baggy",
+  };
+
+  const filteredItems = items.filter((item) => {
+    //category filter
+    if (category !== "all") {
+      const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        full_body: "FULL_BODY",
+        outerwear: "OUTERWEAR",
+      };
+
+      if (item.type !== typeMap[category]) {
+        return false;
+      }
     }
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
 
-    return matchesCategory && matchesSearch;
+    //search filter
+    if (terms.length > 0) {
+      const searchableText = [
+        normalize(item.type),
+        normalize(item.color),
+        normalize(item.seasonWear),
+        normalize(item.formality),
+        normalize(item.fit),
+        normalize(item.pattern),
+
+        materialMap[item.material],
+        patternMap[item.pattern],
+        eventMap[item.formality],
+        fitMap[item.fit],
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const words = searchableText.split(" ");
+      console.log("SEARCH TERMS:", terms);
+      console.log("ITEM TEXT:", searchableText);
+      const matches = terms.every((term) =>
+        words.some((word) => word.startsWith(term)),
+      );
+      if (!matches) return false;
+    }
+    return true;
   });
 
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
@@ -385,36 +444,172 @@ export default function ClosetScreen() {
     );
   });
 
+  const itemsListHeader = (
+    <>
+      <SearchBar
+        value={searchText}
+        onChangeText={(text) => setSearchText(text)}
+        onSubmit={handleSearchSubmit}
+      />
+      <View
+        className="item-categories"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 10,
+          justifyContent: "flex-start",
+          paddingVertical: 15,
+        }}
+      >
+        <Pressable
+          className="tops-category"
+          style={{
+            backgroundColor:
+              category === "tops"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Tops
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="bottoms-category"
+          style={{
+            backgroundColor:
+              category === "bottoms"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "bottoms" ? "all" : "bottoms",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Bottoms
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="full-body-category"
+          style={{
+            backgroundColor:
+              category === "full_body"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "full_body" ? "all" : "full_body",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Full Body
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="outerwear-category"
+          style={{
+            backgroundColor:
+              category === "outerwear"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) =>
+              prev === "outerwear" ? "all" : "outerwear",
+            )
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Outerwear
+          </ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       {!editItemsModalVisible && (
         <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
       )}
 
-      <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            itemId={currItemId}
           />
         ) : (
-          <View style={{ width: "100%", flex: 1 }}>
-            {isItems && (
-              <SearchBar
-                value={searchText}
-                onChangeText={(text) => {
-                  setSearchText(text);
-                  if (text === "") setActiveSearchText("");
-                }}
-                placeholder="Search items inventory..."
-                onSubmit={handleSearchSubmit}
-              />
-            )}
-
+          <View style={{ flex: 1, width: "100%" }}>
             {isItems ? (
               <>
                 {isItemsLoading ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
                     <ActivityIndicator
                       size="large"
                       color={theme.colors.tabIconSelected}
@@ -422,97 +617,40 @@ export default function ClosetScreen() {
                     <ThemedText>Loading your items...</ThemedText>
                   </View>
                 ) : isItemsError ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
                     <ThemedText style={{ textAlign: "center" }}>
-                      {itemsError?.message ||
-                        "Could not load items. Please try again."}
+                      {itemsError?.message || "Could not load items. Please try again."}
                     </ThemedText>
                     <Pressable
                       onPress={() => refetch()}
-                      style={styles.retryButton}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
                     >
                       <ThemedText>Retry</ThemedText>
                     </Pressable>
                   </View>
                 ) : (
                   <>
-                    <View style={styles.categoryRow}>
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "tops" ? "all" : "tops",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Tops
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "bottoms" ? "all" : "bottoms",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Bottoms
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "dresses" ? "all" : "dresses",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Dresses
-                        </ThemedText>
-                      </Pressable>
-                    </View>
-
-                    {isLoading ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        Loading your closet...
-                      </ThemedText>
-                    ) : filteredItems.length === 0 ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        No items found.
-                      </ThemedText>
-                    ) : (
-                      <Items
-                        items={filteredItems}
-                        setCurrItemId={setCurrItemId}
-                        currItemId={currItemId}
-                        setEditItemsModalVisible={setEditItemsModalVisible}
-                        editItemsModalVisible={editItemsModalVisible}
-                      />
-                    )}
+                    <Items
+                      items={filteredItems}
+                      setCurrItemId={setCurrItemId}
+                      currItemId={currItemId}
+                      setEditItemsModalVisible={setEditItemsModalVisible}
+                      editItemsModalVisible={editItemsModalVisible}
+                      listHeaderComponent={itemsListHeader}
+                    />
 
                     <Pressable
                       style={styles.fab}
@@ -548,17 +686,19 @@ export default function ClosetScreen() {
 
                 {mode === "regular" && (
                   <>
-                    <SearchBar
-                      value={outfitSearchText}
-                      onChangeText={(text) => {
-                        setOutfitSearchText(text);
-                        if (text === "") setActiveOutfitSearchText("");
-                      }}
-                      placeholder="Search by date (e.g., Jan 15, 2026)"
-                      onSubmit={() =>
-                        setActiveOutfitSearchText(outfitSearchText)
-                      }
-                    />
+                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                      <SearchBar
+                        value={outfitSearchText}
+                        onChangeText={(text) => {
+                          setOutfitSearchText(text);
+                          if (text === "") setActiveOutfitSearchText("");
+                        }}
+                        placeholder="Search by date (e.g., Jan 15, 2026)"
+                        onSubmit={() =>
+                          setActiveOutfitSearchText(outfitSearchText)
+                        }
+                      />
+                    </View>
                     {isOutfitsLoading && (
                       <View style={styles.centerState}>
                         <ActivityIndicator
@@ -682,6 +822,7 @@ export default function ClosetScreen() {
 
                 {mode === "trip" && (
                   <>
+<<<<<<< past-outfits
                     <SearchBar
                       value={tripSearchText}
                       onChangeText={(text) => {
@@ -690,6 +831,18 @@ export default function ClosetScreen() {
                       placeholder="Search by trip location"
                       onSubmit={() => { }}
                     />
+=======
+                    <View style={{ width: "100%", paddingHorizontal: 30, marginTop: 15 }}>
+                      <SearchBar
+                        value={tripSearchText}
+                        onChangeText={(text) => {
+                          setTripSearchText(text);
+                        }}
+                        placeholder="Search by trip location"
+                        onSubmit={() => { }}
+                      />
+                    </View>
+>>>>>>> testing-everything
                     <FlatList
                       className="trip_Oufit_Details"
                       data={trips}
@@ -698,7 +851,7 @@ export default function ClosetScreen() {
                       }
                       style={{
                         marginVertical: 15,
-                        paddingHorizontal: 30,
+                        paddingHorizontal: 15,
                         width: "100%",
                       }}
                       renderItem={({ item }) => (
@@ -1022,7 +1175,8 @@ const styles = StyleSheet.create({
   },
   outfitToggle: {
     flexDirection: "row",
-    margin: 15,
+    marginHorizontal: 30,
+    marginTop: 15,
     backgroundColor: "#e2d7cd",
     borderRadius: 10,
     alignSelf: "stretch",

@@ -111,8 +111,16 @@ const materialToLabel = (value) => {
     return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
 };
 
+export default function EditItemsModal({ item, setModalVisible }) {
 // TO DO: edit item logic
-export default function EditItemsModal({ item, itemId, setModalVisible }) {
+    useEffect(() => {
+        const t = Date.now();
+        console.log('[EditItemsModal] mount at', new Date(t).toISOString());
+        return () => {
+            console.log('[EditItemsModal] unmount at', new Date().toISOString());
+        };
+    }, []);
+
     const [uri, setUri] = useState(null);
     const [category, setCategory] = useState("TOP");
     const [pattern, setPattern] = useState("SOLID");

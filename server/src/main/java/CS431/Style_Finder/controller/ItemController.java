@@ -36,6 +36,12 @@ public class ItemController {
         return ResponseEntity.ok(itemService.getItemsByUserId(userId));
     }
 
+    // GET /api/items/user/{userId}/least-worn
+    @GetMapping("/user/{userId}/least-worn")
+    public ResponseEntity<List<ItemDto>> getLeastWornItemsByUser(@PathVariable Long userId) {
+        return ResponseEntity.ok(itemService.getLeastWornItemsByUserId(userId));
+    }
+
     // PUT /api/items/{id}
     @PutMapping("/{id}")
     public ResponseEntity<ItemDto> updateItem(@PathVariable Long id, @RequestBody ItemDto dto) {
