@@ -36,6 +36,14 @@ const materialMap = {
   7: "Other",
 };
 
+const itemTypeOrder = {
+  OVER: 1,
+  OUTERWEAR: 1,
+  FULL_BODY: 2,
+  TOP: 3,
+  BOTTOM: 4,
+};
+
 export default function ItemProperty() {
   const router = useRouter();
   const theme = useTheme();
@@ -74,6 +82,10 @@ export default function ItemProperty() {
             const fetchedItems = results
               .filter((result) => result.status === "fulfilled")
               .map((result) => result.value.data);
+            fetchedItems.sort(
+              (a, b) =>
+                (itemTypeOrder[a.type] || 99) - (itemTypeOrder[b.type] || 99),
+            );
             setItems(fetchedItems);
 
             const parsedIndex = Number(itemIndex);

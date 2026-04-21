@@ -11,7 +11,7 @@ export default function OutfitCoverImage({ imageUrls = [], itemIds = [], height 
 
   const shouldFetchByItemIds = providedUrls.length === 0 && Array.isArray(itemIds) && itemIds.length > 0;
 
-  const { data: fetchedUrls = [] } = useQuery({
+  const { data: fetchedUrls = [], isLoading } = useQuery({
     queryKey: ["outfit-cover-images", itemIds],
     enabled: shouldFetchByItemIds,
     staleTime: 5 * 60 * 1000,
@@ -30,6 +30,17 @@ export default function OutfitCoverImage({ imageUrls = [], itemIds = [], height 
 
   const urls = (providedUrls.length > 0 ? providedUrls : fetchedUrls).slice(0, 3);
 
+  if (isLoading && shouldFetchByItemIds) {
+    return (
+      <View style={{
+        width: "100%",
+        height,
+        borderRadius: 10,
+        backgroundColor: "#e8ddd7",  // slightly different shade = loading feel
+      }} />
+    );
+  }
+
   if (urls.length === 0) {
     return (
       <View
@@ -39,7 +50,8 @@ export default function OutfitCoverImage({ imageUrls = [], itemIds = [], height 
           borderRadius: 10,
           backgroundColor: "#efe6df",
         }}
-      />
+      >
+      </View>
     );
   }
 

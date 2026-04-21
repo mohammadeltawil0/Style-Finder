@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -54,6 +54,8 @@ export default function ClosetScreen() {
     useState(false);
   const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
   const [isDeletingTrip, setIsDeletingTrip] = useState(false);
+
+  const [autoOpenOutfitId, setAutoOpenOutfitId] = useState(null);
 
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -181,6 +183,24 @@ export default function ClosetScreen() {
       loadTabStateAndData();
     }, [params.tab, refetch]),
   );
+
+  const handledOutfitId = useRef(null);
+
+  // Replace your openOutfitId effect with this
+  useEffect(() => {
+    if (!params.openOutfitId) return;
+    if (handledOutfitId.current === params.openOutfitId) return; // ✅ skip if already handled
+    if (dbOutfits.length === 0) return;
+
+    const outfit = dbOutfits.find(
+      (o) => String(o.outfitId || o.id) === String(params.openOutfitId)
+    );
+
+    if (outfit) {
+      handledOutfitId.current = params.openOutfitId; // ✅ mark as handled
+      openOutfitDetails(outfit.outfitId);
+    }
+  }, [params.openOutfitId, dbOutfits]);
 
   const handleToggleItems = async (value) => {
     setIsItems(value);
@@ -316,35 +336,105 @@ export default function ClosetScreen() {
     return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
   };
 
-  const filteredItems = processedItems.filter((item) => {
-    let matchesCategory = true;
-    if (category === "tops") matchesCategory = item.type === "TOP";
-    else if (category === "bottoms") matchesCategory = item.type === "BOTTOM";
-    else if (category === "dresses")
-      matchesCategory = item.type === "FULL_BODY";
-    else if (category === "outerwear")
-      matchesCategory = item.type === "OUTERWEAR";
+  const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+  const materialMap = {
+    1: "cotton",
+    2: "linen hemp",
+    3: "wool fleece",
+    4: "silk satin",
+    5: "leather faux leather",
+    6: "synthetics polyester nylon spandex",
+    7: "other",
+  };
 
-    let matchesSearch = true;
-    if (activeSearchText) {
-      matchesSearch = item.name
-        .toLowerCase()
-        .includes(activeSearchText.toLowerCase());
+  const patternMap = {
+    GEOMETRIC_OR_ABSTRACT: "geometric abstract",
+    SOLID: "solid",
+    STRIPED: "striped",
+    GRAPHIC: "graphic",
+    FLORAL: "floral",
+    PLAID_OR_FLANNEL: "plaid flannel",
+  };
+
+  const eventMap = {
+    ACTIVE_OR_SPORT: "sport active gym",
+    FORMAL: "formal dressy",
+    CASUAL: "casual everyday",
+    WORK_OR_SMART: "work",
+    PARTY_OR_NIGHT_OUT: "party night out social",
+  };
+
+  const fitMap = {
+    1: "slim fitted tight",
+    2: "regular normal",
+    3: "loose oversized baggy",
+  };
+
+  const filteredItems = items.filter((item) => {
+    //category filter
+    if (category !== "all") {
+      const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        full_body: "FULL_BODY",
+        outerwear: "OUTERWEAR",
+      };
+
+      if (item.type !== typeMap[category]) {
+        return false;
+      }
     }
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
 
-    return matchesCategory && matchesSearch;
+    //search filter
+    if (terms.length > 0) {
+      const searchableText = [
+        normalize(item.type),
+        normalize(item.color),
+        normalize(item.seasonWear),
+        normalize(item.formality),
+        normalize(item.fit),
+        normalize(item.pattern),
+
+        materialMap[item.material],
+        patternMap[item.pattern],
+        eventMap[item.formality],
+        fitMap[item.fit],
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const words = searchableText.split(" ");
+      console.log("SEARCH TERMS:", terms);
+      console.log("ITEM TEXT:", searchableText);
+      const matches = terms.every((term) =>
+        words.some((word) => word.startsWith(term)),
+      );
+      if (!matches) return false;
+    }
+    return true;
   });
 
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
   // const trips = dbTrips;
 
-  // Filter outfits by date search
-  const filteredOutfits = dbOutfits.filter((outfit) => {
-    if (!activeOutfitSearchText) return true;
-    const query = activeOutfitSearchText.toLowerCase();
-    const outfitDate = formatOutfitDate(outfit.createdAt) || "";
-    return outfitDate.toLowerCase().includes(query);
-  });
+  // Filter outfits by date search, then show newest outfits first.
+  const filteredOutfits = dbOutfits
+    .filter((outfit) => {
+      if (!activeOutfitSearchText) return true;
+      const query = activeOutfitSearchText.toLowerCase();
+      const outfitDate = formatOutfitDate(outfit.createdAt) || "";
+      return outfitDate.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+  const paddedOutfits =
+    filteredOutfits.length % 2 !== 0
+      ? [...filteredOutfits, { id: "empty", isEmpty: true }]
+      : filteredOutfits;
 
   const dummyTrips = [
     {
@@ -365,36 +455,166 @@ export default function ClosetScreen() {
     );
   });
 
+  const itemsListHeader = (
+    <>
+      <SearchBar
+        value={searchText}
+        onChangeText={(text) => setSearchText(text)}
+        onSubmit={handleSearchSubmit}
+      />
+      <View
+        className="item-categories"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 10,
+          justifyContent: "flex-start",
+          paddingVertical: 15,
+        }}
+      >
+        <Pressable
+          className="tops-category"
+          style={{
+            backgroundColor:
+              category === "tops"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Tops
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="bottoms-category"
+          style={{
+            backgroundColor:
+              category === "bottoms"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Bottoms
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="full-body-category"
+          style={{
+            backgroundColor:
+              category === "full_body"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "full_body" ? "all" : "full_body"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Full Body
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="outerwear-category"
+          style={{
+            backgroundColor:
+              category === "outerwear"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "outerwear" ? "all" : "outerwear"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Outerwear
+          </ThemedText>
+        </Pressable>
+      </View>
+    </>
+  );
+
   return (
     <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
       {!editItemsModalVisible && (
         <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
       )}
 
-      <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
         {editItemsModalVisible ? (
           <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
             setModalVisible={setEditItemsModalVisible}
-            itemId={currItemId}
           />
         ) : (
-          <View style={{ width: "100%", flex: 1 }}>
-            {isItems && (
-              <SearchBar
-                value={searchText}
-                onChangeText={(text) => {
-                  setSearchText(text);
-                  if (text === "") setActiveSearchText("");
-                }}
-                placeholder="Search items inventory..."
-                onSubmit={handleSearchSubmit}
-              />
-            )}
-
+          <View style={{ flex: 1, width: "100%" }}>
             {isItems ? (
               <>
                 {isItemsLoading ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
                     <ActivityIndicator
                       size="large"
                       color={theme.colors.tabIconSelected}
@@ -402,97 +622,41 @@ export default function ClosetScreen() {
                     <ThemedText>Loading your items...</ThemedText>
                   </View>
                 ) : isItemsError ? (
-                  <View style={styles.centerState}>
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
                     <ThemedText style={{ textAlign: "center" }}>
                       {itemsError?.message ||
                         "Could not load items. Please try again."}
                     </ThemedText>
                     <Pressable
                       onPress={() => refetch()}
-                      style={styles.retryButton}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
                     >
                       <ThemedText>Retry</ThemedText>
                     </Pressable>
                   </View>
                 ) : (
                   <>
-                    <View style={styles.categoryRow}>
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "tops" ? "all" : "tops",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Tops
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "bottoms" ? "all" : "bottoms",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Bottoms
-                        </ThemedText>
-                      </Pressable>
-
-                      <Pressable
-                        style={styles.categoryBtn}
-                        onPress={() =>
-                          setCategory((prev) =>
-                            prev === "dresses" ? "all" : "dresses",
-                          )
-                        }
-                      >
-                        <ThemedText
-                          style={{
-                            color: theme.colors.text,
-                            fontSize: theme.sizes.text,
-                          }}
-                        >
-                          Dresses
-                        </ThemedText>
-                      </Pressable>
-                    </View>
-
-                    {isLoading ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        Loading your closet...
-                      </ThemedText>
-                    ) : filteredItems.length === 0 ? (
-                      <ThemedText
-                        style={{ textAlign: "center", marginTop: 20 }}
-                      >
-                        No items found.
-                      </ThemedText>
-                    ) : (
-                      <Items
-                        items={filteredItems}
-                        setCurrItemId={setCurrItemId}
-                        currItemId={currItemId}
-                        setEditItemsModalVisible={setEditItemsModalVisible}
-                        editItemsModalVisible={editItemsModalVisible}
-                      />
-                    )}
+                    <Items
+                      items={filteredItems}
+                      setCurrItemId={setCurrItemId}
+                      currItemId={currItemId}
+                      setEditItemsModalVisible={setEditItemsModalVisible}
+                      editItemsModalVisible={editItemsModalVisible}
+                      listHeaderComponent={itemsListHeader}
+                    />
 
                     <Pressable
                       style={styles.fab}
@@ -528,17 +692,25 @@ export default function ClosetScreen() {
 
                 {mode === "regular" && (
                   <>
-                    <SearchBar
-                      value={outfitSearchText}
-                      onChangeText={(text) => {
-                        setOutfitSearchText(text);
-                        if (text === "") setActiveOutfitSearchText("");
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
                       }}
-                      placeholder="Search by date (e.g., Jan 15, 2026)"
-                      onSubmit={() =>
-                        setActiveOutfitSearchText(outfitSearchText)
-                      }
-                    />
+                    >
+                      <SearchBar
+                        value={outfitSearchText}
+                        onChangeText={(text) => {
+                          setOutfitSearchText(text);
+                          if (text === "") setActiveOutfitSearchText("");
+                        }}
+                        placeholder="Search by date (e.g., Jan 15, 2026)"
+                        onSubmit={() =>
+                          setActiveOutfitSearchText(outfitSearchText)
+                        }
+                      />
+                    </View>
                     {isOutfitsLoading && (
                       <View style={styles.centerState}>
                         <ActivityIndicator
@@ -551,7 +723,7 @@ export default function ClosetScreen() {
                     {!isOutfitsLoading && (
                       <FlatList
                         className="regularOutfit-list"
-                        data={filteredOutfits}
+                        data={paddedOutfits}
                         keyExtractor={(item, index) =>
                           item.outfitId?.toString() || index.toString()
                         }
@@ -562,7 +734,7 @@ export default function ClosetScreen() {
                           width: "100%",
                         }}
                         columnWrapperStyle={{
-                          justifyContent: "center",
+                          justifyContent: "flex-start",
                           gap: 15,
                         }}
                         ListEmptyComponent={() =>
@@ -582,79 +754,82 @@ export default function ClosetScreen() {
                             </ThemedText>
                           )
                         }
-                        renderItem={({ item, index }) => (
-                          <View style={styles.outfitCard}>
-                            <TouchableOpacity
-                              onPress={() => openOutfitDetails(item.outfitId)}
-                            >
-                              <View style={styles.outfitViewBadge}>
-                                <Ionicons
-                                  name="eye-outline"
-                                  size={18}
-                                  color={theme.colors.text}
-                                />
-                              </View>
-                              {getOutfitCoverImage(item) ? (
-                                <Image
-                                  source={{ uri: getOutfitCoverImage(item) }}
-                                  style={styles.outfitImage}
-                                  resizeMode="cover"
-                                />
-                              ) : (
-                                <View style={styles.outfitPlaceholder}>
-                                  <ThemedText
-                                    style={{ color: "#666", fontSize: 12 }}
-                                  >
-                                    Items: {item.itemIds?.length || 0}
-                                  </ThemedText>
-                                </View>
-                              )}
-                            </TouchableOpacity>
+                        renderItem={({ item, index }) => {
+                          if (item.isEmpty) {
+                            return <View style={styles.outfitSpacer} />;
+                          }
 
-                            <View style={styles.outfitFooter}>
-                              <View>
-                                <ThemedText
-                                  style={{ fontSize: 13, fontWeight: "600" }}
-                                >
-                                  Outfit {index + 1}
-                                </ThemedText>
-                                {item.createdAt && (
-                                  <ThemedText
-                                    style={{ fontSize: 11, color: "#888" }}
-                                  >
-                                    {formatOutfitDate(item.createdAt)}
-                                  </ThemedText>
+                          return (
+                            <View style={styles.outfitCard}>
+                              <TouchableOpacity
+                                onPress={() => openOutfitDetails(item.outfitId)}
+                              >
+                                <View style={styles.outfitViewBadge}>
+                                  <Ionicons
+                                    name="eye-outline"
+                                    size={18}
+                                    color={theme.colors.text}
+                                  />
+                                </View>
+                                {getOutfitCoverImage(item) ? (
+                                  <Image
+                                    source={{ uri: getOutfitCoverImage(item) }}
+                                    style={styles.outfitImage}
+                                    resizeMode="cover"
+                                  />
+                                ) : (
+                                  <View style={styles.outfitPlaceholder}>
+                                    <ThemedText
+                                      style={{ color: "#666", fontSize: 12 }}
+                                    >
+                                      Items: {item.itemIds?.length || 0}
+                                    </ThemedText>
+                                  </View>
                                 )}
-                              </View>
-                              <View style={styles.outfitActions}>
-                                <Pressable
-                                  onPress={() => handleShareOutfit(item, index)}
-                                  hitSlop={8}
-                                >
-                                  <Ionicons
-                                    name="share-social-outline"
-                                    size={19}
-                                    color={theme.colors.text}
-                                  />
-                                </Pressable>
-                                <Pressable
-                                  onPress={() =>
-                                    requestDeleteOutfit(
-                                      item.outfitId || item.id,
-                                    )
-                                  }
-                                  hitSlop={8}
-                                >
-                                  <Ionicons
-                                    name="trash-outline"
-                                    size={19}
-                                    color={theme.colors.text}
-                                  />
-                                </Pressable>
+                              </TouchableOpacity>
+
+                              <View style={styles.outfitFooter}>
+                                <View>
+                                  {item.createdAt && (
+                                    <ThemedText
+                                      style={{ fontSize: 14, color: "#000000" }}
+                                    >
+                                      {formatOutfitDate(item.createdAt)}
+                                    </ThemedText>
+                                  )}
+                                </View>
+                                <View style={styles.outfitActions}>
+                                  <Pressable
+                                    onPress={() =>
+                                      handleShareOutfit(item, index)
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="share-social-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                  <Pressable
+                                    onPress={() =>
+                                      requestDeleteOutfit(
+                                        item.outfitId || item.id,
+                                      )
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="trash-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                </View>
                               </View>
                             </View>
-                          </View>
-                        )}
+                          );
+                        }}
                       />
                     )}
                   </>
@@ -662,14 +837,22 @@ export default function ClosetScreen() {
 
                 {mode === "trip" && (
                   <>
-                    <SearchBar
-                      value={tripSearchText}
-                      onChangeText={(text) => {
-                        setTripSearchText(text);
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
                       }}
-                      placeholder="Search by trip location"
-                      onSubmit={() => {}}
-                    />
+                    >
+                      <SearchBar
+                        value={tripSearchText}
+                        onChangeText={(text) => {
+                          setTripSearchText(text);
+                        }}
+                        placeholder="Search by trip location"
+                        onSubmit={() => {}}
+                      />
+                    </View>
                     <FlatList
                       className="trip_Oufit_Details"
                       data={trips}
@@ -678,7 +861,7 @@ export default function ClosetScreen() {
                       }
                       style={{
                         marginVertical: 15,
-                        paddingHorizontal: 30,
+                        paddingHorizontal: 15,
                         width: "100%",
                       }}
                       renderItem={({ item }) => (
@@ -708,14 +891,14 @@ export default function ClosetScreen() {
                           </TouchableOpacity>
 
                           <View style={styles.previewRow}>
-                              <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator
-                              >
-                                {(item.outfits || []).map((outfit, index) => (
-                                  <View key={index} style={styles.previewBox} />
-                                ))}
-                              </ScrollView>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator
+                            >
+                              {(item.outfits || []).map((outfit, index) => (
+                                <View key={index} style={styles.previewBox} />
+                              ))}
+                            </ScrollView>
                           </View>
                           <View style={styles.tripFooter}>
                             <Pressable
@@ -937,6 +1120,10 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     width: "48%",
   },
+  outfitSpacer: {
+    width: "48%",
+    marginBottom: 20,
+  },
   outfitImage: {
     width: "100%",
     height: 175,
@@ -1002,7 +1189,8 @@ const styles = StyleSheet.create({
   },
   outfitToggle: {
     flexDirection: "row",
-    margin: 15,
+    marginHorizontal: 30,
+    marginTop: 15,
     backgroundColor: "#e2d7cd",
     borderRadius: 10,
     alignSelf: "stretch",

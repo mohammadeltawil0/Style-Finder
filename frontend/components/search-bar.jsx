@@ -37,10 +37,7 @@ export const SearchBar = ({ value, onChangeText, onSubmit, placeholder  }) => {
             flexDirection: 'row',
             alignItems: 'center',
             backgroundColor: theme.colors.lightBrown,
-            // borderWidth: 1,
-            // borderColor: theme.colors.border,
             borderRadius: 10,
-            marginHorizontal: 30,
             marginTop: 30
         }}>
             <Ionicons style={{ padding: 10 }} name="search" size={20} color="#7F5539" />

@@ -440,7 +440,7 @@ function EditProfile() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {name}
+            {originalName || name}
           </ThemedText>
         </View>
         <View

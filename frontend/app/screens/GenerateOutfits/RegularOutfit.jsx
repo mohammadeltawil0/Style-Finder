@@ -43,8 +43,8 @@ const FORMALITY_OPTIONS = [
 const ITEM_TYPE_ORDER = {
   OUTERWEAR: 1,
   OVER: 1,
-  TOP: 2,
-  FULL_BODY: 3,
+  FULL_BODY: 2,
+  TOP: 3,
   BOTTOM: 4,
 };
 
@@ -663,7 +663,7 @@ export default function RegularOutfit() {
     setIsDetailsModalVisible(false);
     setIsEditModalVisible(false);
     setSelectedOutfit(null);
-    setEditedItemIds(null); 
+    setEditedItemIds(null);
 
     if (actionType === "SAVE") {
       Toast.show({
@@ -692,7 +692,7 @@ export default function RegularOutfit() {
     setEditedItemIds(finalEditedItemIds);
     setIsEditModalVisible(false);
     setTimeout(() => setIsDetailsModalVisible(true), 250);
-    
+
     sendFeedback("EDIT_FEEDBACK", finalEditedItemIds).catch((e) => {
       console.error("Edit feedback error:", e);
       Toast.show({
