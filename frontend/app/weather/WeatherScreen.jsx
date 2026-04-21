@@ -33,8 +33,7 @@ export default function WeatherScreen() {
 
     const { temperature_2m, weather_code, wind_speed_10m } = weather.current;
     const now = new Date();
-    const day = now.toLocaleDateString(undefined, { weekday: 'short' });
-    const date = now.toLocaleDateString();
+    const date = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     return (
