@@ -32,80 +32,9 @@ const normalizeColor = (value) => {
   if (typeof value !== "string") return DEFAULT_COLOR;
   return HEX_COLOR_REGEX.test(value) ? value : DEFAULT_COLOR;
 };
-
-const getContrastColor = (hexColor) => {
-  if (!hexColor || typeof hexColor !== "string" || !hexColor.startsWith("#") || hexColor.length < 7) {
-    return "#FFFFFF";
-  }
-
-  const r = parseInt(hexColor.substring(1, 3), 16);
-  const g = parseInt(hexColor.substring(3, 5), 16);
-  const b = parseInt(hexColor.substring(5, 7), 16);
-  const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-  return brightness > 125 ? "#000000" : "#FFFFFF";
-};
-
-const sanitize = (type, str) => {
-  if (typeof str !== "string") return "";
-
-  const titleCaseIfAllCaps = (value) => {
-    if (!value) return value;
-    const hasLetters = /[a-z]/i.test(value);
-    if (!hasLetters || value !== value.toUpperCase()) return value;
-
-    const lowered = value.toLowerCase();
-    return lowered.replace(/\b\w/g, (char) => char.toUpperCase());
-  };
-
-  //pattern
-  if (type === "pattern") {
-    if (str === "GEOMETRIC_OR_ABSTRACT") {
-      return "Geometric/Abstract";
-    } else if (str === "PLAID_OR_FLANNEL") {
-      return "Plaid/Flannel";
-    } else {
-      //active/sport and work/smart
-      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-    }
-  }
-
-  //formality
-  if (type === "formality") {
-    if (str === "PARTY_OR_NIGHT_OUT") {
-      return "Party/Night Out";
-    } else if (str === "ACTIVE_OR_SPORT") {
-      return "Active/Sport";
-    } else if (str === "WORK_OR_SMART") {
-      return "Work/Smart";
-    } else {
-      //active/sport and work/smart
-      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-    }
-  }
-
-  //material
-  if (type === "material") {
-    if (str === "Leather-Faux-Leather") {
-      return "Leather/Faux Leather";
-    } else {
-      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-    }
-  }
-
-  if (type === "length") {
-    if (str === "KNEE_LENGTH_OR_BERMUDA") {
-      return "Knee Length/Bermuda";
-    } else if (str === "MAXI_OR_FULL_LENGTH") {
-      return "Maxi/Full Length";
-    } else if (str === "MIDI_OR_CAPRI") {
-      return "Midi/Capri";
-    } else {
-      return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
-    }
-  }
-
-  // works for
-  return titleCaseIfAllCaps(str.replace(/[_-]/g, " "));
+const getOptionLabel = (options, value) => {
+    if (value === null || value === undefined || value === "") return "Not specified";
+    return options.find((option) => option.value === value)?.label ?? String(value);
 };
 
 export default function ReviewPage({
@@ -152,37 +81,15 @@ export default function ReviewPage({
   const [tempColor, setTempColor] = useState(normalizeColor(color));
 
   //Converting for UX: pattern, formality, material, season, length
-  const convertedPattern = pattern ? sanitize("pattern", pattern) : null;
-  const convertedFormality = formality
-    ? sanitize("formality", formality)
-    : null;
-  const convertedItemType = itemType ? sanitize("itemType", itemType) : null;
-  // const convertedMaterial = material ? sanitize("material", material) : null;
-  const materialMap = {
-    1: "Cotton",
-    2: "Linen/Hemp",
-    3: "Wool/Fleece",
-    4: "Silk/Satin",
-    5: "Leather/Faux Leather",
-    6: "Synthetics",
-    7: "Other"
-  };
-  const convertedMaterial = material ? materialMap[material] : null;
-  const convertedSeason = season ? sanitize("season", season) : null;
-  const convertedLength = length ? sanitize("length", length) : null;
+  const convertedItemType = getOptionLabel(CATEGORY_OPTIONS, itemType);
+  const convertedPattern = getOptionLabel(PATTERN_OPTIONS, pattern);
+  const convertedFormality = getOptionLabel(FORMALITY_OPTIONS, formality);
+  const convertedMaterial = getOptionLabel(MATERIAL_OPTIONS, material);
+  const convertedSeason = getOptionLabel(SEASON_OPTIONS, season);
+  const convertedLength = getOptionLabel(LENGTH_OPTIONS, length);
+  const convertedFit = getOptionLabel(FIT_OPTIONS, fit);
 
   // Convert enum/int fit states to actual categories for review page display
-  const convertedFit =
-    fit < 0.5
-      ? "Skinny"
-      : fit < 1.5
-        ? "Regular"
-        : "Oversized";
-
-  const getOptionLabel = (options, value) => {
-    if (value === null || value === undefined || value === "") return "Not specified";
-    return options.find((option) => option.value === value)?.label ?? String(value);
-  };
 
   const fitToLabel = (value) => (value < 0.5 ? "SLIM" : value < 1.5 ? "REGULAR" : "LOOSE");
   const fitLabelToValue = (value) => {
@@ -1184,7 +1091,7 @@ export default function ReviewPage({
         value={fitToLabel(fit ?? 1)}
         onSelect={(nextValue) =>
           applyLocalUpdate("Fit", () => {
-            setFit(fitLabelToValue(nextValue));
+            setFit(nextValue);
           })
         }
         options={FIT_OPTIONS}
@@ -1402,12 +1309,3 @@ const styles = {
     alignSelf: "flex-start",
   },
 };
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-// import {API_URL} from '@env';
+import {API_URL} from '@env';
 import axios from 'axios';
 
 // 1. Verify the URL loaded correctly (Debugging)
@@ -8,7 +8,7 @@ import axios from 'axios';
 // const API_URL = "http://localhost:8080";
 
 // If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
-const API_URL = "http://{IP_ADDRESS}:8080";
+// const API_URL = "http://{IP_ADDRESS}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 

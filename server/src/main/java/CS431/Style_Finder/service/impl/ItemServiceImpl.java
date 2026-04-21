@@ -74,9 +74,9 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> getLeastWornItemsByUserId(Long userId) {
-           return itemRepository.findTop3ByUser_UserIdOrderByTimesWornAscItemIdAsc(userId)
+        return itemRepository.findTop3ByUser_UserIdOrderByTimesWornAscItemIdAsc(userId)
                 .stream()
-                .map(itemMapper::toDto)
+                .map(item -> itemMapper.toDto((Item) item)) // Explicit lambda
                 .collect(Collectors.toList());
     }
 

@@ -188,25 +188,93 @@ export default function Recommendations() {
   // Old one's to maintain proper UI and location manual bc user can be anywhere to plan the next outfit
   const [weatherEnabled, setWeatherEnabled] = useState(true);
   const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState(null); // Stores the final lat,lon for the payload
+  const [searchResults, setSearchResults] = useState([]); // Stores the Open-Meteo array
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+
   const [showDropdown, setShowDropdown] = useState(false); // For location autocomplete dropdown
   const [eventType, setEventType] = useState(""); // If formality is formal, ask for which event ...
 
-  const predefinedLocations = [
-    { city: "New York", state: "NY", country: "USA" },
-    { city: "New Brunswick", state: "NJ", country: "USA" },
-    { city: "Piscataway", state: "NJ", country: "USA" },
-    { city: "Jersey City", state: "NJ", country: "USA" },
-    { city: "Los Angeles", state: "CA", country: "USA" },
-    { city: "Chicago", state: "IL", country: "USA" },
-    { city: "Houston", state: "TX", country: "USA" },
-    { city: "Miami", state: "FL", country: "USA" },
-  ];
+  // --- Open-Meteo Geocoding Search ---
+  const handleLocationSearch = async (text) => {
+    setLocation(text);
+    setLocationCoords(null); // Reset coords if they start typing again
 
-  const filteredLocations = predefinedLocations.filter((locate) =>
-    `${locate.city}, ${locate.state}, ${locate.country}`
-      .toLowerCase()
-      .includes(location.toLowerCase()),
-  );
+    if (text.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearchingLocation(true);
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(text)}&count=5&language=en&format=json`);
+      const data = await res.json();
+
+      if (data.results) {
+        setSearchResults(data.results);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Allow location access to use this feature.");
+        return;
+      }
+
+      // 1. Instantly close dropdown and show loading text in the search bar
+      setShowDropdown(false);
+      setLocation("Locating...");
+
+      // 2. Fetch coords (Using Balanced accuracy prevents hanging on Android/Emulators)
+      const gps = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced
+      });
+
+      // 3. Reverse geocode to get City, State, Country
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: gps.coords.latitude,
+        longitude: gps.coords.longitude,
+      });
+
+      if (geocode && geocode.length > 0) {
+        const place = geocode;
+        const city = place.city || place.subregion || place.district || "";
+        const state = place.region || "";
+        const country = place.country || "";
+
+        // Filter out empty strings and join with commas
+        const formattedLocation = [city, state, country].filter(Boolean).join(", ");
+
+        // 4. If we successfully got a name, use it. Otherwise, fallback to coordinates!
+        if (formattedLocation.trim() !== "") {
+          setLocation(formattedLocation);
+        } else {
+          const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+          setLocationCoords(coordString); // Save exact coords for payload
+          setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString); // Display readable name
+        }
+      } else {
+        // Fallback if the geocoder completely fails to return an array
+        const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+        setLocationCoords(coordString); // Save exact coords for payload
+        setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString); // Display readable name
+      }
+
+    } catch (error) {
+      console.error("Location error:", error);
+      setLocation(""); // Clear the "Locating..." text if it crashes
+      Alert.alert("Error", "Could not fetch current location. Please try typing it manually.");
+    }
+  };
 
   // TODO: Additional constraints state if we plan to add that button back in
   const [topFit, setTopFit] = useState([]);
@@ -278,7 +346,7 @@ export default function Recommendations() {
 
   // Andrew's origianl function name fetchSuggestions but renamed to be more descriptive of the action
   const handleGenerateOutfit = async () => {
-    if (!location || !formality) {
+    if (!locationCoords || !formality) {
       Alert.alert("Missing Fields", "Location and Occasion are required.");
       return;
     }
@@ -296,14 +364,13 @@ export default function Recommendations() {
         setIsGenerating(false);
         return;
       }
-      let gpsLocation = await Location.getCurrentPositionAsync({});
-      const locationCoords = `${gpsLocation.coords.latitude},${gpsLocation.coords.longitude}`;
 
+      const finalLocation = locationCoords || location;
       const userId = await getUserId();
 
       // Add data from additional constraints if we have it
       const data = {
-        location: locationCoords,
+        location: finalLocation,
         event: formality,
         useMemory,
         // Additional fields
@@ -490,36 +557,57 @@ export default function Recommendations() {
         {/* Location */}
         <ThemedText style={styles.sectionLabel}>Location:</ThemedText>
         <TextInput
-          placeholder="City, State, Country"
-          placeholderTextColor="#aaa"
-          value={location}
-          onChangeText={(text) => {
-            setLocation(text);
-            setShowDropdown(text.length > 0);
-          }}
-          style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
+            placeholder="Search city, state, or country..."
+            placeholderTextColor="#aaa"
+            value={location}
+            onFocus={() => setShowDropdown(true)}
+            onChangeText={(text) => {
+              handleLocationSearch(text);
+              setShowDropdown(true);
+            }}
+            style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
         />
-        {showDropdown && filteredLocations.length > 0 && (
-          <ScrollView
-            style={styles.filterList}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled
-          >
-            {filteredLocations.map((locate, index) => (
-              <ThemedText
-                key={index}
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setLocation(
-                    `${locate.city}, ${locate.state}, ${locate.country}`,
-                  );
-                  setShowDropdown(false);
-                }}
+
+        {showDropdown && (
+            <ScrollView
+                style={styles.filterList}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+            >
+              <TouchableOpacity
+                  style={[styles.dropdownItem, { backgroundColor: theme.colors.card }]}
+                  onPress={handleCurrentLocation}
               >
-                {locate.city}, {locate.state}, {locate.country}
-              </ThemedText>
-            ))}
-          </ScrollView>
+                <ThemedText style={{ fontWeight: 'bold', color: theme.colors.tabIconSelected }}>
+                  📍 Use Current Location
+                </ThemedText>
+              </TouchableOpacity>
+
+              {isSearchingLocation && (
+                  <View style={{ padding: 10 }}>
+                    <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
+                  </View>
+              )}
+
+              {/* Dynamic Open-Meteo Results */}
+              {!isSearchingLocation && searchResults.map((place) => {
+                // Format: "City, State, Country"
+                const displayName = [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+                return (
+                    <TouchableOpacity
+                        key={place.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setLocation(displayName);
+                          setLocationCoords(`${place.latitude},${place.longitude}`);
+                          setShowDropdown(false);
+                        }}
+                    >
+                      <ThemedText>{displayName}</ThemedText>
+                    </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
         )}
 
         <View style={styles.divider} />
