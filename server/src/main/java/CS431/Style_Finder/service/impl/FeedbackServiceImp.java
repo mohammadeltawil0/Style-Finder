@@ -41,10 +41,10 @@ public class FeedbackServiceImp implements FeedbackService {
             Outfit outfit = new Outfit();
             outfit.setSaved(true);
             ArrayList<OutfitItem> outfitItems = new ArrayList<>();
-            for (int i = 0; i < feedback.getOriginalItemIds().size(); i++) {
+            for (int i = 0; i < feedback.getFinalItemIds().size(); i++) {
                 OutfitItem outfitItem = new OutfitItem();
-                outfitItem.setItem(itemRepository.
-                        findById(feedback.getOriginalItemIds().get(i)).orElse(null));
+                outfitItem.setItem(itemRepository
+                        .findById(feedback.getFinalItemIds().get(i)).orElse(null));
                 outfitItem.setOutfit(outfit);
                 outfitItems.add(outfitItem);
             }
@@ -53,8 +53,8 @@ public class FeedbackServiceImp implements FeedbackService {
             outfitRepository.save(outfit);
         }
 
-        // IMPLICIT MEMORY: Gradient Descent
-        if (feedback.getAction().equals("EDIT_SAVE")) {
+        // IMPLICIT MEMORY: gradient descent on EDIT_SAVE or EDIT_FEEDBACK (no DB outfit save)
+        if (feedback.getAction().equals("EDIT_SAVE") || feedback.getAction().equals("EDIT_FEEDBACK")) {
             List<Item> suggestedItems = wardrobeDb.findAllById(feedback.getOriginalItemIds());
             List<Item> finalItems = wardrobeDb.findAllById(feedback.getFinalItemIds());
             applyGradientDescent(vw, suggestedItems, finalItems, 0.1);
