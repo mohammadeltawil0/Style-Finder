@@ -29,7 +29,8 @@ public class SecurityConfig {
                 "/api/users/login",
                 "/api/users/register",
                 "/api/users/check-username",
-                "/api/users/reset-password"
+                "/api/users/reset-password",
+                "/api/share/**"
             ).permitAll()
 
             //ADMIN ONLY
