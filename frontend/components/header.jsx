@@ -50,9 +50,7 @@ export const CustomHeader = ({ page }) => {
       style={{
         flex: 0,
         backgroundColor:
-          page === "Profile" ||
-          page === "EditProfile" ||
-          page === "UpdatePassword"
+          page === "Profile"
             ? theme.colors.background
             : theme.colors.card,
       }}
@@ -60,9 +58,7 @@ export const CustomHeader = ({ page }) => {
       <View
         style={{
           backgroundColor:
-            page === "Profile" ||
-            page === "EditProfile" ||
-            page === "UpdatePassword"
+            page === "Profile"
               ? theme.colors.background
               : theme.colors.card,
           alignItems: "center",
