@@ -2,6 +2,7 @@ import { FlatList, Image, TouchableOpacity, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import placeholderImg from "../assets/images/placeholder.png";
 
 export const Items = ({
   items,
@@ -14,6 +15,7 @@ export const Items = ({
 }) => {
   const theme = useTheme();
   const paddedItems = items.length % 2 !== 0 ? [...items, { id: "empty", isEmpty: true }] : items;
+
   return (
     <>
       <FlatList
@@ -42,7 +44,6 @@ export const Items = ({
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
                 marginBottom: 20, // space between rows
-                overflow: "hidden", // clips image to borderRadius
                 width: "48%",
               }}
               onPress={() => {
@@ -50,8 +51,8 @@ export const Items = ({
                 setEditItemsModalVisible(!editItemsModalVisible);
               }}
             >
-              <View className="item-image" style={{ height: 175 }}>
-                {item.imageUrl ? (
+              <View className="item-image" style={{ height: 175, borderRadius: 10, overflow: "hidden" }}>
+                {item.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:')) ? (
                   <Image
                     source={{ uri: item.imageUrl }}
                     style={{ width: "100%", height: "100%" }}

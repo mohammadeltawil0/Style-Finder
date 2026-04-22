@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Toast from 'react-native-toast-message';
 import { apiClient } from "../../scripts/apiClient";
+import placeholderImg from "../../assets/images/placeholder.png";
 
 // Page Imports
 import CameraPage from "./camera-page.jsx";
@@ -117,7 +118,7 @@ export default function AddItemScreen() {
     let finalImageUrl = payload.rawUri;
 
     // 1. Direct-to-CDN Upload (From Version B)
-    if (finalImageUrl && !finalImageUrl.startsWith('http')) {
+    if (typeof finalImageUrl === 'string' && finalImageUrl && !finalImageUrl.startsWith('http')) {
 
       const filename = uri.split('/').pop();
       const match = /\.(\w+)$/.exec(filename);
@@ -147,7 +148,7 @@ export default function AddItemScreen() {
     // 2. Save Item to Database (From Version A & B)
     const itemData = {
       ...payload.itemData,
-      imageUrl: finalImageUrl || null,
+      imageUrl: finalImageUrl || placeholderImg,
     };
 
     console.log("Submitting payload:", itemData);

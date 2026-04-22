@@ -91,29 +91,22 @@ public class Item {
             case FLEECE:
                 score += 5.0; // Maximum warmth retention
                 break;
-            case ACRYLIC: // Common synthetic wool substitute
             case LEATHER: // Excellent windbreaker and heat trapper
                 score += 3.0;
                 break;
-
+            // Moderate Insulation (Transitional Seasons)
+            case POLYESTER:
+            case KNIT:
+                score += 1.0; // Slight warmth, depends mostly on bulk
+                break;
+            case DENIM:
+                score += 2.0; // Moderately warm, wind-resistant but not insulating
+                break;
             // Highly Breathable (Summer/Hot Weather)
             case LINEN:
-            case HEMP:
-                score -= 4.0; // Maximum breathability, actively cools
-                break;
             case SILK:
-            case RAYON:
-            case LYOCELL:
-            case MODAL:
-                score -= 2.0; // Lightweight, breathable cellulose/natural fibers
-                break;
-
             // Neutral / Standard Synthetics (Warmth relies almost entirely on bulk)
             case COTTON:
-            case POLYESTER:
-            case NYLON:
-            case SPANDEX:
-            case ACETATE:
             default:
                 score += 0.0; // No inherent thermal bias
                 break;

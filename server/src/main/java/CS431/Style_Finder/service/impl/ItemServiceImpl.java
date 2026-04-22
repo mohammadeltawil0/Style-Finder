@@ -94,7 +94,7 @@ public class ItemServiceImpl implements ItemService {
         item.setSeasonWear(dto.getSeasonWear());
         item.setFormality(dto.getFormality());
         item.setFit(dto.getFit());
-        if (dto.getImageUrl() != null) item.setImageUrl(dto.getImageUrl());
+        item.setImageUrl(dto.getImageUrl());
         return itemMapper.toDto(itemRepository.save(item));
     }
 

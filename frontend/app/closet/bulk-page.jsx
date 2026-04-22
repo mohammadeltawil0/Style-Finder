@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
-import Slider from "@react-native-community/slider";
+// import Slider from "@react-native-community/slider";
 
 export default function BulkPage({
   bulk,
@@ -20,9 +20,9 @@ export default function BulkPage({
 }) {
   const theme = useTheme();
   const options = [
-    "Thin",
-    "Regular",
-    "Thick",
+    { id: 0, label: "Thin", description: "Lightweight, not bulky at all" },
+    { id: 1, label: "Regular", description: "Standard thickness, average bulk" },
+    { id: 2, label: "Thick", description: "Heavy, very bulky or padded" },
   ];
 
   const { width } = useWindowDimensions();
@@ -82,42 +82,51 @@ export default function BulkPage({
               }}
             >
               <View style={styles.bulkOptions}>
-                <View
-                  className="sliderLabelsView"
-                  style={styles.sliderLabelsView}
-                >
-                  <View
-                    className="bulkLabels"
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      paddingHorizontal: 4,
-                      alignItems: "flex-end",
-                    }}
-                  >
-                    {options.map((option, index) => (
-                      <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                        {option}
+                {options.map((option) => {
+                  const isSelected = Math.round(bulk) === option.id;
+                  return (
+                    <Pressable
+                      key={option.id}
+                      onPress={() => setBulk(option.id)}
+                      style={[
+                        {
+                          backgroundColor: isSelected ? theme.colors.tabIconSelected : theme.colors.lightBrown,
+                          borderRadius: 10,
+                          paddingHorizontal: 24,
+                          paddingVertical: 12,
+                          width: isWide ? 400 : "100%",
+                          shadowColor: isSelected ? "#000" : undefined,
+                          shadowOffset: isSelected ? { width: 0, height: 5 } : undefined,
+                          shadowOpacity: isSelected ? 0.2 : undefined,
+                          shadowRadius: isSelected ? 3.5 : undefined,
+                          elevation: isSelected ? 5 : undefined,
+                          marginBottom: 12,
+                        },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          color: theme.colors.text,
+                          fontSize: theme.sizes.h3,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        {option.label}
                       </ThemedText>
-                    ))}
-                  </View>
-                  <View className="sliderView" style={styles.sliderView}>
-                    <Slider
-                      // style={{ width: 220, height: 40 }}
-                      minimumTrackTintColor={theme.colors.tabIconSelected}
-                      maximumTrackTintColor={theme.colors.lightBrown}
-                      thumbTintColor={theme.colors.tabIconSelected}
-                      minimumValue={0}
-                      maximumValue={2}
-                      step={0.25}
-                      value={bulk ?? 1}
-                      onValueChange={(value) => {
-                        setBulk(value);
-                        console.log("bulk", value);
-                      }}
-                    />
-                  </View>
-                </View>
+                      <ThemedText
+                        style={{
+                          fontSize: 16,
+                          opacity: 0.8,
+                          marginTop: 4,
+                          fontFamily: theme.fonts.regular,
+                          color: theme.colors.text,
+                        }}
+                      >
+                        {option.description}
+                      </ThemedText>
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
           </View>

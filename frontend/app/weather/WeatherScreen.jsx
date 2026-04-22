@@ -10,6 +10,7 @@ export default function WeatherScreen() {
 
     const cardStyle = {
         backgroundColor: theme.colors.lightBrown,
+        marginHorizontal: 30,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 20,
@@ -21,6 +22,7 @@ export default function WeatherScreen() {
         flexDirection: "row",
         alignSelf: "stretch",
         justifyContent: "center",
+        height: 120
     };
 
     if (loading) return <ActivityIndicator size="large" />;

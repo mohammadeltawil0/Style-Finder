@@ -21,20 +21,9 @@ import {
     PATTERN_OPTIONS,
     SEASON_OPTIONS,
 } from "../../constants/options";
+import Feather from "@expo/vector-icons/Feather";
 
 const DEFAULT_COLOR = "#74512D";
-
-const getContrastColor = (hexColor) => {
-    if (!hexColor || typeof hexColor !== "string" || !hexColor.startsWith("#") || hexColor.length < 7) {
-        return "#FFFFFF";
-    }
-
-    const r = parseInt(hexColor.substring(1, 3), 16);
-    const g = parseInt(hexColor.substring(3, 5), 16);
-    const b = parseInt(hexColor.substring(5, 7), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 125 ? "#000000" : "#FFFFFF";
-};
 
 const titleCaseFromEnum = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
@@ -72,54 +61,23 @@ const MATERIAL_LABELS = {
 
 const materialToLabel = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
-    if (typeof value === "number") return MATERIAL_LABELS[value] || "Not specified";
 
-    const raw = String(value).trim();
-    if (!raw) return "Not specified";
-
-    const asNumber = Number(raw);
-    if (!Number.isNaN(asNumber) && MATERIAL_LABELS[asNumber]) return MATERIAL_LABELS[asNumber];
-
-    const upper = raw.toUpperCase();
-    const enumMap = {
-        COTTON: 1,
-        LINEN_HEMP: 2,
-        WOOL_FLEECE: 3,
-        SILK_SATIN: 4,
-        LEATHER_FAUX_LEATHER: 5,
-        SYNTHETICS: 6,
-        OTHER: 7,
-    };
-
-    if (enumMap[upper]) return MATERIAL_LABELS[enumMap[upper]];
-
-    const key = raw.toLowerCase().replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
     const labelMap = {
-        cotton: 1,
-        "linen/hemp": 2,
-        "linen hemp": 2,
-        "wool/fleece": 3,
-        "wool fleece": 3,
-        "silk/satin": 4,
-        "silk satin": 4,
-        "leather/faux leather": 5,
-        "leather faux leather": 5,
-        synthetics: 6,
-        other: 7,
+        COTTON: "Cotton",
+        LINEN: "Linen/Hemp",
+        WOOL: "Wool",
+        SILK: "Silk/Satin",
+        LEATHER: "Leather/Faux Leather",
+        POLYESTER: "Synthetics",
+        DENIM: "Denim",
+        KNIT: "Knit/Jersey",
+        FLEECE: "Fleece",
     };
 
-    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
+    return labelMap[String(value).toUpperCase()] || titleCaseFromEnum(value);
 };
-export default function EditItemsModal({ item, setModalVisible }) {
-// TO DO: edit item logic
-    useEffect(() => {
-        const t = Date.now();
-        console.log('[EditItemsModal] mount at', new Date(t).toISOString());
-        return () => {
-            console.log('[EditItemsModal] unmount at', new Date().toISOString());
-        };
-    }, []);
 
+export default function EditItemsModal({ item, setModalVisible }) {
     const [uri, setUri] = useState(null);
     const [category, setCategory] = useState("TOP");
     const [pattern, setPattern] = useState("SOLID");
@@ -148,7 +106,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    const hasImageUrl = typeof uri === "string" && uri.trim().length > 0;
+    const hasImageUrl = uri && typeof uri === 'string' && (uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'));
 
     const fitToSliderValue = (value) => {
         if (typeof value === "number") return value;
@@ -228,34 +186,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
 
     const normalizeMaterial = (value) => {
         if (value === null || value === undefined || value === "") return null;
-        if (typeof value === "number") return value;
-
-        const asNumber = Number(value);
-        if (!Number.isNaN(asNumber) && asNumber >= 1 && asNumber <= 7) return asNumber;
-
-        const upper = String(value).toUpperCase();
-        const enumMap = {
-            COTTON: 1,
-            LINEN_HEMP: 2,
-            WOOL_FLEECE: 3,
-            SILK_SATIN: 4,
-            LEATHER_FAUX_LEATHER: 5,
-            SYNTHETICS: 6,
-            OTHER: 7,
-        };
-        if (enumMap[upper]) return enumMap[upper];
-
-        const map = {
-            cotton: 1,
-            "linen/hemp": 2,
-            "wool/fleece": 3,
-            "silk/satin": 4,
-            "leather/faux leather": 5,
-            synthetics: 6,
-            other: 7,
-        };
-        const key = String(value).toLowerCase();
-        return map[key] || value;
+        return String(value).toUpperCase();
     };
 
     const normalizeBulk = (value) => {
@@ -491,7 +422,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
-                                // { backgroundColor: theme.colors.card }
                             ]}
                         >
                             <Entypo name="chevron-left" size={30} color="black" />
@@ -513,15 +443,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 {
                                     backgroundColor: theme.colors.card,
                                     borderRadius: 10,
-                                    padding: 20,
-                                    alignItems: "center",
-                                    justifyContent: "center",
                                 },
                             ]}
                         >
-                            <ThemedText style={{ textAlign: "center" }}>
-                                No image found for this item.
-                            </ThemedText>
+                            <View
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Feather name="image" size={40} color={theme.colors.text} />
+                            </View>
                             <View
                                 style={{
                                     position: "absolute",
@@ -791,7 +725,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                Event:
+                                Formality:
                             </ThemedText>
                             <ThemedText
                                 style={[
@@ -1260,7 +1194,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsImageModalVisible(false)}
             >
                 <View style={styles.imageModalOverlay}>
-                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}> 
+                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}>
                         <View style={styles.imageModalHeader}>
                             <ThemedText
                                 style={{
@@ -1278,6 +1212,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 uri={draftImageUri}
                                 setPage={() => setIsImageModalVisible(false)}
                                 hideNextButton={true}
+                                isEditing={true}
                             />
                         </View>
                         <View style={styles.confirmActions}>
@@ -1330,6 +1265,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onSelect={(nextCategory) => {
                     setCategory(nextCategory);
                     updateItemMutation.mutate({ type: nextCategory });
+                    setIsLengthModalVisible(true);
+                    return;
                 }}
                 options={CATEGORY_OPTIONS}
                 title="Edit Category"
@@ -1366,7 +1303,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsColorModalVisible(false)}
             >
                 <View style={styles.confirmOverlay}>
-                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}> 
+                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}>
                         <ThemedText
                             style={{
                                 fontSize: theme.sizes.h2,
@@ -1483,7 +1420,11 @@ export default function EditItemsModal({ item, setModalVisible }) {
                     setLength(nextLength);
                     updateItemMutation.mutate({ length: nextLength });
                 }}
-                options={LENGTH_OPTIONS}
+                options={LENGTH_OPTIONS.filter((opt) =>
+                    category === "TOP" || category === "OUTERWEAR"
+                        ? ["SLEEVELESS", "CAP", "SHORT_SLEEVE", "THREE_QUARTER", "LONG_SLEEVE"].includes(opt.value)
+                        : ["ABOVE_KNEE", "KNEE_LENGTH_OR_BERMUDA", "MIDI_OR_CAPRI", "MAXI_OR_FULL_LENGTH"].includes(opt.value)
+                )}
                 title="Edit Length"
                 isSaving={updateItemMutation.isPending}
             />
