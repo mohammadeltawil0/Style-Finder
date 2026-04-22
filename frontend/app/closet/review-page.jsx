@@ -33,8 +33,8 @@ const normalizeColor = (value) => {
   return HEX_COLOR_REGEX.test(value) ? value : DEFAULT_COLOR;
 };
 const getOptionLabel = (options, value) => {
-    if (value === null || value === undefined || value === "") return "Not specified";
-    return options.find((option) => option.value === value)?.label ?? String(value);
+  if (value === null || value === undefined || value === "") return "Not specified";
+  return options.find((option) => option.value === value)?.label ?? String(value);
 };
 
 export default function ReviewPage({
@@ -184,7 +184,7 @@ export default function ReviewPage({
               />
             </View>
             <View className="responseContent" style={{ flexGrow: 1, gap: 20 }}>
-              {uri && !imageFailed && (
+              {!imageFailed && (
                 <Pressable
                   style={{
                     backgroundColor: theme.colors.card,
@@ -194,7 +194,7 @@ export default function ReviewPage({
                   onPress={() => openEditModal(1)}
                 >
                   <Image
-                    source={{ uri }}
+                    source={{ uri: uri }}
                     resizeMode="cover"
                     style={{
                       width: "100%",
@@ -222,48 +222,46 @@ export default function ReviewPage({
                   </View>
                 </Pressable>
               )}
-              {!uri && (
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    alignItems: "center",
+                    backgroundColor: theme.colors.card,
+                    justifyContent: "center",
+                  },
+                ]}
+              >
                 <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      alignItems: "center",
-                      backgroundColor: theme.colors.card,
-                      justifyContent: "center",
-                    },
-                  ]}
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
                 >
-                  <View
-                    className="response"
+                  <ThemedText
                     style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
+                      fontSize: theme.sizes.h3,
+                      color: theme.colors.text,
+                      fontFamily: theme.fonts.regular,
                     }}
                   >
-                    <ThemedText
-                      style={{
-                        fontSize: theme.sizes.h3,
-                        color: theme.colors.text,
-                        fontFamily: theme.fonts.regular,
-                      }}
-                    >
-                      No image uploaded
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
-                  >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(1)}
-                    />
-                  </View>
+                    No image uploaded
+                  </ThemedText>
                 </View>
-              )}
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => openEditModal(1)}
+                  />
+                </View>
+              </View>
               <View
                 style={[
                   styles.responseContainer,

@@ -21,20 +21,9 @@ import {
     PATTERN_OPTIONS,
     SEASON_OPTIONS,
 } from "../../constants/options";
+import Feather from "@expo/vector-icons/Feather";
 
 const DEFAULT_COLOR = "#74512D";
-
-const getContrastColor = (hexColor) => {
-    if (!hexColor || typeof hexColor !== "string" || !hexColor.startsWith("#") || hexColor.length < 7) {
-        return "#FFFFFF";
-    }
-
-    const r = parseInt(hexColor.substring(1, 3), 16);
-    const g = parseInt(hexColor.substring(3, 5), 16);
-    const b = parseInt(hexColor.substring(5, 7), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 125 ? "#000000" : "#FFFFFF";
-};
 
 const titleCaseFromEnum = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
@@ -126,7 +115,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    const hasImageUrl = typeof uri === "string" && uri.trim().length > 0;
+    const hasImageUrl = typeof uri === "string" && uri.startsWith("http");
 
     const fitToSliderValue = (value) => {
         if (typeof value === "number") return value;
@@ -442,7 +431,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
-                                // { backgroundColor: theme.colors.card }
                             ]}
                         >
                             <Entypo name="chevron-left" size={30} color="black" />
@@ -464,15 +452,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 {
                                     backgroundColor: theme.colors.card,
                                     borderRadius: 10,
-                                    padding: 20,
-                                    alignItems: "center",
-                                    justifyContent: "center",
                                 },
                             ]}
                         >
-                            <ThemedText style={{ textAlign: "center" }}>
-                                No image found for this item.
-                            </ThemedText>
+                            <View
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Feather name="image" size={40} color={theme.colors.text} />
+                            </View>
                             <View
                                 style={{
                                     position: "absolute",
@@ -1229,6 +1221,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 uri={draftImageUri}
                                 setPage={() => setIsImageModalVisible(false)}
                                 hideNextButton={true}
+                                isEditing={true}
                             />
                         </View>
                         <View style={styles.confirmActions}>
