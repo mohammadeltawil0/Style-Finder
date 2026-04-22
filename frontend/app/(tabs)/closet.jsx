@@ -337,14 +337,17 @@ export default function ClosetScreen() {
   };
 
   const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+
   const materialMap = {
-    1: "cotton",
-    2: "linen hemp",
-    3: "wool fleece",
-    4: "silk satin",
-    5: "leather faux leather",
-    6: "synthetics polyester nylon spandex",
-    7: "other",
+    COTTON: "cotton",
+    LINEN: "linen hemp",
+    WOOL: "wool",
+    SILK: "silk satin",
+    LEATHER: "leather faux",
+    POLYESTER: "synthetics polyester",
+    DENIM: "denim",
+    KNIT: "knit jersey",
+    FLEECE: "fleece",
   };
 
   const patternMap = {
@@ -370,6 +373,18 @@ export default function ClosetScreen() {
     3: "loose oversized baggy",
   };
 
+  const lengthMap = {
+    SLEEVELESS: "sleeveless",
+    CAP: "cap sleeve",
+    SHORT_SLEEVE: "short sleeve",
+    THREE_QUARTER: "three quarter sleeve",
+    LONG_SLEEVE: "long sleeve",
+    ABOVE_KNEE: "above knee mini micro shorts",
+    KNEE_LENGTH_OR_BERMUDA: "knee length bermuda",
+    MIDI_OR_CAPRI: "midi capri",
+    MAXI_OR_FULL_LENGTH: "maxi full length",
+  };
+
   const filteredItems = items.filter((item) => {
     //category filter
     if (category !== "all") {
@@ -392,6 +407,7 @@ export default function ClosetScreen() {
         normalize(item.type),
         normalize(item.color),
         normalize(item.seasonWear),
+        item.seasonWear === "ALL_SEASONS" ? "summer winter spring fall" : null,
         normalize(item.formality),
         normalize(item.fit),
         normalize(item.pattern),
@@ -400,6 +416,7 @@ export default function ClosetScreen() {
         patternMap[item.pattern],
         eventMap[item.formality],
         fitMap[item.fit],
+        lengthMap[item.length],
       ]
         .filter(Boolean)
         .join(" ");
@@ -455,12 +472,14 @@ export default function ClosetScreen() {
     );
   });
 
+  const categories = ["all", "tops", "bottoms", "full_body", "outerwear"];
+
   const itemsListHeader = (
     <>
       <SearchBar
         value={searchText}
         onChangeText={(text) => setSearchText(text)}
-        placeholder={"Search Item via Type"}
+        placeholder={"Search Item via Type, Formality, Season, Material, Pattern, "}
         onSubmit={handleSearchSubmit}
       />
       <View
@@ -473,142 +492,24 @@ export default function ClosetScreen() {
           paddingVertical: 15,
         }}
       >
-        <Pressable
-          className="all-category"
-          style={{
-            backgroundColor:
-              category === "all"
-                ? theme.colors.tabIconSelected
-                : theme.colors.lightBrown,
-            borderRadius: 10,
-            width: "48%",
-            alignItems: "center",
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-          }}
-          onPress={() => setCategory("all")}
-        >
-          <ThemedText
-            style={{
-              color: theme.colors.text,
-              fontSize: theme.sizes.text,
-            }}
-          >
-            All
-          </ThemedText>
-        </Pressable>
-
-        <Pressable
-          className="tops-category"
-          style={{
-            backgroundColor:
-              category === "tops"
-                ? theme.colors.tabIconSelected
-                : theme.colors.lightBrown,
-            borderRadius: 10,
-            width: "48%",
-            alignItems: "center",
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-          }}
-          onPress={() =>
-            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
-          }
-        >
-          <ThemedText
-            style={{
-              color: theme.colors.text,
-              fontSize: theme.sizes.text,
-            }}
-          >
-            Tops
-          </ThemedText>
-        </Pressable>
-
-        <Pressable
-          className="bottoms-category"
-          style={{
-            backgroundColor:
-              category === "bottoms"
-                ? theme.colors.tabIconSelected
-                : theme.colors.lightBrown,
-            borderRadius: 10,
-            width: "48%",
-            alignItems: "center",
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-          }}
-          onPress={() =>
-            setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
-          }
-        >
-          <ThemedText
-            style={{
-              color: theme.colors.text,
-              fontSize: theme.sizes.text,
-            }}
-          >
-            Bottoms
-          </ThemedText>
-        </Pressable>
-
-        <Pressable
-          className="full-body-category"
-          style={{
-            backgroundColor:
-              category === "full_body"
-                ? theme.colors.tabIconSelected
-                : theme.colors.lightBrown,
-            borderRadius: 10,
-            width: "48%",
-            alignItems: "center",
-            paddingHorizontal: 20,
-            paddingVertical: 10,
-          }}
-          onPress={() =>
-            setCategory((prev) => (prev === "full_body" ? "all" : "full_body"))
-          }
-        >
-          <ThemedText
-            style={{
-              color: theme.colors.text,
-              fontSize: theme.sizes.text,
-            }}
-          >
-            Full Body
-          </ThemedText>
-        </Pressable>
-
-        <View style={{ width: "100%", alignItems: "center" }}>
+        {categories.map((cat) => (
           <Pressable
-            className="outerwear-category"
+            key={cat}
             style={{
-              backgroundColor:
-                category === "outerwear"
-                  ? theme.colors.tabIconSelected
-                  : theme.colors.lightBrown,
+              backgroundColor: category === cat ? theme.colors.tabIconSelected : theme.colors.lightBrown,
               borderRadius: 10,
-              width: "48%",
+              width: "30%",
               alignItems: "center",
-              paddingHorizontal: 20,
+              paddingHorizontal: 10,
               paddingVertical: 10,
             }}
-            onPress={() =>
-              setCategory((prev) =>
-                prev === "outerwear" ? "all" : "outerwear",
-              )
-            }
+            onPress={() => setCategory((prev) => (prev === cat ? "all" : cat))}
           >
-            <ThemedText
-              style={{
-                color: theme.colors.text,
-                fontSize: theme.sizes.text,
-              }}
-            >
-              Outerwear
+            <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
+              {cat === "all" ? "All" : cat === "full_body" ? "Full Body" : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </ThemedText>
           </Pressable>
-        </View>
+        ))}
       </View>
     </>
   );
@@ -880,7 +781,7 @@ export default function ClosetScreen() {
                           setTripSearchText(text);
                         }}
                         placeholder="Search by trip location"
-                        onSubmit={() => {}}
+                        onSubmit={() => { }}
                       />
                     </View>
                     <FlatList
