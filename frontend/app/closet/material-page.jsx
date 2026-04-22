@@ -16,7 +16,7 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
     { id: "WOOL", label: "Wool/Fleece", subheader: "Warm and insulating for sweaters and coats" },
     { id: "SILK", label: "Silk/Satin", subheader: "Smooth, lightweight, and luxurious" },
     { id: "LEATHER", label: "Leather/Faux Leather", subheader: "Durable hide or leather alternative" },
-    { id: "POLYESTER", label: "Synthetics", subheader: "Strong, flexible, and common in activewear" },
+    { id: "POLYESTER", label: "Polyester", subheader: "Strong, flexible, and common in activewear" },
     { id: "DENIM", label: "Denim", subheader: "Durable cotton fabric commonly used for jeans" },
     { id: "KNIT", label: "Knit/Jersey", subheader: "Stretchy and comfortable for t-shirts and casualwear" },
     { id: "FLEECE", label: "Fleece", subheader: "Soft and warm, often used in winter clothing" }
