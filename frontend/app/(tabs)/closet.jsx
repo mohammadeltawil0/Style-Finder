@@ -1,5 +1,9 @@
-import { useCallback, useState, useEffect } from "react";
-import Feather from "@expo/vector-icons/Feather";
+import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useTheme } from "@react-navigation/native";
+import { useQuery } from "@tanstack/react-query";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { useCallback, useState, useEffect, useRef } from "react";
 import {
   Pressable,
   View,
@@ -19,15 +23,9 @@ import {
   ThemedText,
   ThemedView,
 } from "../../components";
-import { useTheme } from "@react-navigation/native";
-import Ionicons from "@expo/vector-icons/Ionicons";
-import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useQuery } from "@tanstack/react-query";
-
+import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
-import { apiClient } from "../../scripts/apiClient";
 
 export default function ClosetScreen() {
   const theme = useTheme();
@@ -36,8 +34,18 @@ export default function ClosetScreen() {
 
   // --- UI States ---
   const [isItems, setIsItems] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [activeSearchText, setActiveSearchText] = useState("");
+  const [outfitSearchText, setOutfitSearchText] = useState("");
+  const [tripSearchText, setTripSearchText] = useState("");
+
+  const [activeOutfitSearchText, setActiveOutfitSearchText] = useState("");
+  const [isOutfitsLoading, setIsOutfitsLoading] = useState(false);
+  const [isDeleteTripModalVisible, setIsDeleteTripModalVisible] = useState(false);
+  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
+  const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
+
   const [category, setCategory] = useState("all");
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [mode, setMode] = useState("regular");
@@ -89,15 +97,108 @@ export default function ClosetScreen() {
     loadUserId();
   }, []);
 
-  const fetchUserOutfits = async (uid) => {
+
+  // All Regular Outfit Related Logic Starts here 
+  const fetchUserOutfits = async (id) => {
     try {
-      const response = await apiClient.get(`/api/outfits/user/${uid}`);
-      setDbOutfits(response.data);
+      const response = await apiClient.get(`/api/outfits/user/${id}`);
+      if (response.status === 200) {
+        const formattedOutfits = response.data.map((outfit) => ({
+          ...outfit,
+          itemIds:
+            outfit.itemIds ||
+            (outfit.outfitItems
+              ? outfit.outfitItems.map((oi) => oi.item.itemId)
+              : []),
+        }));
+        setDbOutfits(formattedOutfits);
+      }
     } catch (error) {
       console.error("Failed to fetch outfits:", error);
     }
   };
 
+  const formatOutfitDate = (createdAt) => {
+    if (!createdAt) return null;
+    const date = new Date(createdAt);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const openOutfitDetails = (outfitId) => {
+    router.push({
+      pathname: "/closet/outfitsHistory/itemProperty",
+      params: {
+        outfitId,
+        isOutfit: "true",
+      },
+    });
+  };
+
+  const confirmDeleteOutfit = async () => {
+    if (!pendingDeleteOutfitId || isDeletingOutfit) return;
+    try {
+      setIsDeletingOutfit(true);
+      const didDelete = await handleDeleteOutfit(pendingDeleteOutfitId);
+      if (didDelete) {
+        setIsDeleteOutfitModalVisible(false);
+        setPendingDeleteOutfitId(null);
+      }
+    } finally {
+      setIsDeletingOutfit(false);
+    }
+  };
+
+  const handleDeleteOutfit = async (outfitId) => {
+    try {
+      await apiClient.delete(`/api/outfits/${outfitId}`);
+      setDbOutfits((prev) =>
+        prev.filter((o) => o.outfitId !== outfitId && o.id !== outfitId),
+      );
+      setIsOutfitModalVisible(false);
+      return true;
+    } catch (error) {
+      console.error("Failed to delete outfit:", error);
+      return false;
+    }
+  };
+
+  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later....
+  const handleShareOutfit = async (outfit, index) => {
+    try {
+      const itemCount = outfit?.itemIds?.length || 0;
+      await Share.share({
+        message: `Check out Outfit ${index + 1} from my closet on StyleFinder (${itemCount} item${itemCount === 1 ? "" : "s"})!`,
+      });
+    } catch (error) {
+      console.error("Failed to share outfit:", error);
+    }
+  };
+
+  // All Regualr Outfit releare logic ends here. 
+  const filteredOutfits = dbOutfits
+    .filter((outfit) => {
+      if (!activeOutfitSearchText) return true;
+      const query = activeOutfitSearchText.toLowerCase();
+      const outfitDate = formatOutfitDate(outfit.createdAt) || "";
+      return outfitDate.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    });
+
+  const paddedOutfits =
+    filteredOutfits.length % 2 !== 0
+      ? [...filteredOutfits, { id: "empty", isEmpty: true }]
+      : filteredOutfits;
+      
+
+  // All Trip Outfit Related Logic Starts here 
   const fetchUserTrips = async (uid) => {
     try {
       const response = await apiClient.get(`/api/trips/user/${uid}`);
@@ -106,6 +207,39 @@ export default function ClosetScreen() {
       console.error("Failed to fetch trips:", error);
     }
   };
+
+  const confirmDeleteTrip = async () => {
+    if (!pendingDeleteTripId || isDeletingTrip) return;
+    try {
+      setIsDeletingTrip(true);
+      const didDelete = await handleDeleteTrip(pendingDeleteTripId);
+      if (didDelete) {
+        setIsDeleteTripModalVisible(false);
+        setPendingDeleteTripId(null);
+      }
+    } finally {
+      setIsDeletingTrip(false);
+    }
+  };
+
+  const dummyTrips = [
+    {
+      id: "t1",
+      name: "NYC Trip",
+      location: "New York City",
+      dates: "04/19/26 - 04/24/26",
+      outfits: [{}, {}, {}, {}],
+    },
+  ];
+
+  const trips = dummyTrips.filter((trip) => {
+    if (!tripSearchText) return true;
+    const query = tripSearchText.toLowerCase();
+    return (
+      trip.name.toLowerCase().includes(query) ||
+      trip.location.toLowerCase().includes(query)
+    );
+  });
 
   useFocusEffect(
       useCallback(() => {
@@ -167,34 +301,6 @@ export default function ClosetScreen() {
     setIsDeleteOutfitModalVisible(true);
     setIsOutfitModalVisible(false);
   };
-
-  const confirmDeleteOutfit = async () => {
-    if (!pendingDeleteOutfitId) return;
-    try {
-      setIsDeletingOutfit(true);
-      await apiClient.delete(`/api/outfits/${pendingDeleteOutfitId}`);
-      setDbOutfits((prev) =>
-          prev.filter((o) => o.outfitId !== pendingDeleteOutfitId && o.id !== pendingDeleteOutfitId)
-      );
-      setIsDeleteOutfitModalVisible(false);
-      setPendingDeleteOutfitId(null);
-    } catch (error) {
-      console.error("Failed to delete outfit:", error);
-    } finally {
-      setIsDeletingOutfit(false);
-    }
-  };
-
-  const handleShareOutfit = async (outfit) => {
-    try {
-      await Share.share({
-        message: `Check out my outfit on Style Finder! It has ${outfit.itemIds?.length || 0} items.`,
-      });
-    } catch (error) {
-      console.error("Error sharing outfit:", error.message);
-    }
-  };
-
   const formatItemType = (typeStr) => {
     if (!typeStr) return "";
     let clean = typeStr.replace(/_OR_/g, "/").replace(/_/g, " ");
@@ -298,146 +404,418 @@ export default function ClosetScreen() {
                       </Pressable>
                     </>
                 ) : (
-                    <>
-                      {/* Outfits / Trips Toggle */}
-                      <View style={styles.outfitToggle}>
-                        <TouchableOpacity style={[styles.toggleBtn, mode === "trip" && styles.activeToggle]} onPress={() => setMode("trip")}>
-                          <ThemedText>Trips</ThemedText>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={[styles.toggleBtn, mode === "regular" && styles.activeToggle]} onPress={() => setMode("regular")}>
-                          <ThemedText>Regular</ThemedText>
-                        </TouchableOpacity>
-                      </View>
+              <>
+                <View style={styles.outfitToggle}>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleBtn,
+                      mode === "trip" && styles.activeToggle,
+                    ]}
+                    onPress={() => setMode("trip")}
+                  >
+                    <ThemedText>Trip</ThemedText>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.toggleBtn,
+                      mode === "regular" && styles.activeToggle,
+                    ]}
+                    onPress={() => setMode("regular")}
+                  >
+                    <ThemedText>Regular</ThemedText>
+                  </TouchableOpacity>
+                </View>
 
-                      {isDataLoading ? (
-                          <View style={styles.centerState}>
-                            <ActivityIndicator size="large" color={theme.colors.tabIconSelected} />
-                          </View>
-                      ) : (
-                          <>
-                            {/* REGULAR OUTFITS (Structure B + Logic A) */}
-                            {mode === "regular" && (
-                                <FlatList
-                                    className="regularOutfit-list"
-                                    data={dbOutfits}
-                                    keyExtractor={(item, index) => item.outfitId?.toString() || index.toString()}
-                                    numColumns="2"
-                                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
-                                    columnWrapperStyle={{ justifyContent: "center", gap: 15 }}
-                                    ListEmptyComponent={() => (
-                                        <ThemedText style={{ textAlign: "center", marginTop: 20 }}>No saved outfits yet.</ThemedText>
-                                    )}
-                                    renderItem={({ item, index }) => {
-                                      const displayImage = getOutfitCoverImage(item);
-                                      return (
-                                          <View style={{ borderColor: theme.colors.border, backgroundColor: theme.colors.lightBrown, borderRadius: 10, marginBottom: 20, width: "48%" }}>
-                                            <TouchableOpacity onPress={() => { setSelectedOutfit(item); setIsOutfitModalVisible(true); }}>
-                                              {displayImage ? (
-                                                  <Image
-                                                      source={{ uri: displayImage }}
-                                                      style={{ height: 175, width: "100%", borderTopLeftRadius: 10, borderTopRightRadius: 10 }}
-                                                      resizeMode="cover"
-                                                  />
-                                              ) : (
-                                                  <View style={{ height: 175, backgroundColor: theme.colors.card, borderTopLeftRadius: 10, borderTopRightRadius: 10, justifyContent: 'center', alignItems: 'center' }}>
-                                                    <ThemedText style={{ color: '#666', fontSize: 12 }}>Items: {item.itemIds?.length || 0}</ThemedText>
-                                                  </View>
-                                              )}
-                                            </TouchableOpacity>
-                                            <View style={{ backgroundColor: theme.colors.card, borderBottomLeftRadius: 10, borderBottomRightRadius: 10, borderTopColor: theme.colors.border, flexDirection: "row", justifyContent: "space-between", padding: 10, alignItems: "center" }}>
-                                              <ThemedText>Outfit {index + 1}</ThemedText>
-                                              <Pressable onPress={() => { setSelectedOutfit(item); setIsOutfitModalVisible(true); }}>
-                                                <Feather name="more-horizontal" size={20} color={theme.colors.text} />
-                                              </Pressable>
-                                            </View>
-                                          </View>
-                                      );
-                                    }}
-                                />
-                            )}
-
-                            {/* TRIPS OUTFITS (Structure B + Logic A Fix) */}
-                            {mode === "trip" && (
-                                <FlatList
-                                    className="trip_Oufit_Details"
-                                    data={dbTrips}
-                                    keyExtractor={(trip) => trip.id?.toString()}
-                                    style={{ marginVertical: 15, paddingHorizontal: 30, width: "100%" }}
-                                    ListEmptyComponent={() => (
-                                        <ThemedText style={{ textAlign: "center", marginTop: 20 }}>No trips logged yet.</ThemedText>
-                                    )}
-                                    renderItem={({ item }) => (
-                                        <View className="TripOufit" style={styles.tripCard}>
-                                          <TouchableOpacity onPress={() => router.push({ pathname: "/closet/outfitsHistory/tripOutfits", params: { id: item.id } })}>
-                                            <View style={styles.tripHeader}>
-                                              <View>
-                                                <ThemedText style={{ fontWeight: "bold" }}>{item.name}</ThemedText>
-                                                <ThemedText>{item.dates}</ThemedText>
-                                              </View>
-                                              <Ionicons name="ellipsis-horizontal" size={18} color={theme.colors.text} />
-                                            </View>
-                                          </TouchableOpacity>
-                                          <View style={styles.previewRow}>
-                                            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                                              {item.outfits && item.outfits.map((outfit, index) => (
-                                                  <View key={index} style={styles.previewBox} />
-                                              ))}
-                                            </ScrollView>
-                                          </View>
-                                        </View>
-                                    )}
-                                />
-                            )}
-                          </>
-                      )}
-
-                      {/* Outfit Details Modal */}
-                      <OutfitDetailsModal
-                          visible={isOutfitModalVisible}
-                          outfit={selectedOutfit}
-                          onClose={() => setIsOutfitModalVisible(false)}
-                          onDelete={() => requestDeleteOutfit(selectedOutfit?.outfitId || selectedOutfit?.id)}
-                          onShare={() => handleShareOutfit(selectedOutfit)}
-                          theme={theme}
+                {mode === "regular" && (
+                  <>
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
+                      }}
+                    >
+                      <SearchBar
+                        value={outfitSearchText}
+                        onChangeText={(text) => {
+                          setOutfitSearchText(text);
+                          if (text === "") setActiveOutfitSearchText("");
+                        }}
+                        placeholder="Search by date (e.g., Jan 15, 2026)"
+                        onSubmit={() =>
+                          setActiveOutfitSearchText(outfitSearchText)
+                        }
                       />
-
-                      {/* Safe Deletion Modal (From Version A) */}
-                      <Modal
-                          visible={isDeleteOutfitModalVisible}
-                          transparent={true}
-                          animationType="fade"
-                          onRequestClose={() => setIsDeleteOutfitModalVisible(false)}
-                      >
-                        <View style={styles.modalOverlay}>
-                          <View style={[styles.confirmModalContent, { backgroundColor: theme.colors.background }]}>
-                            <ThemedText style={styles.confirmTitle}>Delete Outfit</ThemedText>
-                            <ThemedText style={styles.confirmText}>
-                              Are you sure you want to delete this outfit? This cannot be undone.
+                    </View>
+                    {isOutfitsLoading && (
+                      <View style={styles.centerState}>
+                        <ActivityIndicator
+                          size="large"
+                          color={theme.colors.tabIconSelected}
+                        />
+                        <ThemedText>Loading outfits...</ThemedText>
+                      </View>
+                    )}
+                    {!isOutfitsLoading && (
+                      <FlatList
+                        className="regularOutfit-list"
+                        data={paddedOutfits}
+                        keyExtractor={(item, index) =>
+                          item.outfitId?.toString() || index.toString()
+                        }
+                        numColumns={2}
+                        style={{
+                          marginVertical: 15,
+                          paddingHorizontal: 30,
+                          width: "100%",
+                        }}
+                        columnWrapperStyle={{
+                          justifyContent: "flex-start",
+                          gap: 15,
+                        }}
+                        ListEmptyComponent={() =>
+                          isLoading ? (
+                            <View style={styles.centerState}>
+                              <ActivityIndicator
+                                size="large"
+                                color={theme.colors.tabIconSelected}
+                              />
+                              <ThemedText>Loading outfits...</ThemedText>
+                            </View>
+                          ) : (
+                            <ThemedText
+                              style={{ textAlign: "center", marginTop: 20 }}
+                            >
+                              No saved outfits yet.
                             </ThemedText>
-                            <View style={styles.confirmActions}>
+                          )
+                        }
+                        renderItem={({ item, index }) => {
+                          if (item.isEmpty) {
+                            return <View style={styles.outfitSpacer} />;
+                          }
+
+                          return (
+                            <View style={styles.outfitCard}>
                               <TouchableOpacity
-                                  style={[styles.confirmBtn, { backgroundColor: theme.colors.card }]}
-                                  onPress={() => setIsDeleteOutfitModalVisible(false)}
-                                  disabled={isDeletingOutfit}
+                                onPress={() => openOutfitDetails(item.outfitId)}
                               >
-                                <ThemedText>Cancel</ThemedText>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                  style={[styles.confirmBtn, { backgroundColor: "#ff4444" }]}
-                                  onPress={confirmDeleteOutfit}
-                                  disabled={isDeletingOutfit}
-                              >
-                                {isDeletingOutfit ? (
-                                    <ActivityIndicator size="small" color="#fff" />
+                                <View style={styles.outfitViewBadge}>
+                                  <Ionicons
+                                    name="eye-outline"
+                                    size={18}
+                                    color={theme.colors.text}
+                                  />
+                                </View>
+                                {getOutfitCoverImage(item) ? (
+                                  <Image
+                                    source={{ uri: getOutfitCoverImage(item) }}
+                                    style={styles.outfitImage}
+                                    resizeMode="cover"
+                                  />
                                 ) : (
-                                    <ThemedText style={{ color: "#fff", fontWeight: "bold" }}>Delete</ThemedText>
+                                  <View style={styles.outfitPlaceholder}>
+                                    <ThemedText
+                                      style={{ color: "#666", fontSize: 12 }}
+                                    >
+                                      Items: {item.itemIds?.length || 0}
+                                    </ThemedText>
+                                  </View>
                                 )}
                               </TouchableOpacity>
+
+                              <View style={styles.outfitFooter}>
+                                <View>
+                                  {item.createdAt && (
+                                    <ThemedText
+                                      style={{ fontSize: 14, color: "#000000" }}
+                                    >
+                                      {formatOutfitDate(item.createdAt)}
+                                    </ThemedText>
+                                  )}
+                                </View>
+                                <View style={styles.outfitActions}>
+                                  <Pressable
+                                    onPress={() =>
+                                      handleShareOutfit(item, index)
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="share-social-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                  <Pressable
+                                    onPress={() =>
+                                      requestDeleteOutfit(
+                                        item.outfitId || item.id,
+                                      )
+                                    }
+                                    hitSlop={8}
+                                  >
+                                    <Ionicons
+                                      name="trash-outline"
+                                      size={19}
+                                      color={theme.colors.text}
+                                    />
+                                  </Pressable>
+                                </View>
+                              </View>
                             </View>
+                          );
+                        }}
+                      />
+                    )}
+                  </>
+                )}
+
+                {mode === "trip" && (
+                  <>
+                    <View
+                      style={{
+                        width: "100%",
+                        paddingHorizontal: 30,
+                        marginTop: 15,
+                      }}
+                    >
+                      <SearchBar
+                        value={tripSearchText}
+                        onChangeText={(text) => {
+                          setTripSearchText(text);
+                        }}
+                        placeholder="Search by trip location"
+                        onSubmit={() => {}}
+                      />
+                    </View>
+                    <FlatList
+                      className="trip_Oufit_Details"
+                      data={trips}
+                      keyExtractor={(trip, index) =>
+                        trip.id || index.toString()
+                      }
+                      style={{
+                        marginVertical: 15,
+                        paddingHorizontal: 15,
+                        width: "100%",
+                      }}
+                      renderItem={({ item }) => (
+                        <View className="TripOufit" style={styles.tripCard}>
+                          <TouchableOpacity
+                            onPress={() =>
+                              router.push({
+                                pathname: "/closet/outfitsHistory/tripOutfits",
+                                params: { id: item.id },
+                              })
+                            }
+                          >
+                            <View style={styles.tripHeader}>
+                              <View>
+                                <ThemedText> {item.name} </ThemedText>
+                                <ThemedText>{item.dates}</ThemedText>
+                                <ThemedText># Trip</ThemedText>
+                              </View>
+                              <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+
+                          <View style={styles.previewRow}>
+                            <ScrollView
+                              horizontal
+                              showsHorizontalScrollIndicator
+                            >
+                              {(item.outfits || []).map((outfit, index) => (
+                                <View key={index} style={styles.previewBox} />
+                              ))}
+                            </ScrollView>
+                          </View>
+                          <View style={styles.tripFooter}>
+                            <Pressable
+                              onPress={() => handleShareTrip(item)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="share-social-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => requestDeleteTrip(item.id)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
                           </View>
                         </View>
-                      </Modal>
-                    </>
+                      )}
+                    />
+                  </>
+                )}
+
+                <OutfitDetailsModal
+                  visible={isOutfitModalVisible}
+                  outfit={selectedOutfit}
+                  onClose={() => setIsOutfitModalVisible(false)}
+                  onDelete={handleDeleteOutfit}
+                  theme={theme}
+                />
+
+                <Modal
+                  visible={isDeleteOutfitModalVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => {
+                    if (isDeletingOutfit) return;
+                    setIsDeleteOutfitModalVisible(false);
+                    setPendingDeleteOutfitId(null);
+                  }}
+                >
+                  <View style={styles.confirmOverlay}>
+                    <View
+                      style={[
+                        styles.confirmCard,
+                        { backgroundColor: theme.colors.card },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: theme.sizes.h2,
+                          fontWeight: "700",
+                          marginBottom: 8,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        Delete this outfit?
+                      </ThemedText>
+                      <ThemedText style={styles.confirmText}>
+                        This action cannot be undone. This outfit will be
+                        removed permanently.
+                      </ThemedText>
+
+                      <View style={styles.confirmActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            { backgroundColor: theme.colors.lightBrown },
+                          ]}
+                          onPress={() => {
+                            if (isDeletingOutfit) return;
+                            setIsDeleteOutfitModalVisible(false);
+                            setPendingDeleteOutfitId(null);
+                          }}
+                          disabled={isDeletingOutfit}
+                        >
+                          <ThemedText>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            {
+                              backgroundColor: theme.colors.tabIconSelected,
+                              opacity: isDeletingOutfit ? 0.7 : 1,
+                            },
+                          ]}
+                          onPress={confirmDeleteOutfit}
+                          disabled={isDeletingOutfit}
+                        >
+                          {isDeletingOutfit ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <ThemedText style={{ color: theme.colors.text }}>
+                              Delete
+                            </ThemedText>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+
+                <Modal
+                  visible={isDeleteTripModalVisible}
+                  transparent
+                  animationType="fade"
+                  onRequestClose={() => {
+                    if (isDeletingTrip) return;
+                    setIsDeleteTripModalVisible(false);
+                    setPendingDeleteTripId(null);
+                  }}
+                >
+                  <View style={styles.confirmOverlay}>
+                    <View
+                      style={[
+                        styles.confirmCard,
+                        { backgroundColor: theme.colors.card },
+                      ]}
+                    >
+                      <ThemedText
+                        style={{
+                          fontSize: theme.sizes.h2,
+                          fontWeight: "700",
+                          marginBottom: 8,
+                          fontFamily: theme.fonts.bold,
+                        }}
+                      >
+                        Delete this trip?
+                      </ThemedText>
+                      <ThemedText style={styles.confirmText}>
+                        This action cannot be undone. This trip and all its
+                        outfits will be removed permanently.
+                      </ThemedText>
+
+                      <View style={styles.confirmActions}>
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            { backgroundColor: theme.colors.lightBrown },
+                          ]}
+                          onPress={() => {
+                            if (isDeletingTrip) return;
+                            setIsDeleteTripModalVisible(false);
+                            setPendingDeleteTripId(null);
+                          }}
+                          disabled={isDeletingTrip}
+                        >
+                          <ThemedText>Cancel</ThemedText>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          style={[
+                            styles.confirmBtn,
+                            {
+                              backgroundColor: theme.colors.tabIconSelected,
+                              opacity: isDeletingTrip ? 0.7 : 1,
+                            },
+                          ]}
+                          onPress={confirmDeleteTrip}
+                          disabled={isDeletingTrip}
+                        >
+                          {isDeletingTrip ? (
+                            <ActivityIndicator size="small" color="#fff" />
+                          ) : (
+                            <ThemedText style={{ color: theme.colors.text }}>
+                              Delete
+                            </ThemedText>
+                          )}
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  </View>
+                </Modal>
+               </>
                 )}
               </View>
           )}
@@ -447,20 +825,163 @@ export default function ClosetScreen() {
 }
 
 const styles = StyleSheet.create({
-  centerState: { flex: 1, justifyContent: "center", alignItems: "center" },
-  retryButton: { marginTop: 15, padding: 10, backgroundColor: "#b49480", borderRadius: 8 },
-  outfitToggle: { flexDirection: "row", margin: 15, backgroundColor: "#e2d7cd", borderRadius: 10, alignSelf: "stretch" },
-  toggleBtn: { flex: 1, padding: 10, alignItems: "center" },
-  activeToggle: { backgroundColor: "#b49480", borderRadius: 10 },
-  tripCard: { backgroundColor: "#d6c6b8", borderRadius: 14, padding: 14, marginHorizontal: 16, marginBottom: 16 },
-  tripHeader: { flexDirection: "row", justifyContent: "space-between", marginBottom: 10 },
-  previewRow: { flexDirection: "row" },
-  previewBox: { width: 70, height: 70, backgroundColor: "#eee", borderRadius: 8, marginRight: 10 },
-  fab: { backgroundColor: "#b49480", borderRadius: 100, bottom: 30, padding: 5, position: "absolute", right: 30, zIndex: 10 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
-  confirmModalContent: { width: "80%", borderRadius: 16, padding: 20, elevation: 5 },
-  confirmTitle: { fontSize: 20, fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  confirmText: { marginBottom: 16, lineHeight: 20, textAlign: "center" },
-  confirmActions: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
-  confirmBtn: { flex: 1, borderRadius: 10, paddingVertical: 12, alignItems: "center" },
+  centerState: {
+    marginTop: 40,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingHorizontal: 24,
+  },
+  retryButton: {
+    backgroundColor: "#d6c6b8",
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    gap: 38,
+    justifyContent: "space-between",
+    padding: 15,
+  },
+  categoryBtn: {
+    backgroundColor: "#d6c6b8",
+    borderRadius: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+  },
+  outfitCard: {
+    backgroundColor: "#d6c6b8",
+    borderRadius: 10,
+    marginBottom: 20,
+    width: "48%",
+  },
+  outfitSpacer: {
+    width: "48%",
+    marginBottom: 20,
+  },
+  outfitImage: {
+    width: "100%",
+    height: 175,
+    marginBottom: 10,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
+  },
+  outfitPlaceholder: {
+    height: 175,
+    marginBottom: 10,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  outfitFooter: {
+    backgroundColor: "#fff",
+    borderBottomLeftRadius: 10,
+    borderBottomRightRadius: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 10,
+    alignItems: "center",
+  },
+  outfitActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  confirmOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  confirmCard: {
+    width: "100%",
+    borderRadius: 16,
+    padding: 18,
+  },
+  confirmText: {
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  confirmActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  confirmBtn: {
+    flex: 1,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  outfitViewBadge: {
+    position: "absolute",
+    right: 6,
+    top: 6,
+    borderRadius: 12,
+    padding: 4,
+    backgroundColor: "#fff",
+    zIndex: 2,
+  },
+  outfitToggle: {
+    flexDirection: "row",
+    marginHorizontal: 30,
+    marginTop: 15,
+    backgroundColor: "#e2d7cd",
+    borderRadius: 10,
+    alignSelf: "stretch",
+  },
+  toggleBtn: {
+    flex: 1,
+    padding: 10,
+    alignItems: "center",
+  },
+  activeToggle: {
+    backgroundColor: "#b49480",
+    borderRadius: 10,
+  },
+  tripCard: {
+    backgroundColor: "#d6c6b8",
+    borderRadius: 14,
+    padding: 14,
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  tripHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  tripFooter: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  previewRow: {
+    flexDirection: "row",
+  },
+  previewBox: {
+    width: 70,
+    height: 70,
+    backgroundColor: "#eee",
+    borderRadius: 8,
+    marginRight: 10,
+  },
+  fab: {
+    backgroundColor: "#b49480",
+    borderRadius: 100,
+    bottom: 30,
+    padding: 5,
+    position: "absolute",
+    right: 30,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
 });
