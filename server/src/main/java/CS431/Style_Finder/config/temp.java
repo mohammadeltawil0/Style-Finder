@@ -9,6 +9,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 public class temp {
     public static void main(String[] args) {
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        System.out.println(encoder.encode("honey1Admin@26")); // change if needed
+        System.out.println(encoder.encode("password12@")); // change if needed
     }
 }
