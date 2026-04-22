@@ -147,7 +147,7 @@ export default function Preferences2() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <ThemedView>
+      <ThemedView style={{ flexDirection: "column", gap: 30 }}>
         <View
           style={{
             flexDirection: "row",
@@ -158,8 +158,8 @@ export default function Preferences2() {
         >
           <ThemedText
             style={{
-              fontSize: theme.sizes.h1,
-              fontFamily: theme.fonts.bold,
+              fontSize: theme.sizes.h2,
+              fontFamily: theme.fonts.semiBold,
               flex: 1,
             }}
           >
@@ -210,7 +210,7 @@ export default function Preferences2() {
         </View>
 
         <TouchableOpacity style={styles.btn} onPress={handleSave}>
-          <ThemedText>Save Preferences</ThemedText>
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>Save Preferences</ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ScrollView>
@@ -218,7 +218,7 @@ export default function Preferences2() {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { paddingVertical: 20, paddingHorizontal: 30 },
   option: { padding: 10, borderWidth: 1, marginVertical: 5, borderRadius: 8 },
   selected: { backgroundColor: "#B49480" },
   btn: {
@@ -227,5 +227,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#B49480",
     borderRadius: 10,
     alignItems: "center",
+    marginBottom: 20
   },
 });
