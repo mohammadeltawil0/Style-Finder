@@ -9,6 +9,7 @@ import { ThemedText, ThemedView } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import WeatherScreen from "../weather/WeatherScreen";
+import OutfitCoverImage from '../closet/outfit-cover-image';
 
 export default function HomeScreen() {
   const theme = useTheme();
@@ -50,18 +51,30 @@ export default function HomeScreen() {
     queryKey: ["leastWornItems", userId],
     enabled: !!userId,
     queryFn: async () => {
-      // DEBUGGING LOGS FOR API CALL
-      const start = Date.now();
-      console.log('[least-worn] API call start:', new Date(start).toISOString());
       const response = await apiClient.get(`/api/items/user/${userId}/least-worn`);
-      const end = Date.now();
-      console.log('[least-worn] API call end:', new Date(end).toISOString(), 'Duration:', (end - start) + 'ms');
       const items = Array.isArray(response?.data) ? response.data : [];
 
       return items.map((item, index) => ({
         id: String(item?.itemId ?? item?.id ?? index),
         name: item?.type ? String(item.type).replace(/_/g, " ") : "Item",
         imageUrl: item?.imageUrl || null,
+      }));
+    },
+  });
+
+  const {
+    data: pastOutfits = [],
+    isLoading: isLoadingOutfits,
+    refetch: refetchPastOutfits,
+  } = useQuery({
+    queryKey: ["pastOutfits", userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const response = await apiClient.get(`/api/outfits/user/${userId}/random3`);
+      const data = Array.isArray(response?.data) ? response.data : [];
+      return data.map((outfit) => ({
+        ...outfit,
+        itemIds: outfit.itemIds || (outfit.outfitItems ? outfit.outfitItems.map((oi) => oi.item.itemId) : []),
       }));
     },
   });
@@ -90,16 +103,10 @@ export default function HomeScreen() {
       if (userId) {
         refetchName();
         refetchLeastWorn();
+        refetchPastOutfits();
       }
-    }, [userId, refetchName, refetchLeastWorn]),
+    }, [userId, refetchName, refetchLeastWorn, refetchPastOutfits]),
   );
-
-  const handleNavigate = (target) => {
-    router.navigate({
-      pathname: "/(tabs)/closet",
-      params: { tab: target },
-    });
-  };
 
   return (
     <ScrollView
@@ -126,7 +133,7 @@ export default function HomeScreen() {
           <>
             <View
               className="header-text"
-              style={{ flexDirection: "row", width: "100%"}}
+                style={{ flexDirection: "row", width: "100%", marginHorizontal: 30 }}
             >
               <View style={{ width: "70%" }}>
                 <ThemedText
@@ -135,34 +142,25 @@ export default function HomeScreen() {
                     fontFamily: theme.fonts.bold,
                   }}
                 >
-                  Hello,
-                </ThemedText>
-                <ThemedText
-                  style={{
-                    fontSize: theme.sizes.h1,
-                    fontFamily: theme.fonts.bold,
-                  }}
-                >
-                  {name}!{" "}
+                    Hello, {name}!
                 </ThemedText>
               </View>
             </View>
+              <WeatherScreen />
             <View
               className="not-worn-items"
               style={{
                 backgroundColor: theme.colors.lightBrown,
-                width: "80%",
                 borderRadius: 10,
-                height: 150,
-                justifyContent: "space-between",
+                paddingHorizontal: 20,
                 paddingVertical: 20,
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 5 },
                 shadowOpacity: 0.3,
                 shadowRadius: 3.5,
                 elevation: 5,
-                alignSelf: "center",
-                paddingHorizontal: 20,
+                height: 150,
+                marginHorizontal: 30
               }}
             >
               <ThemedText
@@ -219,35 +217,86 @@ export default function HomeScreen() {
               style={{
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
-                flexDirection: "row",
                 paddingHorizontal: 20,
                 paddingVertical: 20,
-                justifyContent: "space-between",
                 shadowColor: "#000",
                 shadowOffset: { width: 0, height: 5 },
                 shadowOpacity: 0.3,
                 shadowRadius: 3.5,
                 elevation: 5,
-                width: "80%",
-                alignSelf: "center",
+                height: isLoadingOutfits ? 90 : pastOutfits.length === 0 ? 110 : 170,
+                marginHorizontal: 30
               }}
             >
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h3,
-                }}
-              >
-                Look at past outfits
-              </ThemedText>
-              <AntDesign
-                name="right"
-                size={24}
-                color={theme.colors.card}
-                onPress={() => handleNavigate("outfits")}
-              // TO DO: create logic where if user has no past outfits vs a grid of past outfits!
-              />
-            </View>
-            <WeatherScreen />
+                {isLoadingOutfits ? (
+                  <>
+                    <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
+                      Look at past outfits
+                    </ThemedText>
+                    <ThemedText>Loading...</ThemedText>
+                  </>
+                ) : pastOutfits.length === 0 ? (
+                  <>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                      <View>
+                        <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
+                          Look at past outfits
+                        </ThemedText>
+                          <ThemedText style={{ opacity: 0.7 }}>
+                            Generate some outfits and they'll
+                          </ThemedText>
+                          <ThemedText style={{ opacity: 0.7 }}>
+                            show up here!
+                          </ThemedText>
+                        </View>
+                        <AntDesign
+                          style={{ alignSelf: "center" }}
+                          name="right"
+                          size={24}
+                          color={theme.colors.card}
+                          onPress={() => router.replace({ pathname: "/(tabs)/recommendations" })}
+                        />
+                      </View>
+                    </>
+                  ) : (
+                    <>
+                      <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
+                        Look at past outfits
+                      </ThemedText>
+                      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                        <ScrollView
+                          horizontal
+                          showsHorizontalScrollIndicator={false}
+                          contentContainerStyle={{
+                            flexGrow: 1,
+                            justifyContent: "center",
+                            alignItems: "center",
+                            gap: 12,
+                          }}
+                        >
+                          {pastOutfits.slice(0, 3).map((item) => (
+                            <Pressable
+                              key={String(item.outfitId || item.id)}
+                              style={{ width: 90, height: 90 }}
+                              onPress={() => router.navigate({
+                                pathname: "/(tabs)/closet",
+                                params: {
+                                  tab: "outfits",
+                                  openOutfitId: String(item.outfitId || item.id)
+                                }
+                              })}
+                            >
+                              <OutfitCoverImage
+                                itemIds={item.itemIds || []}
+                                height={90}
+                              />
+                            </Pressable>
+                          ))}
+                          </ScrollView>
+                        </View>
+                  </>
+                )}
+              </View>
           </>
         )}
       </ThemedView>

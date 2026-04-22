@@ -12,4 +12,5 @@ public interface OutfitService {
     OutfitDto updateOutfit(Long outfitId, OutfitDto dto);
     OutfitDto markAsSaved(Long outfitId);
     void deleteOutfit(Long outfitId);
+    List<OutfitDto> find3Outfits(Long userId);
 }
