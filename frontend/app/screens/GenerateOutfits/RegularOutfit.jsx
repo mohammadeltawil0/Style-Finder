@@ -708,14 +708,46 @@ export default function RegularOutfit() {
   );
 
   const handleGenerateOutfit = async () => {
-    if (!locationCoords || !formality) {
-      Toast.show({
-        type: "error",
-        text1: "Missing fields",
-        text2: "Location and Occasion are required.",
-      });
-      return;
-    }
+      if (!locationCoords || !formality) {
+        Toast.show({
+          type: "error",
+          text1: "Missing fields",
+          text2: "Location and Occasion are required.",
+        });
+        return;
+      }
+
+      try {
+        const userId = await getUserId();
+        const itemsRes = await apiClient.get(`/api/items/user/${userId}`);
+        const userItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+
+        const tops = userItems.filter(item => normalizeType(getItemType(item)) === "TOP");
+        const bottoms = userItems.filter(item => normalizeType(getItemType(item)) === "BOTTOM");
+
+        if (tops.length < 2 || bottoms.length < 2) {
+          Toast.show({
+            type: "error",
+            text1: "Not enough items",
+            text2: `You need at least 2 tops and 2 bottoms.`,
+            text3: `You have ${tops.length} top(s) and ${bottoms.length} bottom(s).`,
+
+          });
+          return;
+        }
+      } catch (e) {
+        if (e?.response?.status !== 500) {
+          console.error("Generate outfit error:", e);
+        }
+        Toast.show({
+          type: "error",
+          text1: "Could not load closet",
+          text2: "Please try again.",
+        });
+        return;
+      }
+
+
     try {
       setIsGenerating(true);
 
