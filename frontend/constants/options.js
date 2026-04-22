@@ -25,13 +25,15 @@ export const FORMALITY_OPTIONS = [
 ];
 
 export const MATERIAL_OPTIONS = [
-    { label: "Cotton", value: 1 },
-    { label: "Linen/Hemp", value: 2 },
-    { label: "Wool/Fleece", value: 3 },
-    { label: "Silk/Satin", value: 4 },
-    { label: "Leather/Faux Leather", value: 5 },
-    { label: "Synthetics", value: 6 },
-    { label: "Other", value: 7 },
+    { label: "Cotton", value: "COTTON" },
+    { label: "Linen/Hemp", value: "LINEN" },
+    { label: "Wool", value: "WOOL" },
+    { label: "Silk/Satin", value: "SILK" },
+    { label: "Leather/Faux Leather", value: "LEATHER" },
+    { label: "Synthetics", value: "POLYESTER" },
+    { label: "Denim", value: "DENIM" },
+    { label: "Knit/Jersey", value: "KNIT" },
+    { label: "Fleece", value: "FLEECE" },
 ];
 
 export const FIT_OPTIONS = [

@@ -17,7 +17,9 @@ export default function MaterialPage({ setPage, goBack, material, setMaterial, u
     { id: "SILK", label: "Silk/Satin", subheader: "Smooth, lightweight, and luxurious" },
     { id: "LEATHER", label: "Leather/Faux Leather", subheader: "Durable hide or leather alternative" },
     { id: "POLYESTER", label: "Synthetics", subheader: "Strong, flexible, and common in activewear" },
-    { id: "ACRYLIC", label: "Other", subheader: "Materials not listed above" },
+    { id: "DENIM", label: "Denim", subheader: "Durable cotton fabric commonly used for jeans" },
+    { id: "KNIT", label: "Knit/Jersey", subheader: "Stretchy and comfortable for t-shirts and casualwear" },
+    { id: "FLEECE", label: "Fleece", subheader: "Soft and warm, often used in winter clothing" }
   ];
 
   const { width } = useWindowDimensions();

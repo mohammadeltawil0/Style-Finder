@@ -72,46 +72,24 @@ const MATERIAL_LABELS = {
 
 const materialToLabel = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
-    if (typeof value === "number") return MATERIAL_LABELS[value] || "Not specified";
 
-    const raw = String(value).trim();
-    if (!raw) return "Not specified";
-
-    const asNumber = Number(raw);
-    if (!Number.isNaN(asNumber) && MATERIAL_LABELS[asNumber]) return MATERIAL_LABELS[asNumber];
-
-    const upper = raw.toUpperCase();
-    const enumMap = {
-        COTTON: 1,
-        LINEN_HEMP: 2,
-        WOOL_FLEECE: 3,
-        SILK_SATIN: 4,
-        LEATHER_FAUX_LEATHER: 5,
-        SYNTHETICS: 6,
-        OTHER: 7,
-    };
-
-    if (enumMap[upper]) return MATERIAL_LABELS[enumMap[upper]];
-
-    const key = raw.toLowerCase().replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
     const labelMap = {
-        cotton: 1,
-        "linen/hemp": 2,
-        "linen hemp": 2,
-        "wool/fleece": 3,
-        "wool fleece": 3,
-        "silk/satin": 4,
-        "silk satin": 4,
-        "leather/faux leather": 5,
-        "leather faux leather": 5,
-        synthetics: 6,
-        other: 7,
+        COTTON: "Cotton",
+        LINEN: "Linen/Hemp",
+        WOOL: "Wool",
+        SILK: "Silk/Satin",
+        LEATHER: "Leather/Faux Leather",
+        POLYESTER: "Synthetics",
+        DENIM: "Denim",
+        KNIT: "Knit/Jersey",
+        FLEECE: "Fleece",
     };
 
-    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
+    return labelMap[String(value).toUpperCase()] || titleCaseFromEnum(value);
 };
+
 export default function EditItemsModal({ item, setModalVisible }) {
-// TO DO: edit item logic
+    // TO DO: edit item logic
     useEffect(() => {
         const t = Date.now();
         console.log('[EditItemsModal] mount at', new Date(t).toISOString());
@@ -228,34 +206,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
 
     const normalizeMaterial = (value) => {
         if (value === null || value === undefined || value === "") return null;
-        if (typeof value === "number") return value;
-
-        const asNumber = Number(value);
-        if (!Number.isNaN(asNumber) && asNumber >= 1 && asNumber <= 7) return asNumber;
-
-        const upper = String(value).toUpperCase();
-        const enumMap = {
-            COTTON: 1,
-            LINEN_HEMP: 2,
-            WOOL_FLEECE: 3,
-            SILK_SATIN: 4,
-            LEATHER_FAUX_LEATHER: 5,
-            SYNTHETICS: 6,
-            OTHER: 7,
-        };
-        if (enumMap[upper]) return enumMap[upper];
-
-        const map = {
-            cotton: 1,
-            "linen/hemp": 2,
-            "wool/fleece": 3,
-            "silk/satin": 4,
-            "leather/faux leather": 5,
-            synthetics: 6,
-            other: 7,
-        };
-        const key = String(value).toLowerCase();
-        return map[key] || value;
+        return String(value).toUpperCase();
     };
 
     const normalizeBulk = (value) => {
@@ -791,7 +742,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                Event:
+                                Formality:
                             </ThemedText>
                             <ThemedText
                                 style={[
@@ -1260,7 +1211,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsImageModalVisible(false)}
             >
                 <View style={styles.imageModalOverlay}>
-                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}> 
+                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}>
                         <View style={styles.imageModalHeader}>
                             <ThemedText
                                 style={{
@@ -1366,7 +1317,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsColorModalVisible(false)}
             >
                 <View style={styles.confirmOverlay}>
-                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}> 
+                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}>
                         <ThemedText
                             style={{
                                 fontSize: theme.sizes.h2,
@@ -1483,7 +1434,11 @@ export default function EditItemsModal({ item, setModalVisible }) {
                     setLength(nextLength);
                     updateItemMutation.mutate({ length: nextLength });
                 }}
-                options={LENGTH_OPTIONS}
+                options={LENGTH_OPTIONS.filter((opt) =>
+                    category === "TOP" || category === "OUTERWEAR"
+                        ? ["SLEEVELESS", "CAP", "SHORT_SLEEVE", "THREE_QUARTER", "LONG_SLEEVE"].includes(opt.value)
+                        : ["ABOVE_KNEE", "KNEE_LENGTH_OR_BERMUDA", "MIDI_OR_CAPRI", "MAXI_OR_FULL_LENGTH"].includes(opt.value)
+                )}
                 title="Edit Length"
                 isSaving={updateItemMutation.isPending}
             />
