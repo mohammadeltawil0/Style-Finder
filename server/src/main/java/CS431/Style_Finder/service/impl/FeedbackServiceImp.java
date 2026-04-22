@@ -29,7 +29,7 @@ public class FeedbackServiceImp implements FeedbackService {
                 .orElseThrow(() -> new RuntimeException("User weights not found."));
 
         // EXPLICIT MEMORY: Create a new CBR Case
-        if (feedback.getAction().equals("SAVE") || feedback.getAction().equals("EDIT_SAVE")) {
+        if (feedback.getAction().equals("SAVE")) {
             OutfitCase newMemory = new OutfitCase();
             newMemory.setUserId(feedback.getUserId());
             newMemory.setTemperature(feedback.getContextTemp());
@@ -37,6 +37,14 @@ public class FeedbackServiceImp implements FeedbackService {
             newMemory.setItemIds(feedback.getFinalItemIds());
             newMemory.setRating(5);
             cbrDb.save(newMemory);
+
+            // increment timesWorn for every item in the saved outfit  - for each item id in outfit
+            for (Long itemId : feedback.getFinalItemIds()) {
+                itemRepository.findById(itemId).ifPresent(item -> {
+                    item.setTimesWorn(item.getTimesWorn() == null ? 1 : item.getTimesWorn() + 1);
+                    itemRepository.save(item);
+                });
+            }
 
             Outfit outfit = new Outfit();
             outfit.setSaved(true);
