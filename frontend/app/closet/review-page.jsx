@@ -32,9 +32,10 @@ const normalizeColor = (value) => {
   if (typeof value !== "string") return DEFAULT_COLOR;
   return HEX_COLOR_REGEX.test(value) ? value : DEFAULT_COLOR;
 };
-const getOptionLabel = (options, value) => {
-    if (value === null || value === undefined || value === "") return "Not specified";
-    return options.find((option) => option.value === value)?.label ?? String(value);
+const getOptionLabel = (options, value, wantLabel) => {
+  if (value === null || value === undefined || value === "") return "Not specified";
+  const option = options.find((option) => option.value === value);
+  return wantLabel ? option?.label : option?.display;
 };
 
 export default function ReviewPage({
@@ -80,23 +81,21 @@ export default function ReviewPage({
   const [draftImageUri, setDraftImageUri] = useState(uri ?? null);
   const [tempColor, setTempColor] = useState(normalizeColor(color));
 
-  //Converting for UX: pattern, formality, material, season, length
-  const convertedItemType = getOptionLabel(CATEGORY_OPTIONS, itemType);
-  const convertedPattern = getOptionLabel(PATTERN_OPTIONS, pattern);
-  const convertedFormality = getOptionLabel(FORMALITY_OPTIONS, formality);
-  const convertedMaterial = getOptionLabel(MATERIAL_OPTIONS, material);
-  const convertedSeason = getOptionLabel(SEASON_OPTIONS, season);
-  const convertedLength = getOptionLabel(LENGTH_OPTIONS, length);
-  const convertedFit = getOptionLabel(FIT_OPTIONS, fit);
-
   // Convert enum/int fit states to actual categories for review page display
-
   const fitToLabel = (value) => (value < 0.5 ? "SLIM" : value < 1.5 ? "REGULAR" : "LOOSE");
-  const fitLabelToValue = (value) => {
-    if (value === "SLIM") return 0;
-    if (value === "REGULAR") return 1;
-    return 2;
-  };
+
+  //Converting for UX: pattern, formality, material, season, length
+  const convertedItemType = getOptionLabel(CATEGORY_OPTIONS, itemType, true);
+  const convertedPattern = getOptionLabel(PATTERN_OPTIONS, pattern, true);
+  const convertedFormality = getOptionLabel(FORMALITY_OPTIONS, formality, true);
+  const convertedMaterial = getOptionLabel(MATERIAL_OPTIONS, material, true);
+  const convertedSeason = getOptionLabel(SEASON_OPTIONS, season, true);
+  const convertedLength = getOptionLabel(LENGTH_OPTIONS, length, true);
+  const convertedFit = getOptionLabel(FIT_OPTIONS, fitToLabel(fit), true);
+  const convertedBulk = getOptionLabel(BULK_OPTIONS, bulk, false);
+
+  console.log("fit: ", fit);
+  console.log("converted fit: ", convertedFit);
 
   const openEditModal = (field) => {
     if (field === 1) {
@@ -184,7 +183,7 @@ export default function ReviewPage({
               />
             </View>
             <View className="responseContent" style={{ flexGrow: 1, gap: 20 }}>
-              {uri && !imageFailed && (
+              {!imageFailed ? (
                 <Pressable
                   style={{
                     backgroundColor: theme.colors.card,
@@ -194,7 +193,7 @@ export default function ReviewPage({
                   onPress={() => openEditModal(1)}
                 >
                   <Image
-                    source={{ uri }}
+                    source={{ uri: uri }}
                     resizeMode="cover"
                     style={{
                       width: "100%",
@@ -221,48 +220,47 @@ export default function ReviewPage({
                     />
                   </View>
                 </Pressable>
-              )}
-              {!uri && (
+              ) : (
                 <View
                   style={[
                     styles.responseContainer,
                     {
                       alignItems: "center",
-                      backgroundColor: theme.colors.card,
-                      justifyContent: "center",
-                    },
-                  ]}
+                    backgroundColor: theme.colors.card,
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                <View
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
                 >
-                  <View
-                    className="response"
+                  <ThemedText
                     style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
+                      fontSize: theme.sizes.h3,
+                      color: theme.colors.text,
+                      fontFamily: theme.fonts.regular,
                     }}
                   >
-                    <ThemedText
-                      style={{
-                        fontSize: theme.sizes.h3,
-                        color: theme.colors.text,
-                        fontFamily: theme.fonts.regular,
-                      }}
-                    >
-                      No image uploaded
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
-                  >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(1)}
-                    />
-                  </View>
+                    No image uploaded
+                  </ThemedText>
                 </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => openEditModal(1)}
+                  />
+                </View>
+                  </View>
               )}
               <View
                 style={[
@@ -583,8 +581,6 @@ export default function ReviewPage({
                   />
                 </View>
               </View>
-              {/* OPTIONAL PARAMETERS */}
-              {season ? (
                 <View
                   style={[
                     styles.responseContainer,
@@ -635,50 +631,7 @@ export default function ReviewPage({
                       onPress={() => openEditModal(7)}
                     />
                   </View>
-                </View>
-              ) : (
-                <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      alignItems: "center",
-                      backgroundColor: theme.colors.card,
-                      justifyContent: "center",
-                    },
-                  ]}
-                >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
-                  >
-                    <ThemedText
-                      style={{
-                        fontSize: theme.sizes.h3,
-                        color: theme.colors.text,
-                        fontFamily: theme.fonts.regular,
-                      }}
-                    >
-                      Season not specified
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
-                  >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(7)}
-                    />
-                  </View>
-                </View>
-              )}
-              {length ? (
+              </View>
                 <View
                   style={[
                     styles.responseContainer,
@@ -729,143 +682,58 @@ export default function ReviewPage({
                       onPress={() => openEditModal(8)}
                     />
                   </View>
-                </View>
-              ) : (
+              </View>
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
                 <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      alignItems: "center",
-                      backgroundColor: theme.colors.card,
-                      justifyContent: "center",
-                    },
-                  ]}
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
                 >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
-                  >
-                    <ThemedText
-                      style={{
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
                         fontSize: theme.sizes.h3,
-                        color: theme.colors.text,
+                      },
+                    ]}
+                  >
+                    Bulk:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
                         fontFamily: theme.fonts.regular,
-                      }}
-                    >
-                      Length not specified
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
                   >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(8)}
-                    />
-                  </View>
+                  {convertedBulk}
+                  </ThemedText>
                 </View>
-              )}
-              {bulk !== null && bulk !== undefined ? (
                 <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      backgroundColor: theme.colors.card,
-                    },
-                  ]}
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
                 >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
-                  >
-                    <ThemedText
-                      style={[
-                        styles.titleText,
-                        {
-                          fontFamily: theme.fonts.bold,
-                          fontSize: theme.sizes.h3,
-                        },
-                      ]}
-                    >
-                      Bulk:
-                    </ThemedText>
-                    <ThemedText
-                      style={[
-                        styles.answerText,
-                        {
-                          fontFamily: theme.fonts.regular,
-                          fontSize: theme.sizes.text,
-                        },
-                      ]}
-                    >
-                      {bulk}
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
-                  >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(9)}
-                    />
-                  </View>
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => openEditModal(9)}
+                  />
                 </View>
-              ) : (
-                <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      alignItems: "center",
-                      backgroundColor: theme.colors.card,
-                      justifyContent: "center",
-                    },
-                  ]}
-                >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
-                  >
-                    <ThemedText
-                      style={{
-                        fontSize: theme.sizes.h3,
-                        color: theme.colors.text,
-                        fontFamily: theme.fonts.regular,
-                      }}
-                    >
-                      Bulk not specified
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
-                  >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(9)}
-                    />
-                  </View>
-                </View>
-              )}
+              </View>
             </View>
           </View>
         </View>
