@@ -17,7 +17,6 @@ import { useTheme } from "@react-navigation/native";
 import { Feather } from "@expo/vector-icons";
 
 export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing = false }) => {
-  console.log("is editing?", isEditing);
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
