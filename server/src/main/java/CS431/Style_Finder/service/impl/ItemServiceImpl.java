@@ -17,7 +17,7 @@ import CS431.Style_Finder.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import CS431.Style_Finder.repository.OutfitRepository;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +27,7 @@ public class ItemServiceImpl implements ItemService {
 
     private final ItemRepository itemRepository;
     private final OutfitItemRepository outfitItemRepository;
+    private final OutfitRepository outfitRepository;
     private final UserRepository userRepository;
     private final ItemMapper itemMapper;
 
@@ -103,8 +104,20 @@ public class ItemServiceImpl implements ItemService {
         itemRepository.findById(itemId)
                 .orElseThrow(() -> new ResourceNotFoundException("Item not found with id: " + itemId));
 
-        // Remove dependent rows in join table to satisfy FK constraint before deleting the item.
-        outfitItemRepository.deleteByItem_ItemId(itemId);
+        // 1. Find which outfits contain this item
+        List<Long> affectedOutfitIds = outfitItemRepository
+                .findByItem_ItemId(itemId)
+                .stream()
+                .map(outfitItem -> outfitItem.getOutfit().getOutfitId())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 2. Delete each affected outfit's join rows then the outfit itself
+        for (Long outfitId : affectedOutfitIds) {
+            outfitItemRepository.deleteByOutfit_OutfitId(outfitId);
+            outfitRepository.deleteById(outfitId);
+        }
+
         itemRepository.deleteById(itemId);
     }
 
