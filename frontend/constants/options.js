@@ -37,9 +37,9 @@ export const MATERIAL_OPTIONS = [
 ];
 
 export const FIT_OPTIONS = [
-    { label: "Slim", value: "SLIM" },
-    { label: "Regular", value: "REGULAR" },
-    { label: "Loose", value: "LOOSE" }
+    { label: "Slim", value: "SLIM", display: "Slim" },
+    { label: "Regular", value: "REGULAR", display: "Regular" },
+    { label: "Loose", value: "LOOSE", display: "Loose" }
 ];
 
 export const SEASON_OPTIONS = [
@@ -63,9 +63,9 @@ export const LENGTH_OPTIONS = [
 ];
 
 export const BULK_OPTIONS = [
-    { label: "Thin", value: 0 },
-    { label: "Regular", value: 1 },
-    { label: "Thick", value: 2 },
+    { label: "Thin", value: 0, display: "Thin" },
+    { label: "Regular", value: 1, display: "Regular" },
+    { label: "Thick", value: 2, display: "Thick" },
 ];
 
 export default {

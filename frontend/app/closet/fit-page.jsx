@@ -7,7 +7,7 @@ import {
 } from "react-native";
 import { useTheme } from "@react-navigation/native";
 import { ThemedText, ThemedView, TogglePreview } from "../../components";
-import Slider from "@react-native-community/slider";
+// import Slider from "@react-native-community/slider";
 
 export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, previewMode, setPreviewMode }) {
   const theme = useTheme();
@@ -19,15 +19,17 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
 
   const showNext = fit !== null && fit !== undefined;
   const isUpperBodyItem = itemType === "Top" || itemType === "Full Body" || itemType === "TOP" || itemType === "FULL_BODY";
-  const upperOptions = ["Skinny", "Regular", "Loose"];
-
-  const lowerOptions = [
-    "Skinny/Bodycon",
-    // "Slim fit",
-    "Straight",
-    // "Relaxed",
-    "Baggy/Wide leg", // equivalent to loose
+  const upperOptions = [
+    { id: 0, label: "Skinny", description: "Tight fit, hugs the body" },
+    { id: 1, label: "Regular", description: "Standard fit, not too tight or loose" },
+    { id: 2, label: "Loose", description: "Relaxed fit, more room and comfort" },
   ];
+  const lowerOptions = [
+    { id: 0, label: "Skinny/Bodycon", description: "Very tight fit, body-hugging" },
+    { id: 1, label: "Straight", description: "Straight fit, not too tight or loose" },
+    { id: 2, label: "Baggy", description: "Loose fit, lots of room" },
+  ];
+  const options = isUpperBodyItem ? upperOptions : lowerOptions;
 
   return (
     <ThemedView
@@ -82,48 +84,55 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
                   fontFamily: theme.fonts.regular,
                 }}
               >
-                On a scale from 0 to 1, describe the fit of this item
+                Between the three options, describe the fit of this item
               </ThemedText>
             </View>
-            <View className="sliderLabelsView" style={styles.sliderLabelsView}>
-              {/* TO DO: remove the gap between slider and labels */}
-              <View
-                className="fitLabels"
-                style={{
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  height: 220,
-                  paddingHorizontal: 4,
-                  alignItems: "flex-end",
-                }}
-              >
-                {isUpperBodyItem
-                  ? upperOptions.map((option, index) => (
-                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                      {option}
+            <View className="fitOptionsView" style={{ gap: 16, width: "100%", alignItems: "center" }}>
+              {options.map((option) => {
+                const isSelected = Math.round(fit) === option.id;
+                return (
+                  <Pressable
+                    key={option.id}
+                    onPress={() => setFit(option.id)}
+                    style={[
+                      {
+                        backgroundColor: isSelected ? theme.colors.tabIconSelected : theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 24,
+                        paddingVertical: 12,
+                        width: isWide ? 400 : "100%",
+                        shadowColor: isSelected ? "#000" : undefined,
+                        shadowOffset: isSelected ? { width: 0, height: 5 } : undefined,
+                        shadowOpacity: isSelected ? 0.2 : undefined,
+                        shadowRadius: isSelected ? 3.5 : undefined,
+                        elevation: isSelected ? 5 : undefined,
+                      },
+                    ]}
+                  >
+                    <ThemedText
+                      style={{
+                        color: theme.colors.text,
+                        fontSize: theme.sizes.h3,
+                        fontFamily: theme.fonts.bold,
+                        textAlign: "flex-start",
+                      }}
+                    >
+                      {option.label}
                     </ThemedText>
-                  ))
-                  : lowerOptions.map((option, index) => (
-                    <ThemedText key={index} style={{ textAlign: "flex-end" }}>
-                      {option}
+                    <ThemedText
+                      style={{
+                        fontSize: 16,
+                        opacity: 0.8,
+                        marginTop: 4,
+                        fontFamily: theme.fonts.regular,
+                        color: theme.colors.text,
+                      }}
+                    >
+                      {option.description}
                     </ThemedText>
-                  ))}
-              </View>
-              <View className="sliderView" style={styles.sliderView}>
-                <Slider
-                  style={{ width: 220, height: 40 }}
-                  minimumTrackTintColor={theme.colors.tabIconSelected}
-                  maximumTrackTintColor={theme.colors.lightBrown}
-                  thumbTintColor={theme.colors.tabIconSelected}
-                  minimumValue={0}
-                  maximumValue={2}
-                  step={0.1}
-                  value={fit ?? 1}
-                  onValueChange={(value) => {
-                    setFit(value);
-                  }}
-                />
-              </View>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
         </View>
@@ -233,12 +242,14 @@ const styles = {
     maxWidth: 700,
     alignSelf: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: 30,
     position: "relative",
   },
   mainContent: {
     flex: 1,
     justifyContent: "flex-start",
+    flexDirection: "column",
+    gap: 30
   },
   textBlock: {
     alignSelf: "flex-start",

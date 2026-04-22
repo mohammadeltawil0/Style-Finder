@@ -78,15 +78,6 @@ const materialToLabel = (value) => {
 };
 
 export default function EditItemsModal({ item, setModalVisible }) {
-    // TO DO: edit item logic
-    useEffect(() => {
-        const t = Date.now();
-        console.log('[EditItemsModal] mount at', new Date(t).toISOString());
-        return () => {
-            console.log('[EditItemsModal] unmount at', new Date().toISOString());
-        };
-    }, []);
-
     const [uri, setUri] = useState(null);
     const [category, setCategory] = useState("TOP");
     const [pattern, setPattern] = useState("SOLID");
@@ -1274,6 +1265,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onSelect={(nextCategory) => {
                     setCategory(nextCategory);
                     updateItemMutation.mutate({ type: nextCategory });
+                    setIsLengthModalVisible(true);
+                    return;
                 }}
                 options={CATEGORY_OPTIONS}
                 title="Edit Category"
