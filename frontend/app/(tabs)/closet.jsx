@@ -3,18 +3,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  FlatList,
+  Image,
+  Modal,
   Pressable,
-  View,
+  ScrollView,
+  Share,
   StyleSheet,
   TouchableOpacity,
-  FlatList,
-  ScrollView,
-  Image,
-  ActivityIndicator,
-  Share,
-  Modal,
+  View,
 } from "react-native";
 import {
   ClosetToggle,
@@ -28,50 +28,61 @@ import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
 
 export default function ClosetScreen() {
-  const theme = useTheme();
-  const router = useRouter();
-  const params = useLocalSearchParams();
-
-  // --- UI States ---
   const [isItems, setIsItems] = useState(true);
-  const [isLoading, setIsLoading] = useState(true);
   const [searchText, setSearchText] = useState("");
   const [activeSearchText, setActiveSearchText] = useState("");
   const [outfitSearchText, setOutfitSearchText] = useState("");
-  const [tripSearchText, setTripSearchText] = useState("");
-
   const [activeOutfitSearchText, setActiveOutfitSearchText] = useState("");
-  const [isOutfitsLoading, setIsOutfitsLoading] = useState(false);
-  const [isDeleteTripModalVisible, setIsDeleteTripModalVisible] = useState(false);
-  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
-  const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
-
+  const [tripSearchText, setTripSearchText] = useState("");
   const [category, setCategory] = useState("all");
   const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
   const [mode, setMode] = useState("regular");
   const [userId, setUserId] = useState(null);
   const [currItemId, setCurrItemId] = useState(null);
-
-  // --- Database States (Outfits & Trips) ---
   const [dbOutfits, setDbOutfits] = useState([]);
   const [dbTrips, setDbTrips] = useState([]);
-  const [isDataLoading, setIsDataLoading] = useState(true);
-
-  // --- Modal States ---
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOutfitsLoading, setIsOutfitsLoading] = useState(false);
   const [selectedOutfit, setSelectedOutfit] = useState(null);
-  const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
 
-  // Safe Deletion States (From Version A)
-  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] = useState(false);
+  const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
+  const [isDeleteOutfitModalVisible, setIsDeleteOutfitModalVisible] =
+    useState(false);
   const [pendingDeleteOutfitId, setPendingDeleteOutfitId] = useState(null);
   const [isDeletingOutfit, setIsDeletingOutfit] = useState(false);
+  const [isDeleteTripModalVisible, setIsDeleteTripModalVisible] =
+    useState(false);
+  const [pendingDeleteTripId, setPendingDeleteTripId] = useState(null);
+  const [isDeletingTrip, setIsDeletingTrip] = useState(false);
 
-  // --- React Query for Items (From Version A) ---
+  const [autoOpenOutfitId, setAutoOpenOutfitId] = useState(null);
+
+  const params = useLocalSearchParams();
+  const router = useRouter();
+  const theme = useTheme();
+
   const fetchItems = async () => {
-    if (!userId) return [];
+    if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
-    return response.data;
+    return [...response.data].sort((a, b) => {
+      const aId = Number(a?.itemId ?? a?.id ?? 0);
+      const bId = Number(b?.itemId ?? b?.id ?? 0);
+      return bId - aId;
+    });
   };
+
+  useEffect(() => {
+    const loadUserId = async () => {
+      const storedUserId = await AsyncStorage.getItem("userId");
+      const parsedUserId = Number(storedUserId);
+
+      if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
+        setUserId(parsedUserId);
+      }
+    };
+
+    loadUserId();
+  }, []);
 
   const {
     data: items = [],
@@ -85,20 +96,16 @@ export default function ClosetScreen() {
     enabled: !!userId,
   });
 
-  // --- Initial Data Load ---
-  useEffect(() => {
-    const loadUserId = async () => {
-      const storedUserId = await AsyncStorage.getItem("userId");
-      const parsedUserId = Number(storedUserId);
-      if (Number.isInteger(parsedUserId) && parsedUserId > 0) {
-        setUserId(parsedUserId);
-      }
-    };
-    loadUserId();
-  }, []);
+  const formatOutfitDate = (createdAt) => {
+    if (!createdAt) return null;
+    const date = new Date(createdAt);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-
-  // All Regular Outfit Related Logic Starts here 
   const fetchUserOutfits = async (id) => {
     try {
       const response = await apiClient.get(`/api/outfits/user/${id}`);
@@ -118,39 +125,101 @@ export default function ClosetScreen() {
     }
   };
 
-  const formatOutfitDate = (createdAt) => {
-    if (!createdAt) return null;
-    const date = new Date(createdAt);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
-
-  const openOutfitDetails = (outfitId) => {
-    router.push({
-      pathname: "/closet/outfitsHistory/itemProperty",
-      params: {
-        outfitId,
-        isOutfit: "true",
-      },
-    });
-  };
-
-  const confirmDeleteOutfit = async () => {
-    if (!pendingDeleteOutfitId || isDeletingOutfit) return;
+  // TODO: Uncommend where this is user, had it, may be changed when trip feature implemented, just want to make sure outfits are loading for now.
+  const fetchUserTrips = async (id) => {
     try {
-      setIsDeletingOutfit(true);
-      const didDelete = await handleDeleteOutfit(pendingDeleteOutfitId);
-      if (didDelete) {
-        setIsDeleteOutfitModalVisible(false);
-        setPendingDeleteOutfitId(null);
+      const response = await apiClient.get(`/api/trips/user/${id}`);
+      if (response.status === 200) {
+        const formattedTrips = response.data.map((trip) => ({
+          id: trip.tripId?.toString(),
+          name: trip.tripLocation || "Trip",
+          location: trip.tripLocation || "",
+          dates:
+            trip.startDate && trip.endDate
+              ? `${trip.startDate} - ${trip.endDate}`
+              : "",
+          outfits: trip.tripOutfits || [],
+        }));
+        setDbTrips(formattedTrips);
       }
-    } finally {
-      setIsDeletingOutfit(false);
+    } catch (error) {
+      console.error("Failed to fetch trips:", error);
     }
   };
+
+  useFocusEffect(
+    useCallback(() => {
+      const loadTabStateAndData = async () => {
+        try {
+          setIsLoading(true);
+          const userIdStr = await AsyncStorage.getItem("userId");
+          const parsedId = userIdStr ? parseInt(userIdStr, 10) : null;
+
+          if (params.tab === "outfits") {
+            setIsItems(false);
+            await AsyncStorage.setItem("closetTab", "outfits");
+          } else if (params.tab === "items") {
+            setIsItems(true);
+            await AsyncStorage.setItem("closetTab", "items");
+          } else {
+            const savedTab = await AsyncStorage.getItem("closetTab");
+            setIsItems(savedTab !== "outfits");
+          }
+
+          if (parsedId) {
+            await Promise.all([
+              refetch(),
+              fetchUserOutfits(parsedId),
+              fetchUserTrips(parsedId),
+            ]);
+          }
+        } catch (e) {
+          console.error("Error loading closet state:", e);
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      loadTabStateAndData();
+    }, [params.tab, refetch]),
+  );
+
+  const handledOutfitId = useRef(null);
+
+  // Replace your openOutfitId effect with this
+  useEffect(() => {
+    if (!params.openOutfitId) return;
+    if (handledOutfitId.current === params.openOutfitId) return; // ✅ skip if already handled
+    if (dbOutfits.length === 0) return;
+
+    const outfit = dbOutfits.find(
+      (o) => String(o.outfitId || o.id) === String(params.openOutfitId),
+    );
+
+    if (outfit) {
+      handledOutfitId.current = params.openOutfitId;
+      openOutfitDetails(outfit.outfitId);
+    }
+  }, [params.openOutfitId, dbOutfits]);
+
+  const handleToggleItems = async (value) => {
+    setIsItems(value);
+    await AsyncStorage.setItem("closetTab", value ? "items" : "outfits");
+
+    // If switching to outfits, fetch them with loading indicator
+    if (!value && userId) {
+      setIsOutfitsLoading(true);
+      try {
+        await Promise.all([fetchUserOutfits(userId), fetchUserTrips(userId)]);
+      } catch (error) {
+        console.error("Failed to reload outfits:", error);
+      } finally {
+        setIsOutfitsLoading(false);
+      }
+    }
+  };
+
+  const handleSearchSubmit = () => setActiveSearchText(searchText);
 
   const handleDeleteOutfit = async (outfitId) => {
     try {
@@ -178,7 +247,177 @@ export default function ClosetScreen() {
     }
   };
 
-  // All Regualr Outfit releare logic ends here. 
+  const handleShareTrip = async (trip) => {
+    try {
+      await Share.share({
+        message: `Check out my trip to ${trip?.name} from ${trip?.dates} on StyleFinder!`,
+      });
+    } catch (error) {
+      console.error("Failed to share trip:", error);
+    }
+  };
+
+  const handleDeleteTrip = async (tripId) => {
+    try {
+      await apiClient.delete(`/api/trips/${tripId}`);
+      setDbTrips((prev) => prev.filter((t) => t.id !== tripId));
+      setIsDeleteTripModalVisible(false);
+      return true;
+    } catch (error) {
+      console.error("Failed to delete trip:", error);
+      return false;
+    }
+  };
+
+  const requestDeleteTrip = (tripId) => {
+    setPendingDeleteTripId(tripId);
+    setIsDeleteTripModalVisible(true);
+  };
+
+  const confirmDeleteTrip = async () => {
+    if (!pendingDeleteTripId || isDeletingTrip) return;
+    try {
+      setIsDeletingTrip(true);
+      const didDelete = await handleDeleteTrip(pendingDeleteTripId);
+      if (didDelete) {
+        setIsDeleteTripModalVisible(false);
+        setPendingDeleteTripId(null);
+      }
+    } finally {
+      setIsDeletingTrip(false);
+    }
+  };
+
+  const requestDeleteOutfit = (outfitId) => {
+    setPendingDeleteOutfitId(outfitId);
+    setIsDeleteOutfitModalVisible(true);
+  };
+
+  const confirmDeleteOutfit = async () => {
+    if (!pendingDeleteOutfitId || isDeletingOutfit) return;
+    try {
+      setIsDeletingOutfit(true);
+      const didDelete = await handleDeleteOutfit(pendingDeleteOutfitId);
+      if (didDelete) {
+        setIsDeleteOutfitModalVisible(false);
+        setPendingDeleteOutfitId(null);
+      }
+    } finally {
+      setIsDeletingOutfit(false);
+    }
+  };
+
+  const openOutfitDetails = (outfitId) => {
+    router.push({
+      pathname: "/closet/outfitsHistory/itemProperty",
+      params: {
+        outfitId,
+        isOutfit: "true",
+      },
+    });
+  };
+
+  const formatItemType = (type) => {
+    if (!type) return "Item";
+    const cleanStr = type.replace(/_/g, " ");
+    return cleanStr.replace(/\w\S*/g, (txt) => {
+      return txt.charAt(0).toUpperCase() + txt.substring(1).toLowerCase();
+    });
+  };
+
+  const processedItems = items.map((item, index) => ({
+    ...item,
+    id: item.itemId,
+    name: `${formatItemType(item.type)} (Item ${index + 1})`,
+  }));
+
+  const getOutfitCoverImage = (outfit) => {
+    const firstOutfitItem = outfit?.outfitItems?.[0]?.item;
+    return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
+  };
+
+  const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
+  const materialMap = {
+    1: "cotton",
+    2: "linen hemp",
+    3: "wool fleece",
+    4: "silk satin",
+    5: "leather faux leather",
+    6: "synthetics polyester nylon spandex",
+    7: "other",
+  };
+
+  const patternMap = {
+    GEOMETRIC_OR_ABSTRACT: "geometric abstract",
+    SOLID: "solid",
+    STRIPED: "striped",
+    GRAPHIC: "graphic",
+    FLORAL: "floral",
+    PLAID_OR_FLANNEL: "plaid flannel",
+  };
+
+  const eventMap = {
+    ACTIVE_OR_SPORT: "sport active gym",
+    FORMAL: "formal dressy",
+    CASUAL: "casual everyday",
+    WORK_OR_SMART: "work",
+    PARTY_OR_NIGHT_OUT: "party night out social",
+  };
+
+  const fitMap = {
+    1: "slim fitted tight",
+    2: "regular normal",
+    3: "loose oversized baggy",
+  };
+
+  const filteredItems = items.filter((item) => {
+    //category filter
+    if (category !== "all") {
+      const typeMap = {
+        tops: "TOP",
+        bottoms: "BOTTOM",
+        full_body: "FULL_BODY",
+        outerwear: "OUTERWEAR",
+      };
+
+      if (item.type !== typeMap[category]) {
+        return false;
+      }
+    }
+    const terms = searchText.toLowerCase().trim().split(/\s+/).filter(Boolean);
+
+    //search filter
+    if (terms.length > 0) {
+      const searchableText = [
+        normalize(item.type),
+        normalize(item.color),
+        normalize(item.seasonWear),
+        normalize(item.formality),
+        normalize(item.fit),
+        normalize(item.pattern),
+
+        materialMap[item.material],
+        patternMap[item.pattern],
+        eventMap[item.formality],
+        fitMap[item.fit],
+      ]
+        .filter(Boolean)
+        .join(" ");
+      const words = searchableText.split(" ");
+      console.log("SEARCH TERMS:", terms);
+      console.log("ITEM TEXT:", searchableText);
+      const matches = terms.every((term) =>
+        words.some((word) => word.startsWith(term)),
+      );
+      if (!matches) return false;
+    }
+    return true;
+  });
+
+  // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
+  // const trips = dbTrips;
+
+  // Filter outfits by date search, then show newest outfits first.
   const filteredOutfits = dbOutfits
     .filter((outfit) => {
       if (!activeOutfitSearchText) return true;
@@ -196,31 +435,6 @@ export default function ClosetScreen() {
     filteredOutfits.length % 2 !== 0
       ? [...filteredOutfits, { id: "empty", isEmpty: true }]
       : filteredOutfits;
-      
-
-  // All Trip Outfit Related Logic Starts here 
-  const fetchUserTrips = async (uid) => {
-    try {
-      const response = await apiClient.get(`/api/trips/user/${uid}`);
-      setDbTrips(response.data);
-    } catch (error) {
-      console.error("Failed to fetch trips:", error);
-    }
-  };
-
-  const confirmDeleteTrip = async () => {
-    if (!pendingDeleteTripId || isDeletingTrip) return;
-    try {
-      setIsDeletingTrip(true);
-      const didDelete = await handleDeleteTrip(pendingDeleteTripId);
-      if (didDelete) {
-        setIsDeleteTripModalVisible(false);
-        setPendingDeleteTripId(null);
-      }
-    } finally {
-      setIsDeletingTrip(false);
-    }
-  };
 
   const dummyTrips = [
     {
@@ -241,169 +455,249 @@ export default function ClosetScreen() {
     );
   });
 
-  useFocusEffect(
-      useCallback(() => {
-        const loadTabStateAndData = async () => {
-          setIsDataLoading(true);
-          try {
-            const parsedId = userId || Number(await AsyncStorage.getItem("userId"));
+  const itemsListHeader = (
+    <>
+      <SearchBar
+        value={searchText}
+        onChangeText={(text) => setSearchText(text)}
+        placeholder={"Search Item via Type"}
+        onSubmit={handleSearchSubmit}
+      />
+      <View
+        className="item-categories"
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          gap: 10,
+          justifyContent: "flex-start",
+          paddingVertical: 15,
+        }}
+      >
+        <Pressable
+          className="all-category"
+          style={{
+            backgroundColor:
+              category === "all"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() => setCategory("all")}
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            All
+          </ThemedText>
+        </Pressable>
 
-            if (params.tab === "outfits") {
-              setIsItems(false);
-            } else if (params.tab === "items") {
-              setIsItems(true);
-            } else {
-              const savedTab = await AsyncStorage.getItem("closetTab");
-              setIsItems(savedTab !== "outfits");
-            }
-
-            if (parsedId) {
-              await Promise.all([
-                refetch(),
-                fetchUserOutfits(parsedId),
-                fetchUserTrips(parsedId),
-              ]);
-            }
-          } catch (e) {
-            console.error("Error loading closet state:", e);
-          } finally {
-            setIsDataLoading(false);
+        <Pressable
+          className="tops-category"
+          style={{
+            backgroundColor:
+              category === "tops"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "tops" ? "all" : "tops"))
           }
-        };
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Tops
+          </ThemedText>
+        </Pressable>
 
-        loadTabStateAndData();
-      }, [params.tab, refetch, userId])
+        <Pressable
+          className="bottoms-category"
+          style={{
+            backgroundColor:
+              category === "bottoms"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "bottoms" ? "all" : "bottoms"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Bottoms
+          </ThemedText>
+        </Pressable>
+
+        <Pressable
+          className="full-body-category"
+          style={{
+            backgroundColor:
+              category === "full_body"
+                ? theme.colors.tabIconSelected
+                : theme.colors.lightBrown,
+            borderRadius: 10,
+            width: "48%",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingVertical: 10,
+          }}
+          onPress={() =>
+            setCategory((prev) => (prev === "full_body" ? "all" : "full_body"))
+          }
+        >
+          <ThemedText
+            style={{
+              color: theme.colors.text,
+              fontSize: theme.sizes.text,
+            }}
+          >
+            Full Body
+          </ThemedText>
+        </Pressable>
+
+        <View style={{ width: "100%", alignItems: "center" }}>
+          <Pressable
+            className="outerwear-category"
+            style={{
+              backgroundColor:
+                category === "outerwear"
+                  ? theme.colors.tabIconSelected
+                  : theme.colors.lightBrown,
+              borderRadius: 10,
+              width: "48%",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+            }}
+            onPress={() =>
+              setCategory((prev) =>
+                prev === "outerwear" ? "all" : "outerwear",
+              )
+            }
+          >
+            <ThemedText
+              style={{
+                color: theme.colors.text,
+                fontSize: theme.sizes.text,
+              }}
+            >
+              Outerwear
+            </ThemedText>
+          </Pressable>
+        </View>
+      </View>
+    </>
   );
 
-  // --- Interaction Handlers ---
-  const handleToggleItems = async (value) => {
-    setIsItems(value);
-    await AsyncStorage.setItem("closetTab", value ? "items" : "outfits");
-  };
-
-  const handleSearchSubmit = () => setActiveSearchText(searchText);
-
-  const getOutfitCoverImage = (outfit) => {
-    if (outfit.coverImageUrl) return outfit.coverImageUrl;
-    if (outfit.items && outfit.items.length > 0) {
-      const topOrFull = outfit.items.find(
-          (i) => i.type === "TOP" || i.type === "FULL_BODY"
-      );
-      if (topOrFull && topOrFull.imageUrl) return topOrFull.imageUrl;
-      return outfit.items.imageUrl;
-    }
-    return null;
-  };
-
-  // Safe Deletion Logic (From Version A)
-  const requestDeleteOutfit = (outfitId) => {
-    setPendingDeleteOutfitId(outfitId);
-    setIsDeleteOutfitModalVisible(true);
-    setIsOutfitModalVisible(false);
-  };
-  const formatItemType = (typeStr) => {
-    if (!typeStr) return "";
-    let clean = typeStr.replace(/_OR_/g, "/").replace(/_/g, " ");
-    return clean.charAt(0).toUpperCase() + clean.slice(1).toLowerCase();
-  };
-
-  // --- Filtering ---
-  const filteredItems = items.filter((item) => {
-    const matchesSearch =
-        activeSearchText === "" ||
-        item.color?.toLowerCase().includes(activeSearchText.toLowerCase()) ||
-        item.type?.toLowerCase().includes(activeSearchText.toLowerCase());
-
-    const matchesCategory =
-        category === "all" ||
-        (category === "tops" && item.type === "TOP") ||
-        (category === "bottoms" && item.type === "BOTTOM") ||
-        (category === "dresses" && item.type === "FULL_BODY") ||
-        (category === "outerwear" && (item.type === "OUTERWEAR" || item.type === "OVER"));
-
-    return matchesSearch && matchesCategory;
-  });
-
   return (
-      <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
-        {!editItemsModalVisible && (
-            <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
-        )}
+    <ThemedView gradient={false} style={{ flex: 1, alignItems: "center" }}>
+      {!editItemsModalVisible && (
+        <ClosetToggle isItems={isItems} toggleItems={handleToggleItems} />
+      )}
 
-        <View style={{ flex: 1, width: "100%", alignItems: "center" }}>
-          {editItemsModalVisible ? (
-              <EditItemsModal setModalVisible={setEditItemsModalVisible} itemId={currItemId} />
-          ) : (
-              <View style={{ width: "100%", flex: 1 }}>
-                {/* Search Bar */}
-                {isItems && (
-                    <SearchBar
-                        value={searchText}
-                        onChangeText={(text) => {
-                          setSearchText(text);
-                          if (text === "") setActiveSearchText("");
-                        }}
-                        onSubmit={handleSearchSubmit}
+      <View
+        style={{
+          flex: 1,
+          width: "100%",
+          alignItems: "center",
+          position: "relative",
+        }}
+      >
+        {editItemsModalVisible ? (
+          <EditItemsModal
+            item={items.find((i) => i.itemId === currItemId)}
+            setModalVisible={setEditItemsModalVisible}
+          />
+        ) : (
+          <View style={{ flex: 1, width: "100%" }}>
+            {isItems ? (
+              <>
+                {isItemsLoading ? (
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                    }}
+                  >
+                    <ActivityIndicator
+                      size="large"
+                      color={theme.colors.tabIconSelected}
                     />
-                )}
-
-                {isItems ? (
-                    <>
-                      {/* Horizontal Category Scroll (From Version B) */}
-                      <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={{ gap: 15, padding: 15, paddingBottom: 20 }}
-                          style={{ flexGrow: 0 }}
-                      >
-                        {["all", "tops", "bottoms", "dresses", "outerwear"].map(cat => (
-                            <Pressable
-                                key={cat}
-                                style={{
-                                  backgroundColor: category === cat ? theme.colors.tabIconSelected : theme.colors.lightBrown,
-                                  borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10, height: 40
-                                }}
-                                onPress={() => setCategory(cat)}
-                            >
-                              <ThemedText style={{ color: theme.colors.text }}>
-                                {cat === "all" ? "All" : cat === "dresses" ? "Dresses/Full Body" : cat.charAt(0).toUpperCase() + cat.slice(1)}
-                              </ThemedText>
-                            </Pressable>
-                        ))}
-                      </ScrollView>
-
-                      {/* React Query Status States (From Version A) */}
-                      {isItemsLoading ? (
-                          <View style={styles.centerState}>
-                            <ActivityIndicator size="large" color={theme.colors.tabIconSelected} />
-                            <ThemedText style={{ marginTop: 10 }}>Loading your items...</ThemedText>
-                          </View>
-                      ) : isItemsError ? (
-                          <View style={styles.centerState}>
-                            <ThemedText style={{ textAlign: "center" }}>
-                              {itemsError?.message || "Could not load items. Please try again."}
-                            </ThemedText>
-                            <Pressable onPress={() => refetch()} style={styles.retryButton}>
-                              <ThemedText>Retry</ThemedText>
-                            </Pressable>
-                          </View>
-                      ) : filteredItems.length === 0 ? (
-                          <ThemedText style={{ textAlign: "center", marginTop: 20 }}>No items found.</ThemedText>
-                      ) : (
-                          <Items
-                              items={filteredItems}
-                              setCurrItemId={setCurrItemId}
-                              currItemId={currItemId}
-                              setEditItemsModalVisible={setEditItemsModalVisible}
-                              editItemsModalVisible={editItemsModalVisible}
-                          />
-                      )}
-
-                      <Pressable style={styles.fab} onPress={() => router.push("../closet/add-item")}>
-                        <Ionicons name="add-sharp" size={40} color="black" />
-                      </Pressable>
-                    </>
+                    <ThemedText>Loading your items...</ThemedText>
+                  </View>
+                ) : isItemsError ? (
+                  <View
+                    style={{
+                      marginTop: 40,
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: 10,
+                      paddingHorizontal: 24,
+                    }}
+                  >
+                    <ThemedText style={{ textAlign: "center" }}>
+                      {itemsError?.message ||
+                        "Could not load items. Please try again."}
+                    </ThemedText>
+                    <Pressable
+                      onPress={() => refetch()}
+                      style={{
+                        backgroundColor: theme.colors.lightBrown,
+                        borderRadius: 10,
+                        paddingHorizontal: 16,
+                        paddingVertical: 10,
+                      }}
+                    >
+                      <ThemedText>Retry</ThemedText>
+                    </Pressable>
+                  </View>
                 ) : (
+                  <>
+                    <Items
+                      items={filteredItems}
+                      setCurrItemId={setCurrItemId}
+                      currItemId={currItemId}
+                      setEditItemsModalVisible={setEditItemsModalVisible}
+                      editItemsModalVisible={editItemsModalVisible}
+                      listHeaderComponent={itemsListHeader}
+                    />
+
+                    <Pressable
+                      style={styles.fab}
+                      onPress={() => router.push("../closet/add-item")}
+                    >
+                      <Ionicons name="add-sharp" size={40} color="black" />
+                    </Pressable>
+                  </>
+                )}
+              </>
+            ) : (
               <>
                 <View style={styles.outfitToggle}>
                   <TouchableOpacity
@@ -815,12 +1109,12 @@ export default function ClosetScreen() {
                     </View>
                   </View>
                 </Modal>
-               </>
-                )}
-              </View>
-          )}
-        </View>
-      </ThemedView>
+              </>
+            )}
+          </View>
+        )}
+      </View>
+    </ThemedView>
   );
 }
 

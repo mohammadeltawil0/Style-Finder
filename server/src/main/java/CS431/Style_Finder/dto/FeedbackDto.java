@@ -1,6 +1,7 @@
 package CS431.Style_Finder.dto;
-import lombok.*;
 import java.util.List;
+
+import lombok.*;
 
 @Getter
 @Setter
@@ -12,7 +13,7 @@ public class FeedbackDto {
     private String suggestionId;
     private List<Long> originalItemIds;
     private List<Long> finalItemIds;
-    private String action; // SAVE, EDIT_SAVE, REJECT
+    private String action; // SAVE, EDIT_FEEDBACK, REJECT
     private int contextTemp;
     private String contextOccasion;
 }

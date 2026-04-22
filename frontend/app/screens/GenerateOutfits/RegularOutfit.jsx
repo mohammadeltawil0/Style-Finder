@@ -1,9 +1,9 @@
 import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
 import * as Location from "expo-location";
-import { useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -17,7 +17,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "../../../components";
@@ -99,6 +99,7 @@ const fetchItemsByIds = async (itemIds = []) => {
     results.filter((r) => r.status === "fulfilled").map((r) => r.value.data),
   );
 };
+
 /**
  * Shows the outfit's items as tappable image cards — tap one to replace it.
  * Manages its own ReplacementModal internally so no navigation is needed.
@@ -162,6 +163,21 @@ const EditOutfitModal = ({
     setReplaceTargetIndex(null);
   };
 
+  const isOuterwearItem = (item) => {
+    const normalizedType = normalizeType(getItemType(item));
+    return normalizedType === "OUTERWEAR" || normalizedType === "OVER";
+  };
+
+  const handleRemoveOuterwear = (indexToRemove) => {
+    setItems((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const hasOuterwear = items.some((item) => isOuterwearItem(item));
+
+  const handleRemoveAllOuterwear = () => {
+    setItems((prev) => prev.filter((item) => !isOuterwearItem(item)));
+  };
+
   const handleDone = () => {
     const ids = items.map(getItemId).filter((id) => id !== null);
     if (ids.length === 0) {
@@ -192,17 +208,11 @@ const EditOutfitModal = ({
             { backgroundColor: theme.colors.background },
           ]}
         >
-          <View style={styles.chevronView}>
-            <Pressable onPress={onClose}>
-              <Entypo name="chevron-down" size={30} color={theme.colors.text} />
-            </Pressable>
-          </View>
-
           {!replaceModalVisible ? (
             <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
               <ThemedText style={styles.modalTitle}>Edit Outfit</ThemedText>
               <ThemedText style={styles.editSubtitle}>
-                Tap any item to replace it from your closet.
+                Tap image to replace, tap trash to remove outerwear.
               </ThemedText>
 
               {items.length === 0 && (
@@ -234,6 +244,21 @@ const EditOutfitModal = ({
                       </ThemedText>
                     </View>
                   )}
+
+                  {isOuterwearItem(item) && (
+                      <Pressable
+                        style={styles.trashIconOverlay}
+                        onPress={() => handleRemoveOuterwear(index)}
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={19}
+                          color={theme.colors.text}
+                        />
+                      </Pressable>
+                    )}
+                    
                   <View style={{ marginTop: 10 }}>
                     <ThemedText style={{ fontWeight: "bold", fontSize: 17 }}>
                       {formatEnum(getItemType(item))}
@@ -244,6 +269,7 @@ const EditOutfitModal = ({
                   </View>
                 </TouchableOpacity>
               ))}
+
 
               <TouchableOpacity
                 style={[
@@ -342,7 +368,10 @@ const EditOutfitModal = ({
   );
 };
 
-// --- OUTFIT DETAILS MODAL ---
+
+
+// ─── Outfit Details Modal ─────────────────────────────────────────────────────
+
 const OutfitDetailsModal = ({
   visible,
   outfit,
@@ -469,42 +498,71 @@ const OutfitDetailsModal = ({
   );
 };
 
-// --- MAIN SCREEN ---
-export default function Recommendations() {
-  const theme = useTheme();
-  const router = useRouter();
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 
-  // Andrew's original state variables
+export default function RegularOutfit() {
+  const theme = useTheme();
+
   const [suggestions, setSuggestions] = useState([]);
   const [formality, setFormality] = useState("CASUAL");
   const [isGenerating, setIsGenerating] = useState(false);
   const [useMemory, setUseMemory] = useState(false);
-  const [selectedOutfit, setSelectedOutfit] = useState(null);
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [weatherEnabled, setWeatherEnabled] = useState(true);
+  const [eventType, setEventType] = useState("");
 
+  const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState(null); // Stores the final lat,lon for the payload
+  const [searchResults, setSearchResults] = useState([]); // Stores the Open-Meteo array
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false); // For location autocomplete dropdown
+
+  // Modal state
+  const [selectedOutfit, setSelectedOutfit] = useState(null);
   const [isDetailsModalVisible, setIsDetailsModalVisible] = useState(false);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [editableItems, setEditableItems] = useState([]);
   const [editedItemIds, setEditedItemIds] = useState(null);
 
-  // New State Variable for toogling between regular and Trip outfits
-  const [isRegularOutfit, setIsRegularOutfit] = useState(true);
+  // Additional constraints
+  const [topFit, setTopFit] = useState([]);
+  const [topLength, setTopLength] = useState([]);
+  const [bottomFit, setBottomFit] = useState([]);
+  const [bottomLength, setBottomLength] = useState([]);
+  const [fullBody, setFullBody] = useState(false);
+  const [fullBodyLength, setFullBodyLength] = useState([]);
+  const [outerwear, setOuterwear] = useState(false);
+  const [outerFit, setOuterFit] = useState([]);
+  const [patterns, setPatterns] = useState(false);
+  const [color, setColor] = useState("");
+  const [extraConstraints, setConstraints] = useState(null);
 
-  const handleToggleOutfit = async (value) => {
-    setIsRegularOutfit(value);
-    await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
+  const predefinedLocations = [
+    { city: "New York", state: "NY", country: "USA" },
+    { city: "New Brunswick", state: "NJ", country: "USA" },
+    { city: "Piscataway", state: "NJ", country: "USA" },
+    { city: "Jersey City", state: "NJ", country: "USA" },
+    { city: "Los Angeles", state: "CA", country: "USA" },
+    { city: "Chicago", state: "IL", country: "USA" },
+    { city: "Houston", state: "TX", country: "USA" },
+    { city: "Miami", state: "FL", country: "USA" },
+  ];
+
+  const filteredLocations = predefinedLocations.filter((l) =>
+    `${l.city}, ${l.state}, ${l.country}`
+      .toLowerCase()
+      .includes(location.toLowerCase()),
+  );
+
+  // Helper function to get userId from AsyncStorage
+  const getUserId = async () => {
+    try {
+      const storedIdString = await AsyncStorage.getItem("userId");
+      if (storedIdString !== null) return parseInt(storedIdString, 10);
+    } catch (error) {
+      console.error("Storage error", error);
+    }
+    return null;
   };
-
-  // TODO: Talk about this to group!!
-  // Old one's to maintain proper UI and location manual bc user can be anywhere to plan the next outfit
-  const [weatherEnabled, setWeatherEnabled] = useState(true);
-  const [location, setLocation] = useState("");
-  const [locationCoords, setLocationCoords] = useState(null); // Stores the final lat,lon for the payload
-  const [searchResults, setSearchResults] = useState([]); // Stores the Open-Meteo array
-  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
-
-  const [showDropdown, setShowDropdown] = useState(false); // For location autocomplete dropdown
-  const [eventType, setEventType] = useState(""); // If formality is formal, ask for which event ...
 
   // --- Open-Meteo Geocoding Search ---
   const handleLocationSearch = async (text) => {
@@ -620,24 +678,44 @@ export default function Recommendations() {
     }, []),
   );
 
-  // Helper function to get userId from AsyncStorage
-  const getUserId = async () => {
-    try {
-      const storedIdString = await AsyncStorage.getItem("userId");
-      if (storedIdString !== null) return parseInt(storedIdString, 10);
-    } catch (error) {
-      console.error("Storage error", error);
-    }
-    return null;
-  };
+  // Restore saved constraints on focus
+  useFocusEffect(
+    useCallback(() => {
+      const load = async () => {
+        const saved = await AsyncStorage.getItem("recommendationConstraints");
+        if (!saved) return;
+        const p = JSON.parse(saved);
+        setLocation(p.location || "");
+        setFormality(p.formality || "CASUAL");
+        setEventType(p.eventType || "");
+        setWeatherEnabled(
+          p.weatherEnabled === true || p.weatherEnabled === "true",
+        );
+        setConstraints(p);
+        setTopFit(p.topFit || []);
+        setTopLength(p.topLength || []);
+        setBottomFit(p.bottomFit || []);
+        setBottomLength(p.bottomLength || []);
+        setFullBody(p.fullBody || false);
+        setFullBodyLength(p.fullBodyLength || []);
+        setOuterwear(p.outerwear || false);
+        setOuterFit(p.outerFit || []);
+        setPatterns(p.patterns || false);
+        setColor(p.color || "");
+      };
+      load();
+    }, []),
+  );
 
-  // Andrew's origianl function name fetchSuggestions but renamed to be more descriptive of the action
   const handleGenerateOutfit = async () => {
     if (!locationCoords || !formality) {
-      Alert.alert("Missing Fields", "Location and Occasion are required.");
+      Toast.show({
+        type: "error",
+        text1: "Missing fields",
+        text2: "Location and Occasion are required.",
+      });
       return;
     }
-
     try {
       setIsGenerating(true);
 
@@ -651,11 +729,9 @@ export default function Recommendations() {
         setIsGenerating(false);
         return;
       }
-
       const finalLocation = locationCoords || location;
       const userId = await getUserId();
 
-      // Add data from additional constraints if we have it
       const data = {
         location: finalLocation,
         event: formality,
@@ -665,6 +741,7 @@ export default function Recommendations() {
         eventType,
         weatherEnabled,
       };
+      setShowDropdown(false);
 
       console.log("=== Generate Outfit Request ===");
       console.log("UserId:", userId);
@@ -678,16 +755,25 @@ export default function Recommendations() {
       console.log("=== Generate Outfit Response ===");
       console.log("Response:", JSON.stringify(res.data, null, 2));
 
-      // Populate the grid with results
       setSuggestions(res.data?.slice(0, 10) || []);
-    } catch (error) {
-      console.error("=== Generate Outfit Error ===", error);
-      Alert.alert("Error", "Generation failed. Please try again.");
+      Toast.show({
+        type: "success",
+        text1: "Outfit generated",
+        text2: "Scroll down to see your outfits.",
+      });
+    } catch (e) {
+      console.error("Generate outfit error:", e);
+      Toast.show({
+        type: "error",
+        text1: "Outfit generation failed",
+        text2: "Try again in a few minutes.",
+      });
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Unified feedback sender
   const sendFeedback = async (actionType, finalItemIds = null) => {
     if (!selectedOutfit) return;
     const userId = await getUserId();
@@ -769,18 +855,6 @@ export default function Recommendations() {
     });
   };
 
-  
-  const resetAllConstraints = async () => {
-    await AsyncStorage.removeItem("recommendationConstraints");
-    setLocation("");
-    setFormality("CASUAL");
-    setEventType("");
-    setWeatherEnabled(true);
-    setUseMemory(false);
-    setIsRegularOutfit(true);
-  };
-
-  // Dynamic button text matching first file logic
   const buttonText = isGenerating
     ? "Processing..."
     : useMemory
@@ -789,7 +863,7 @@ export default function Recommendations() {
 
   return (
     <View>
-      {/* Header — title + logo */}
+      {/* ── Header ── */}
       <View style={styles.header}>
         <View style={{ flex: 1 }}>
           <ThemedText
@@ -808,8 +882,8 @@ export default function Recommendations() {
         />
       </View>
 
+      {/* ── Controls ── */}
       <View style={styles.controlsContainer}>
-        {/* Select Occasion */}
         <ThemedText style={styles.sectionLabel}>Select Occasion:</ThemedText>
         <ScrollView
           horizontal
@@ -845,7 +919,6 @@ export default function Recommendations() {
           ))}
         </ScrollView>
 
-        {/* Event Type — only for FORMAL */}
         {formality === "FORMAL" && (
           <View style={{ marginBottom: 20 }}>
             <ThemedText style={styles.sectionLabel}>Event Type:</ThemedText>
@@ -853,12 +926,11 @@ export default function Recommendations() {
               placeholder="e.g. Wedding, Gala, Interview..."
               placeholderTextColor="#aaa"
               value={eventType}
-              onChangeText={(text) => setEventType(text)}
+              onChangeText={setEventType}
               style={[styles.input, { color: theme.colors.text }]}
             />
           </View>
         )}
-
         {/* Location */}
         <ThemedText style={styles.sectionLabel}>Location:</ThemedText>
         <TextInput
@@ -931,7 +1003,6 @@ export default function Recommendations() {
 
         <View style={styles.divider} />
 
-        {/* Consider Weather toggle */}
         <View style={styles.toggleRow}>
           <ThemedText style={styles.toggleLabel}>Consider Weather:</ThemedText>
           <Switch
@@ -939,13 +1010,12 @@ export default function Recommendations() {
               false: "#767577",
               true: theme.colors.tabIconSelected,
             }}
-            thumbColor={"#f4f3f4"}
+            thumbColor="#f4f3f4"
             onValueChange={setWeatherEnabled}
             value={weatherEnabled}
           />
         </View>
 
-        {/* Recall past outfits toggle */}
         <View style={styles.toggleRow}>
           <ThemedText style={styles.toggleLabel}>
             Recall past outfits?
@@ -955,7 +1025,7 @@ export default function Recommendations() {
               false: "#767577",
               true: theme.colors.tabIconSelected,
             }}
-            thumbColor={"#f4f3f4"}
+            thumbColor="#f4f3f4"
             onValueChange={setUseMemory}
             value={useMemory}
           />
@@ -963,7 +1033,6 @@ export default function Recommendations() {
 
         <View style={styles.divider} />
 
-        {/* Generate / Recall button */}
         <TouchableOpacity
           onPress={handleGenerateOutfit}
           activeOpacity={0.7}
@@ -981,7 +1050,7 @@ export default function Recommendations() {
         </TouchableOpacity>
       </View>
 
-      {/* Results Grid — only shown when suggestions exist */}
+      {/* ── Results Grid ── */}
       {suggestions.length > 0 && (
         <FlatList
           data={suggestions}
@@ -1152,6 +1221,15 @@ const styles = StyleSheet.create({
   // Edit modal item cards
   editItemCard: { padding: 12, borderRadius: 10, marginBottom: 14 },
   editItemImage: { width: "100%", height: 180, borderRadius: 10 },
+  trashIconOverlay: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 6,
+    padding: 6,
+    zIndex: 10,
+  },
   noImage: {
     alignItems: "center",
     justifyContent: "center",
