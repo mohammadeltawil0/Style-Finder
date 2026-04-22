@@ -53,7 +53,7 @@ export const Items = ({
             >
               <View className="item-image" style={{ height: 175, borderRadius: 10, overflow: "hidden" }}>
                 {console.log("item.imageUrl:", item.imageUrl, typeof item.imageUrl)}
-                {item.imageUrl && typeof item.imageUrl === 'string' && item.imageUrl.startsWith('http') ? (
+                {item.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:')) ? (
                   <Image
                     source={{ uri: item.imageUrl }}
                     style={{ width: "100%", height: "100%" }}

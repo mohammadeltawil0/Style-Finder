@@ -115,7 +115,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    const hasImageUrl = typeof uri === "string" && uri.startsWith("http");
+    const hasImageUrl = uri && typeof uri === 'string' && (uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'));
 
     const fitToSliderValue = (value) => {
         if (typeof value === "number") return value;

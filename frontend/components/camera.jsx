@@ -187,6 +187,8 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
     setFacing((prev) => (prev === "back" ? "front" : "back"));
   };
 
+  const isValidUri = uri && typeof uri === 'string' && (uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'));
+
   if (uri) {
     return (
       <>
@@ -197,7 +199,7 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
             isWeb && styles.previewContainerWeb,
           ]}
         >
-          {uri && typeof uri === 'string' && uri.startsWith('http') ? (
+          {isValidUri ? (
             <Image
               source={{ uri }}
               contentFit="cover"
@@ -227,7 +229,7 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
               Change Photo
             </ThemedText>
           </Pressable>
-          {isEditing && ((uri && typeof uri === 'string' && uri.startsWith('http'))) && (
+          {isEditing && ((uri && typeof uri === 'string' && uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'))) && (
             <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
               <Pressable
                 style={{
