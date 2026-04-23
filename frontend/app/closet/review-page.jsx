@@ -80,6 +80,7 @@ export default function ReviewPage({
   const [imageFailed, setImageFailed] = useState(false);
   const [draftImageUri, setDraftImageUri] = useState(uri ?? null);
   const [tempColor, setTempColor] = useState(normalizeColor(color));
+  const [tempCategory, setTempCategory] = useState(itemType);
 
   // Convert enum/int fit states to actual categories for review page display
   const fitToLabel = (value) => (value < 0.5 ? "SLIM" : value < 1.5 ? "REGULAR" : "LOOSE");
@@ -226,41 +227,41 @@ export default function ReviewPage({
                     styles.responseContainer,
                     {
                       alignItems: "center",
-                    backgroundColor: theme.colors.card,
-                    justifyContent: "center",
-                  },
-                ]}
-              >
-                <View
-                  className="response"
-                  style={{
-                    alignItems: "flex-start",
-                    flexDirection: "column",
-                    width: "70%",
-                  }}
+                      backgroundColor: theme.colors.card,
+                      justifyContent: "center",
+                    },
+                  ]}
                 >
-                  <ThemedText
+                  <View
+                    className="response"
                     style={{
-                      fontSize: theme.sizes.h3,
-                      color: theme.colors.text,
-                      fontFamily: theme.fonts.regular,
+                      alignItems: "flex-start",
+                      flexDirection: "column",
+                      width: "70%",
                     }}
                   >
-                    No image uploaded
-                  </ThemedText>
-                </View>
-                <View
-                  className="editContainer"
-                  style={{ flexGrow: 1, alignItems: "flex-end" }}
-                >
-                  <Ionicons
-                    name="create"
-                    size={20}
-                    color={theme.colors.text}
-                    onPress={() => openEditModal(1)}
-                  />
-                </View>
+                    <ThemedText
+                      style={{
+                        fontSize: theme.sizes.h3,
+                        color: theme.colors.text,
+                        fontFamily: theme.fonts.regular,
+                      }}
+                    >
+                      No image uploaded
+                    </ThemedText>
                   </View>
+                  <View
+                    className="editContainer"
+                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                  >
+                    <Ionicons
+                      name="create"
+                      size={20}
+                      color={theme.colors.text}
+                      onPress={() => openEditModal(1)}
+                    />
+                  </View>
+                </View>
               )}
               <View
                 style={[
@@ -581,107 +582,107 @@ export default function ReviewPage({
                   />
                 </View>
               </View>
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
                 <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      backgroundColor: theme.colors.card,
-                    },
-                  ]}
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
                 >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
+                        fontSize: theme.sizes.h3,
+                      },
+                    ]}
                   >
-                    <ThemedText
-                      style={[
-                        styles.titleText,
-                        {
-                          fontFamily: theme.fonts.bold,
-                          fontSize: theme.sizes.h3,
-                        },
-                      ]}
-                    >
-                      Season:
-                    </ThemedText>
-                    <ThemedText
-                      style={[
-                        styles.answerText,
-                        {
-                          fontFamily: theme.fonts.regular,
-                          fontSize: theme.sizes.text,
-                        },
-                      ]}
-                    >
-                      {convertedSeason}
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                    Season:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
+                        fontFamily: theme.fonts.regular,
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
                   >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(7)}
-                    />
-                  </View>
+                    {convertedSeason}
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => openEditModal(7)}
+                  />
+                </View>
               </View>
+              <View
+                style={[
+                  styles.responseContainer,
+                  {
+                    backgroundColor: theme.colors.card,
+                  },
+                ]}
+              >
                 <View
-                  style={[
-                    styles.responseContainer,
-                    {
-                      backgroundColor: theme.colors.card,
-                    },
-                  ]}
+                  className="response"
+                  style={{
+                    alignItems: "flex-start",
+                    flexDirection: "column",
+                    width: "70%",
+                  }}
                 >
-                  <View
-                    className="response"
-                    style={{
-                      alignItems: "flex-start",
-                      flexDirection: "column",
-                      width: "70%",
-                    }}
+                  <ThemedText
+                    style={[
+                      styles.titleText,
+                      {
+                        fontFamily: theme.fonts.bold,
+                        fontSize: theme.sizes.h3,
+                      },
+                    ]}
                   >
-                    <ThemedText
-                      style={[
-                        styles.titleText,
-                        {
-                          fontFamily: theme.fonts.bold,
-                          fontSize: theme.sizes.h3,
-                        },
-                      ]}
-                    >
-                      Length:
-                    </ThemedText>
-                    <ThemedText
-                      style={[
-                        styles.answerText,
-                        {
-                          fontFamily: theme.fonts.regular,
-                          fontSize: theme.sizes.text,
-                        },
-                      ]}
-                    >
-                      {convertedLength}
-                    </ThemedText>
-                  </View>
-                  <View
-                    className="editContainer"
-                    style={{ flexGrow: 1, alignItems: "flex-end" }}
+                    Length:
+                  </ThemedText>
+                  <ThemedText
+                    style={[
+                      styles.answerText,
+                      {
+                        fontFamily: theme.fonts.regular,
+                        fontSize: theme.sizes.text,
+                      },
+                    ]}
                   >
-                    <Ionicons
-                      name="create"
-                      size={20}
-                      color={theme.colors.text}
-                      onPress={() => openEditModal(8)}
-                    />
-                  </View>
+                    {convertedLength}
+                  </ThemedText>
+                </View>
+                <View
+                  className="editContainer"
+                  style={{ flexGrow: 1, alignItems: "flex-end" }}
+                >
+                  <Ionicons
+                    name="create"
+                    size={20}
+                    color={theme.colors.text}
+                    onPress={() => openEditModal(8)}
+                  />
+                </View>
               </View>
               <View
                 style={[
@@ -719,7 +720,7 @@ export default function ReviewPage({
                       },
                     ]}
                   >
-                  {convertedBulk}
+                    {convertedBulk}
                   </ThemedText>
                 </View>
                 <View
@@ -893,13 +894,19 @@ export default function ReviewPage({
         setModalVisible={setIsCategoryModalVisible}
         value={itemType}
         onSelect={(nextValue) =>
-          applyLocalUpdate("Category", () => {
-            setItemType(nextValue);
-          })
+          setTempCategory(nextValue)
         }
+        onCancel={() => {
+          setIsCategoryModalVisible(false);
+        }}
+        onDone={() => {
+          setIsCategoryModalVisible(false);
+          setIsLengthModalVisible(true);
+        }}
         options={CATEGORY_OPTIONS}
         title="Edit Category"
         isSaving={isPending}
+        category={tempCategory}
       />
 
       <EditModal
@@ -954,17 +961,24 @@ export default function ReviewPage({
       />
 
       <EditModal
-        modalVisible={isFitModalVisible}
-        setModalVisible={setIsFitModalVisible}
-        value={fitToLabel(fit ?? 1)}
-        onSelect={(nextValue) =>
-          applyLocalUpdate("Fit", () => {
-            setFit(nextValue);
-          })
-        }
-        options={FIT_OPTIONS}
-        title="Edit Fit"
+        modalVisible={isCategoryModalVisible}
+        setModalVisible={setIsCategoryModalVisible}
+        value={tempCategory}
+        onSelect={(nextValue) => {
+          setTempCategory(nextValue);
+        }}
+        onCancel={() => {
+          setTempCategory(itemType);
+          setIsCategoryModalVisible(false);
+        }}
+        onDone={() => {
+          setIsCategoryModalVisible(false);
+          setIsLengthModalVisible(true);
+        }}
+        options={CATEGORY_OPTIONS}
+        title="Edit Category"
         isSaving={isPending}
+        category={tempCategory}
       />
 
       <EditModal
@@ -985,14 +999,23 @@ export default function ReviewPage({
         modalVisible={isLengthModalVisible}
         setModalVisible={setIsLengthModalVisible}
         value={length}
-        onSelect={(nextValue) =>
-          applyLocalUpdate("Length", () => {
-            setLength(nextValue);
-          })
-        }
-        options={LENGTH_OPTIONS}
+        onSelect={(nextLength) => {
+          setItemType(tempCategory);
+          setLength(nextLength);
+        }}
+        options={LENGTH_OPTIONS.filter((opt) =>
+          tempCategory === "TOP" || tempCategory === "OUTERWEAR"
+            ? ["SLEEVELESS", "CAP", "SHORT_SLEEVE", "THREE_QUARTER", "LONG_SLEEVE"].includes(opt.value)
+            : ["ABOVE_KNEE", "KNEE_LENGTH_OR_BERMUDA", "MIDI_OR_CAPRI", "MAXI_OR_FULL_LENGTH"].includes(opt.value)
+        )}
         title="Edit Length"
         isSaving={isPending}
+        onCancel={() => {
+          // Undo the tempCategory change if user cancels
+          setItemType(itemType);
+          setTempCategory(itemType);
+          setIsLengthModalVisible(false);
+        }}
       />
 
       <EditModal

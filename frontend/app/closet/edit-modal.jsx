@@ -11,6 +11,9 @@ export default function EditModal({
     options,
     title,
     isSaving = false,
+    category = null,
+    onCancel = null,
+    onDone = null,
 }) {
     const [localValue, setLocalValue] = useState(value);
     const theme = useTheme();
@@ -110,6 +113,9 @@ export default function EditModal({
                             onPress={() => {
                                 setLocalValue(value);
                                 setModalVisible(false);
+                                if (typeof onCancel === "function") {
+                                    onCancel();
+                                }
                             }}
                             disabled={isSaving}
                             style={{
@@ -132,6 +138,9 @@ export default function EditModal({
                             onPress={() => {
                                 onSelect(localValue);
                                 setModalVisible(false);
+                                if (typeof onDone === "function") {
+                                    onDone();
+                                }
                             }}
                             disabled={isSaving}
                             style={{

@@ -91,6 +91,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [draftImageUri, setDraftImageUri] = useState(null);
     const [tempColor, setTempColor] = useState(DEFAULT_COLOR);
+    const [tempCategory, setTempCategory] = useState(category);
 
     const theme = useTheme();
     const queryClient = useQueryClient();
@@ -1210,14 +1211,21 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setModalVisible={setIsCategoryModalVisible}
                 value={category}
                 onSelect={(nextCategory) => {
-                    setCategory(nextCategory);
+                    setTempCategory(nextCategory);
                     updateItemMutation.mutate({ type: nextCategory });
+                    // Don't open length modal here
+                }}
+                onCancel={() => {
+                    setIsCategoryModalVisible(false);
+                }}
+                onDone={() => {
+                    setIsCategoryModalVisible(false);
                     setIsLengthModalVisible(true);
-                    return;
                 }}
                 options={CATEGORY_OPTIONS}
                 title="Edit Category"
                 isSaving={updateItemMutation.isPending}
+                category={tempCategory}
             />
 
             <EditModal
@@ -1364,6 +1372,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setModalVisible={setIsLengthModalVisible}
                 value={length}
                 onSelect={(nextLength) => {
+                    setCategory(tempCategory);
                     setLength(nextLength);
                     updateItemMutation.mutate({ length: nextLength });
                 }}
@@ -1374,6 +1383,11 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 )}
                 title="Edit Length"
                 isSaving={updateItemMutation.isPending}
+                onCancel={() => {
+                    // Undo the category change if user cancels
+                    setCategory(item.type || item.category || "TOP");
+                    setIsLengthModalVisible(false);
+                }}
             />
 
             <EditModal
