@@ -57,9 +57,7 @@ export default function ClosetScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const theme = useTheme();
-
-  console.log("CLOSET PARAMS:", params);
-
+  
   const fetchItems = async () => {
     if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
@@ -153,7 +151,7 @@ export default function ClosetScreen() {
           setIsLoading(true);
           const userIdStr = await AsyncStorage.getItem("userId");
           const parsedId = userIdStr ? parseInt(userIdStr, 10) : null;
-          
+
           const savedTab = await AsyncStorage.getItem("closetTab");
           setIsItems(savedTab !== "outfits"); // always trust AsyncStorageP
 
