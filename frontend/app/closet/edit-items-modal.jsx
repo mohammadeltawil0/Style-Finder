@@ -49,16 +49,6 @@ const titleCaseFromEnum = (value) => {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const MATERIAL_LABELS = {
-    1: "Cotton",
-    2: "Linen/Hemp",
-    3: "Wool/Fleece",
-    4: "Silk/Satin",
-    5: "Leather/Faux Leather",
-    6: "Synthetics",
-    7: "Other",
-};
-
 const materialToLabel = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
 
@@ -89,7 +79,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [length, setLength] = useState(null);
     const [bulk, setBulk] = useState(null);
     const [imageDataForSave, setImageDataForSave] = useState(null);
-    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
     const [isPatternModalVisible, setIsPatternModalVisible] = useState(false);
     const [isFormalityModalVisible, setIsFormalityModalVisible] = useState(false);
@@ -231,31 +220,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
         return options.find((option) => option.value === value)?.label || titleCaseFromEnum(value);
     };
 
-    const deleteItemMutation = useMutation({
-        mutationFn: async (itemId) => {
-            await apiClient.delete(`/api/items/${itemId}`);
-        },
-        onSuccess: async () => {
-            // Keep query keys aligned with ClosetScreen useQuery(['items', userId]).
-            await queryClient.invalidateQueries({ queryKey: ["items"] });
-            Toast.show({
-                type: "success",
-                text1: "Item deleted",
-                text2: "The item was removed successfully.",
-            });
-            setIsDeleteModalVisible(false);
-            setModalVisible(false);
-        },
-        onError: (error) => {
-            console.error("Failed to delete item:", error);
-            Toast.show({
-                type: "error",
-                text1: "Delete failed",
-                text2: "We could not delete this item. Please try again.",
-            });
-        },
-    });
-
     const updateItemMutation = useMutation({
         mutationFn: async (changes) => {
             const itemId = item?.itemId ?? item?.id;
@@ -331,16 +295,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
             });
         },
     });
-
-    const handleDeleteItem = () => {
-        const resolvedItemId = item?.itemId ?? item?.id;
-        if (!resolvedItemId || deleteItemMutation.isPending) {
-            console.error("Delete blocked: missing item id", item);
-            return;
-        }
-
-        deleteItemMutation.mutate(resolvedItemId);
-    };
 
     const convertToBase64 = async (localUri) => {
         const base64 = await FileSystem.readAsStringAsync(localUri, {
@@ -418,20 +372,13 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         width: "100%",
                     }}
                 >
-                    <View className="chevronView" style={styles.chevronView}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -17 }}>
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
                             ]}
                         >
-                            <Entypo name="chevron-left" size={30} color="black" />
-                        </Pressable>
-                        <Pressable
-                            style={[styles.topActionButton,
-                            { backgroundColor: theme.colors.tabIconSelected }
-                            ]}
-                            onPress={() => setIsDeleteModalVisible(true)}>
-                            <FontAwesome6 name="trash" size={24} color={theme.colors.text} />
+                            <Feather name="arrow-left" size={30} color={theme.colors.text} />
                         </Pressable>
                     </View>
                     {!hasImageUrl ? (
@@ -442,7 +389,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 styles.imageContainer,
                                 {
                                     backgroundColor: theme.colors.card,
-                                    borderRadius: 10,
+                                    // borderRadius: 10,
                                 },
                             ]}
                         >
@@ -454,7 +401,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     justifyContent: "center",
                                 }}
                             >
-                                <Feather name="image" size={40} color={theme.colors.text} />
+                                <Feather name="image" size={60} color={theme.colors.text} />
                             </View>
                             <View
                                 style={{
@@ -1441,49 +1388,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 title="Edit Bulk"
                 isSaving={updateItemMutation.isPending}
             />
-
-            <Modal
-                visible={isDeleteModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setIsDeleteModalVisible(false)}
-            >
-                <View style={styles.confirmOverlay}>
-                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}>
-                        <ThemedText style={{
-                            fontSize: theme.sizes.h2,
-                            fontWeight: "700",
-                            marginBottom: 8,
-                            fontFamily: theme.fonts.bold,
-                        }}>Delete this item?</ThemedText>
-                        <ThemedText style={styles.confirmText}>
-                            This action cannot be undone. This will remove this item from any outfits it's included in, and will remove outfit as well.
-                        </ThemedText>
-
-                        <View style={styles.confirmActions}>
-                            <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
-                                onPress={() => setIsDeleteModalVisible(false)}
-                                disabled={deleteItemMutation.isPending}
-                            >
-                                <ThemedText>Cancel</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: theme.colors.tabIconSelected, opacity: deleteItemMutation.isPending ? 0.7 : 1 }]}
-                                onPress={handleDeleteItem}
-                                disabled={deleteItemMutation.isPending}
-                            >
-                                {deleteItemMutation.isPending ? (
-                                    <ActivityIndicator size="small" color="#fff" />
-                                ) : (
-                                    <ThemedText style={{ color: theme.colors.text }}>Delete</ThemedText>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </>
     );
 }
@@ -1505,7 +1409,6 @@ const styles = {
     chevronView: {
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: 20,
         width: "100%",
         flexDirection: "row",
     },
@@ -1517,11 +1420,13 @@ const styles = {
         justifyContent: "center",
     },
     imageContainer: {
-        height: 200,
-        width: 200,
-        justifyContent: "center",
-        alignItems: "center",
-        alignSelf: "center",
+        marginTop: 13,
+        height: 250,
+        // width: 200,
+        // justifyContent: "center",
+        // alignItems: "center",
+        // alignSelf: "center",
+        borderRadius: 20
     },
     responseContainer: {
         width: "100%",
@@ -1530,13 +1435,6 @@ const styles = {
         borderRadius: 10,
         flexDirection: "row",
         marginTop: 20,
-    },
-    deleteBtn: {
-        marginTop: 24,
-        paddingVertical: 14,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
     },
     confirmOverlay: {
         flex: 1,
@@ -1554,23 +1452,6 @@ const styles = {
     logoWrap: {
         marginBottom: 10,
         transform: [{ scale: 2 }],
-    },
-    confirmText: {
-        textAlign: "center",
-        marginBottom: 16,
-    },
-    confirmActions: {
-        marginTop: "10%",
-        width: "100%",
-        flexDirection: "row",
-        gap: 10,
-    },
-    confirmBtn: {
-        flex: 1,
-        borderRadius: 10,
-        paddingVertical: 12,
-        alignItems: "center",
-        justifyContent: "center",
     },
     colorWheelWrap: {
         width: 260,
@@ -1610,6 +1491,18 @@ const styles = {
     imageModalBody: {
         width: "100%",
         height: 400,
+    },
+    confirmActions: {
+        width: "100%",
+        flexDirection: "row",
+        gap: 10,
+    },
+    confirmBtn: {
+        flex: 1,
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: "center",
+        justifyContent: "center",
     },
 };
 

@@ -133,7 +133,7 @@ export default function HomeScreen() {
           <>
             <View
               className="header-text"
-                style={{ flexDirection: "row", width: "100%", marginHorizontal: 30 }}
+                style={{ flexDirection: "row", width: "100%", marginHorizontal: 20 }}
             >
               <View style={{ width: "70%" }}>
                 <ThemedText
@@ -160,7 +160,7 @@ export default function HomeScreen() {
                 shadowRadius: 3.5,
                 elevation: 5,
                 height: 150,
-                marginHorizontal: 30
+                marginHorizontal: 20
               }}
             >
               <ThemedText
@@ -192,8 +192,10 @@ export default function HomeScreen() {
                         justifyContent: "center",
                       }}
                       onPress={() => {
-                        setSelectedItem(item);
-                        setEditItemsModalVisible(true);
+                        router.navigate({
+                          pathname: "/closet/item-details-modal",
+                          params: { tab: "items", itemId: item.id }
+                        });
                       }}
                     >
                       {item.imageUrl ? (
@@ -225,7 +227,7 @@ export default function HomeScreen() {
                 shadowRadius: 3.5,
                 elevation: 5,
                 height: isLoadingOutfits ? 90 : pastOutfits.length === 0 ? 110 : 170,
-                marginHorizontal: 30
+                marginHorizontal: 20
               }}
             >
                 {isLoadingOutfits ? (

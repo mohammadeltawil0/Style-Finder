@@ -218,10 +218,10 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
           <Pressable
             onPress={() => setUri(null)}
             style={{
-              backgroundColor: theme.colors.card,
+              backgroundColor: theme.colors.tabIconSelected,
               borderRadius: 10,
               padding: 10,
-              width: 150,
+              width: buttonWidth * 2,
             }}
           >
             <ThemedText style={{ textAlign: "center" }}>
@@ -229,11 +229,11 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
             </ThemedText>
           </Pressable>
           {isEditing && ((uri && typeof uri === 'string' && uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'))) && (
-            <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
+            <View>
               <Pressable
                 style={{
                   alignSelf: "center",
-                  backgroundColor: theme.colors.card,
+                  backgroundColor: theme.colors.tabIconSelected,
                   borderRadius: 10,
                   paddingVertical: 10,
                   width: buttonWidth * 2,
@@ -249,7 +249,7 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing
           {!hideNextButton && (
             <Pressable
               style={{
-                backgroundColor: theme.colors.card,
+                backgroundColor: theme.colors.tabIconSelected,
                 borderRadius: 10,
                 padding: 10,
                 width: buttonWidth,
@@ -432,12 +432,10 @@ const styles = StyleSheet.create({
   },
   navigationButtons: {
     alignItems: "center",
-    flexDirection: "column",
-    gap: 10,
+    flexDirection: "row",
     justifyContent: "center",
-    padding: 20,
-    position: "absolute",
-    bottom: 10,
+    gap: 16,
+    paddingTop: 20,
     width: "100%",
   },
   navigationButtonsCompact: {
@@ -470,5 +468,11 @@ const styles = StyleSheet.create({
     paddingRight: 0,
     marginTop: 16,
     alignSelf: "center",
+  },
+  confirmActions: {
+    marginTop: "10%",
+    width: "100%",
+    flexDirection: "row",
+    gap: 10,
   },
 });
