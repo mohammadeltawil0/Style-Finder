@@ -126,6 +126,13 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="closet/item-details-modal"
+              options={{
+                header: () => <CustomHeader page="item-details-modal" />,
+                // headerShown: false,
+              }}
+            />
+            <Stack.Screen
               name="closet/outfitsHistory/tripOutfits"
               options={{
                 header: () => <CustomHeader page="TripOutfitDetail" />,

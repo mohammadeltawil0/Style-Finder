@@ -51,8 +51,8 @@ export const CustomHeader = ({ page }) => {
         flex: 0,
         backgroundColor:
           page === "Profile" ||
-          page === "EditProfile" ||
-          page === "UpdatePassword"
+            page === "EditProfile" ||
+            page === "UpdatePassword"
             ? theme.colors.background
             : theme.colors.card,
       }}
@@ -61,8 +61,8 @@ export const CustomHeader = ({ page }) => {
         style={{
           backgroundColor:
             page === "Profile" ||
-            page === "EditProfile" ||
-            page === "UpdatePassword"
+              page === "EditProfile" ||
+              page === "UpdatePassword"
               ? theme.colors.background
               : theme.colors.card,
           alignItems: "center",
@@ -321,6 +321,19 @@ export const CustomHeader = ({ page }) => {
                 }}
               >
                 Generating Outfits...
+              </ThemedText>
+            </>
+          )}
+          {page === "item-details-modal" && (
+            <>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Item Details
               </ThemedText>
             </>
           )}

@@ -2,16 +2,11 @@ import { FlatList, Image, TouchableOpacity, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
-import placeholderImg from "../assets/images/placeholder.png";
 
 export const Items = ({
   items,
-  setCurrItemId,
-  currItemId,
-  setEditItemsModalVisible,
-  editItemsModalVisible,
+  openItemDetails,
   listHeaderComponent,
-  listFooterComponent,
 }) => {
   const theme = useTheme();
   const paddedItems = items.length % 2 !== 0 ? [...items, { id: "empty", isEmpty: true }] : items;
@@ -22,7 +17,6 @@ export const Items = ({
         className="items-list"
         data={paddedItems} // An array of user items
         ListHeaderComponent={listHeaderComponent || null}
-        ListFooterComponent={listFooterComponent || null}
         keyExtractor={(item, index) =>
           item?.itemId != null ? String(item.itemId) : item?.id != null ? String(item.id) : `item-${index}`
         }
@@ -47,8 +41,7 @@ export const Items = ({
                 width: "48%",
               }}
               onPress={() => {
-                setCurrItemId(item.itemId);
-                setEditItemsModalVisible(!editItemsModalVisible);
+                openItemDetails(item.itemId);
               }}
             >
               <View className="item-image" style={{ height: 175, borderRadius: 10, overflow: "hidden" }}>
