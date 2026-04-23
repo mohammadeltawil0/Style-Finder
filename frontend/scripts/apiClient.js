@@ -1,4 +1,4 @@
-import {API_URL} from '@env';
+import { API_URL } from '@env';
 import axios from 'axios';
 
 // 1. Verify the URL loaded correctly (Debugging)
