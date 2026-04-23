@@ -269,8 +269,8 @@ const styles = StyleSheet.create({
         margin: 20,
         borderRadius: 14,
         backgroundColor: "#d6c6b8",
-        // alignItems: "center",
-        // justifyContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
     },
     info: {
         paddingHorizontal: 20,
