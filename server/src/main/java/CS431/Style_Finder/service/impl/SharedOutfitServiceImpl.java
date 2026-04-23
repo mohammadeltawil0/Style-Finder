@@ -84,10 +84,18 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
     }
 
     private OutfitDto mapToOutfitDto(Outfit outfit) {
-        //IMPORTANT: Replace with your actual mapper if you already have one
         return OutfitDto.builder()
                 .outfitId(outfit.getOutfitId())
-                // TODO: add items, colors, etc.
+                .userId(outfit.getUser() != null ? outfit.getUser().getUserId() : null)
+                .saved(outfit.getSaved())
+                .createdAt(outfit.getCreatedAt())
+                .itemIds(
+                    outfit.getOutfitItems() != null
+                        ? outfit.getOutfitItems().stream()
+                            .map(outfitItem -> outfitItem.getItem().getItemId())
+                            .toList()
+                        : null
+                )
                 .build();
     }
 }
