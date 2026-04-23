@@ -1,4 +1,4 @@
-// import {API_URL} from '@env';
+import {API_URL} from '@env';
 import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -10,7 +10,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 // const API_URL = "http://localhost:8080";
 
 // If Expo Go, and to get IP address in terminal, run `ipconfig getifaddr en0` for Mac or `ipconfig` for Windows 
-//const API_URL = "http://{localhost}:8080";
+// const API_URL = "http://{IP_ADDRESS}:8080";
 
 console.log("Connecting to Backend at:", API_URL);
 
@@ -37,7 +37,7 @@ apiClient.interceptors.request.use(
     if (token && !isPublicRoute) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
-      delete config.headers.Authorization; // 🔥 remove bad header
+      delete config.headers.Authorization; //remove bad header
     }
 
     return config;

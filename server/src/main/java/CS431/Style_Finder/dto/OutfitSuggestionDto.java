@@ -12,4 +12,5 @@ public class OutfitSuggestionDto {
     private List<Long> itemIds;
     private double score;
     private String generationSource;
+    private String coverImageUrl;
 }

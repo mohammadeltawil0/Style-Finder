@@ -51,8 +51,8 @@ export const CustomHeader = ({ page }) => {
         flex: 0,
         backgroundColor:
           page === "Profile" ||
-          page === "EditProfile" ||
-          page === "UpdatePassword"
+            page === "EditProfile" ||
+            page === "UpdatePassword"
             ? theme.colors.background
             : theme.colors.card,
       }}
@@ -61,8 +61,8 @@ export const CustomHeader = ({ page }) => {
         style={{
           backgroundColor:
             page === "Profile" ||
-            page === "EditProfile" ||
-            page === "UpdatePassword"
+              page === "EditProfile" ||
+              page === "UpdatePassword"
               ? theme.colors.background
               : theme.colors.card,
           alignItems: "center",
@@ -112,38 +112,6 @@ export const CustomHeader = ({ page }) => {
               }}
             >
               GENERATE OUTFITS
-            </ThemedText>
-          )}
-          {page === "EditOutfit" && (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
-          )}
-          {page === "EditOutfit" && (
-            <ThemedText
-              style={{
-                fontSize: theme.sizes.h2,
-                fontFamily: theme.fonts.bold,
-                color: theme.colors.text,
-              }}
-            >
-              EDIT OUTFITS
-            </ThemedText>
-          )}
-          {page === "ClosetItems" && (
-            <TouchableOpacity onPress={() => router.back()}>
-              <Ionicons name="arrow-back" size={24} color={theme.colors.text} />
-            </TouchableOpacity>
-          )}
-          {page === "ClosetItems" && (
-            <ThemedText
-              style={{
-                fontSize: theme.sizes.h2,
-                fontFamily: theme.fonts.bold,
-                color: theme.colors.text,
-              }}
-            >
-              SELECT ITEM
             </ThemedText>
           )}
           {page === "add-item" && (
@@ -356,7 +324,20 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {page === "OutfitDetail" && (
+          {page === "item-details-modal" && (
+            <>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                Item Details
+              </ThemedText>
+            </>
+          )}
+          {page === "RegularOutfitDetail" && (
             <>
               <TouchableOpacity
                 onPress={() =>
@@ -379,7 +360,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Outfit Details
+                Regular Outfit Details
               </ThemedText>
             </>
           )}

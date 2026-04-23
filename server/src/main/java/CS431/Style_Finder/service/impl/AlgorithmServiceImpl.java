@@ -2,10 +2,7 @@ package CS431.Style_Finder.service.impl;
 
 import CS431.Style_Finder.dto.OutfitSuggestionDto;
 import CS431.Style_Finder.mapper.OutfitMapper;
-import CS431.Style_Finder.model.Item;
-import CS431.Style_Finder.model.OutfitCase;
-import CS431.Style_Finder.model.User;
-import CS431.Style_Finder.model.UserWeights;
+import CS431.Style_Finder.model.*;
 import CS431.Style_Finder.model.enums.ColorCategory;
 import CS431.Style_Finder.model.enums.Formality;
 import CS431.Style_Finder.repository.ItemRepository;

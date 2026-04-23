@@ -5,22 +5,18 @@ import { Ionicons } from "@expo/vector-icons";
 
 export const Items = ({
   items,
-  setCurrItemId,
-  currItemId,
-  setEditItemsModalVisible,
-  editItemsModalVisible,
+  openItemDetails,
   listHeaderComponent,
-  listFooterComponent,
 }) => {
   const theme = useTheme();
   const paddedItems = items.length % 2 !== 0 ? [...items, { id: "empty", isEmpty: true }] : items;
+
   return (
     <>
       <FlatList
         className="items-list"
         data={paddedItems} // An array of user items
         ListHeaderComponent={listHeaderComponent || null}
-        ListFooterComponent={listFooterComponent || null}
         keyExtractor={(item, index) =>
           item?.itemId != null ? String(item.itemId) : item?.id != null ? String(item.id) : `item-${index}`
         }
@@ -42,16 +38,14 @@ export const Items = ({
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
                 marginBottom: 20, // space between rows
-                overflow: "hidden", // clips image to borderRadius
                 width: "48%",
               }}
               onPress={() => {
-                setCurrItemId(item.itemId);
-                setEditItemsModalVisible(!editItemsModalVisible);
+                openItemDetails(item.itemId);
               }}
             >
-              <View className="item-image" style={{ height: 175 }}>
-                {item.imageUrl ? (
+              <View className="item-image" style={{ height: 175, borderRadius: 10, overflow: "hidden" }}>
+                {item.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:')) ? (
                   <Image
                     source={{ uri: item.imageUrl }}
                     style={{ width: "100%", height: "100%" }}

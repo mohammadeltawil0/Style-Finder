@@ -14,13 +14,15 @@ import * as ImagePicker from "expo-image-picker";
 import Toast from "react-native-toast-message";
 import { ThemedText } from "./themed-text";
 import { useTheme } from "@react-navigation/native";
+import { Feather } from "@expo/vector-icons";
 
-export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
+export const Camera = ({ setUri, setPage, uri, hideNextButton = false, isEditing = false }) => {
   const [permission, requestPermission] = useCameraPermissions();
   const ref = useRef(null);
   const [facing, setFacing] = useState("back");
   const [isCameraAvailable, setIsCameraAvailable] = useState(true);
   const [isTakingPicture, setIsTakingPicture] = useState(false);
+  const [removePhoto, setRemovePhoto] = useState(false);
 
   const { width } = useWindowDimensions();
 
@@ -87,8 +89,7 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
               paddingVertical: 10,
               width: buttonWidth,
             }}
-            onPress={() => setPage(2)}
-          >
+            onPress={() => { setPage(2); }}>
             <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
           </Pressable>
         )}
@@ -185,6 +186,8 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
     setFacing((prev) => (prev === "back" ? "front" : "back"));
   };
 
+  const isValidUri = uri && typeof uri === 'string' && (uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'));
+
   if (uri) {
     return (
       <>
@@ -195,11 +198,15 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
             isWeb && styles.previewContainerWeb,
           ]}
         >
-          <Image
-            source={{ uri }}
-            contentFit="cover"
-            style={[styles.previewImage, isWeb && styles.previewImageWeb]}
-          />
+          {isValidUri ? (
+            <Image
+              source={{ uri }}
+              contentFit="cover"
+              style={[styles.previewImage, isWeb && styles.previewImageWeb]}
+            />
+          ) : (
+            <Feather name="image" size={40} color={theme.colors.text} />
+          )}
         </View>
         <View
           style={[
@@ -211,20 +218,38 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
           <Pressable
             onPress={() => setUri(null)}
             style={{
-              backgroundColor: theme.colors.card,
+              backgroundColor: theme.colors.tabIconSelected,
               borderRadius: 10,
               padding: 10,
-              width: 150,
+              width: buttonWidth * 2,
             }}
           >
             <ThemedText style={{ textAlign: "center" }}>
               Change Photo
             </ThemedText>
           </Pressable>
+          {isEditing && ((uri && typeof uri === 'string' && uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'))) && (
+            <View>
+              <Pressable
+                style={{
+                  alignSelf: "center",
+                  backgroundColor: theme.colors.tabIconSelected,
+                  borderRadius: 10,
+                  paddingVertical: 10,
+                  width: buttonWidth * 2,
+                  paddingHorizontal: 10,
+                }}
+                onPress={() => { setUri(null); setRemovePhoto(true); }}
+                disabled={isTakingPicture}
+              >
+                <ThemedText style={{ textAlign: "center" }}>Remove Image</ThemedText>
+              </Pressable>
+            </View>
+          )}
           {!hideNextButton && (
             <Pressable
               style={{
-                backgroundColor: theme.colors.card,
+                backgroundColor: theme.colors.tabIconSelected,
                 borderRadius: 10,
                 padding: 10,
                 width: buttonWidth,
@@ -247,56 +272,64 @@ export const Camera = ({ setUri, setPage, uri, hideNextButton = false }) => {
         isWeb && styles.containerWeb,
       ]}
     >
-      <CameraView
-        style={[styles.camera, isWeb && styles.cameraWeb]}
-        ref={ref}
-        facing={facing}
-        pointerEvents="none"
-        animateShutter={false}
-      />
-      <View
-        style={[
-          styles.shutterContainer,
-          hideNextButton && styles.shutterContainerCompact,
-          isWeb && styles.shutterContainerWeb,
-        ]}
-      >
-        <Pressable
-          onPress={toggleFacing}
-          style={styles.iconBtn}
-          disabled={isTakingPicture}
-        >
-          <FontAwesome6 name="rotate-left" size={32} color="white" />
-        </Pressable>
-        <Pressable onPress={takePicture} disabled={isTakingPicture}>
-          <View style={[styles.shutterBtn]}>
-            <View style={styles.shutterBtnInner} />
-          </View>
-        </Pressable>
-        <Pressable
-          onPress={pickImage}
-          style={styles.iconBtn}
-          disabled={isTakingPicture}
-        >
-          <FontAwesome name="photo" size={32} color="white" />
-        </Pressable>
-      </View>
-      {!hideNextButton && (
-        <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
-          <Pressable
-            style={{
-              alignSelf: "center",
-              backgroundColor: theme.colors.card,
-              borderRadius: 10,
-              paddingVertical: 10,
-              width: buttonWidth,
-            }}
-            onPress={() => setPage(2)}
-            disabled={isTakingPicture}
-          >
-            <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
-          </Pressable>
+      {removePhoto ? (
+        <View style={styles.previewContainer}>
+          <Feather name="image" size={40} color={theme.colors.text} />
         </View>
+      ) : (
+        <>
+          <CameraView
+            style={[styles.camera, isWeb && styles.cameraWeb]}
+            ref={ref}
+            facing={facing}
+            pointerEvents="none"
+            animateShutter={false}
+          />
+          <View
+            style={[
+              styles.shutterContainer,
+              hideNextButton && styles.shutterContainerCompact,
+              isWeb && styles.shutterContainerWeb,
+            ]}
+          >
+            <Pressable
+              onPress={toggleFacing}
+              style={styles.iconBtn}
+              disabled={isTakingPicture}
+            >
+              <FontAwesome6 name="rotate-left" size={32} color="white" />
+            </Pressable>
+            <Pressable onPress={takePicture} disabled={isTakingPicture}>
+              <View style={[styles.shutterBtn]}>
+                <View style={styles.shutterBtnInner} />
+              </View>
+            </Pressable>
+            <Pressable
+              onPress={pickImage}
+              style={styles.iconBtn}
+              disabled={isTakingPicture}
+            >
+              <FontAwesome name="photo" size={32} color="white" />
+            </Pressable>
+          </View>
+          {!hideNextButton && (
+            <View style={[styles.nextButton, isWeb && styles.nextButtonWeb]}>
+              <Pressable
+                style={{
+                  alignSelf: "center",
+                  backgroundColor: theme.colors.card,
+                  borderRadius: 10,
+                  paddingVertical: 10,
+                  width: buttonWidth,
+                }}
+                onPress={() => setPage(2)}
+                disabled={isTakingPicture}
+              >
+                <ThemedText style={{ textAlign: "center" }}>Skip Image</ThemedText>
+              </Pressable>
+            </View>
+          )}
+        </>
       )}
     </View>
   );
@@ -400,11 +433,9 @@ const styles = StyleSheet.create({
   navigationButtons: {
     alignItems: "center",
     flexDirection: "row",
-    gap: 40,
     justifyContent: "center",
-    padding: 20,
-    position: "absolute",
-    bottom: 10,
+    gap: 16,
+    paddingTop: 20,
     width: "100%",
   },
   navigationButtonsCompact: {
@@ -437,5 +468,11 @@ const styles = StyleSheet.create({
     paddingRight: 0,
     marginTop: 16,
     alignSelf: "center",
+  },
+  confirmActions: {
+    marginTop: "10%",
+    width: "100%",
+    flexDirection: "row",
+    gap: 10,
   },
 });

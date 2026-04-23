@@ -15,15 +15,19 @@ import { apiClient } from "../../../scripts/apiClient";
 import EditItemsModal from "../edit-items-modal";
 
 // Helper to format backend Enums (e.g. "FULL_BODY" -> "Full Body", "PARTY_OR_NIGHT_OUT" -> "Party / Night Out")
-const formatEnum = (str) => {
+// --- FORMATTING HELPER ---
+const formatTagEnum = (str) => {
   if (!str) return "";
-  let cleanStr = str.replace(/_OR_/g, " / ");
-  cleanStr = cleanStr.replace(/_/g, " ");
-  return cleanStr.replace(
-    /\w\S*/g,
-    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
-  );
+  let cleanStr = str.replace(/_OR_/g, " / ").replace(/_/g, " ");
+  return cleanStr.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
 };
+
+const formatDescriptionEnum = (str) => {
+  if (!str) return "";
+  let cleanStr = str.replace(/_OR_/g, " / ").replace(/_/g, " ");
+  return cleanStr.toLowerCase();
+};
+
 
 // Material mapping to match the frontend selection options
 const materialMap = {
@@ -213,43 +217,41 @@ export default function ItemProperty() {
 
           <View style={styles.info}>
             <ThemedText style={styles.title}>
-              {formatEnum(currentItem.type)}
+              {formatTagEnum(currentItem.type)}
             </ThemedText>
 
             <ThemedText style={styles.label}>Description:</ThemedText>
-            <ThemedText style={{ marginTop: 4 }}>
-              A {currentItem.color ? currentItem.color.toLowerCase() : ""}{" "}
-              {formatEnum(currentItem.fit)} fit{" "}
-              {formatEnum(currentItem.type).toLowerCase()} with a{" "}
-              {formatEnum(currentItem.pattern)} pattern, perfect for{" "}
-              {formatEnum(currentItem.formality).toLowerCase()} occasions.
+            <ThemedText style={{ marginTop: 4, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
+              A{' '}
+              <View style={{ height: 20, width: 20, borderRadius: 10, backgroundColor: currentItem.color ? currentItem.color.toLowerCase() : "#ccc", marginHorizontal: 6, display: "inline-block" }} />
+              {' '} {formatDescriptionEnum(currentItem.fit)} fit {formatDescriptionEnum(currentItem.type).toLowerCase()} with a {formatDescriptionEnum(currentItem.pattern)} pattern, perfect for {formatDescriptionEnum(currentItem.formality).toLowerCase()} occasions.
             </ThemedText>
 
             <ThemedText style={styles.label}>Tags:</ThemedText>
             <View style={styles.tags}>
               {currentItem.color && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.color)}</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.color)}</ThemedText>
                 </View>
               )}
               {currentItem.pattern && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.pattern)}</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.pattern)}</ThemedText>
                 </View>
               )}
               {currentItem.formality && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.formality)}</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.formality)}</ThemedText>
                 </View>
               )}
               {currentItem.seasonWear && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.seasonWear)}</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.seasonWear)}</ThemedText>
                 </View>
               )}
               {currentItem.fit && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.fit)} Fit</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.fit)} Fit</ThemedText>
                 </View>
               )}
               {currentItem.material && materialMap[currentItem.material] && (
@@ -259,7 +261,7 @@ export default function ItemProperty() {
               )}
               {currentItem.length && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatEnum(currentItem.length)}</ThemedText>
+                  <ThemedText>{formatTagEnum(currentItem.length)}</ThemedText>
                 </View>
               )}
             </View>
@@ -270,11 +272,10 @@ export default function ItemProperty() {
                   style={[styles.btn, styles.fullWidthBtn]}
                   onPress={() =>
                     router.push({
-                      pathname: "/closet/outfitsHistory/itemDetail",
+                      pathname: "/closet/item-details-modal",
                       params: {
+                        tab: "items",
                         itemId: currentItem.itemId,
-                        outfitId,
-                        itemIndex: String(currentItemIndex),
                       },
                     })
                   }

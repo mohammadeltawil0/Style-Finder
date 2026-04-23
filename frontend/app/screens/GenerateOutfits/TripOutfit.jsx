@@ -8,6 +8,7 @@ import React, { useEffect } from "react";
 import { apiClient } from "../../../scripts/apiClient";
 import Entypo from "@expo/vector-icons/Entypo";
 import OutfitCoverImage from "../../closet/outfit-cover-image";
+import * as Location from "expo-location";
 
 const formatEnum = (str) => {
   if (!str) return "";
@@ -214,6 +215,10 @@ export default function TripOutfit() {
 
   // Trip-level state
   const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState(null); // Stores the final lat,lon for the payload
+  const [searchResults, setSearchResults] = useState([]); // Stores the Open-Meteo array
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+
   const [showDropdown, setShowDropdown] = useState(false);
   const [formality, setFormality] = useState("CASUAL");
   const [weatherType, setWeatherType] = useState("SUNNY");
@@ -227,25 +232,86 @@ export default function TripOutfit() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [activeDate, setActiveDate] = useState(null);
 
+  // --- Open-Meteo Geocoding Search ---
+  const handleLocationSearch = async (text) => {
+    setLocation(text);
+    setLocationCoords(null); // Reset coords if they start typing again
 
-  const predefinedLocations = [
-    { city: "New York", state: "NY", country: "USA" },
-    { city: "New Brunswick", state: "NJ", country: "USA" },
-    { city: "Piscataway", state: "NJ", country: "USA" },
-    { city: "Jersey City", state: "NJ", country: "USA" },
-    { city: "Los Angeles", state: "CA", country: "USA" },
-    { city: "Chicago", state: "IL", country: "USA" },
-    { city: "Houston", state: "TX", country: "USA" },
-    { city: "Miami", state: "FL", country: "USA" },
-    { city: "Paris", state: "IDF", country: "France"},
-    { city: "London", state: "ENG", country: "UK" },
-    { city: "Tokyo", state: "TK",  country: "Japan"},
-  ];
+    if (text.length < 3) {
+      setSearchResults([]);
+      return;
+    }
 
-  const filteredLocations = predefinedLocations.filter(locate =>
-    `${locate.city}, ${locate.state}, ${locate.country}`
-      .toLowerCase().includes(location.toLowerCase())
-  );
+    try {
+      setIsSearchingLocation(true);
+      const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(text)}&count=5&language=en&format=json`);
+      const data = await res.json();
+
+      if (data.results) {
+        setSearchResults(data.results);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert("Permission Denied", "Allow location access to use this feature.");
+        return;
+      }
+
+      // 1. Instantly close dropdown and show loading text in the search bar
+      setShowDropdown(false);
+      setLocation("Locating...");
+
+      // 2. Fetch coords (Using Balanced accuracy prevents hanging on Android/Emulators)
+      const gps = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced
+      });
+
+      // 3. Reverse geocode to get City, State, Country
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: gps.coords.latitude,
+        longitude: gps.coords.longitude,
+      });
+
+      if (geocode && geocode.length > 0) {
+        const place = geocode;
+        const city = place.city || place.subregion || place.district || "";
+        const state = place.region || "";
+        const country = place.country || "";
+
+        // Filter out empty strings and join with commas
+        const formattedLocation = [city, state, country].filter(Boolean).join(", ");
+
+        // 4. If we successfully got a name, use it. Otherwise, fallback to coordinates!
+        if (formattedLocation.trim() !== "") {
+          setLocation(formattedLocation);
+        } else {
+          const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+          setLocationCoords(coordString); // Save exact coords for payload
+          setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString);
+        }
+      } else {
+        // Fallback if the geocoder completely fails to return an array
+        const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+        setLocationCoords(coordString); // Save exact coords for payload
+        setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString);
+      }
+
+    } catch (error) {
+      console.error("Location error:", error);
+      setLocation(""); // Clear the "Locating..." text if it crashes
+      Alert.alert("Error", "Could not fetch current location. Please try typing it manually.");
+    }
+  };
 
   // Handles confirm date range to later show per-date outfit  controls and enable generation
   const handleConfirmRange = () => {
@@ -263,7 +329,7 @@ export default function TripOutfit() {
       return;
     }
 
-    // save existing outfits counts if user is reselect date 
+    // save existing outfits counts if user is reselect date
     const config = {};
     dates.forEach(d => {
       const iso = toISO(d);
@@ -282,7 +348,7 @@ export default function TripOutfit() {
     }));
   };
 
-  // TODO: Call backend API, for now its copy and similar version of regular generate call 
+  // TODO: Call backend API, for now its copy and similar version of regular generate call
   const getUserId = async () => {
     try {
       const storedIdString = await AsyncStorage.getItem('userId');
@@ -295,7 +361,7 @@ export default function TripOutfit() {
 
   // COPIED AND SIMILAR VERSION OF REGULAR GENERATE CALL, PROBABLY WILL BE DIFFERENT ENDPOINT AND/OR PAYLOAD
   const handleGenerateTrip = async () => {
-    if (!location) {
+    if (!locationCoords) {
       Alert.alert("Missing Fields", "Location is required.");
       return;
     }
@@ -310,9 +376,10 @@ export default function TripOutfit() {
 
       const results = await Promise.all(
         isoKeys.map(iso => {
+          const finalLocation = locationCoords || location;
           const { outfitCount } = dateConfig[iso];
           const data = {
-            location,
+            location: finalLocation,
             event: formality,
             weatherType,
             tripDate: iso,
@@ -323,7 +390,7 @@ export default function TripOutfit() {
           console.log(`Requesting ${outfitCount} outfits for ${iso}`);
 
           // THIS MAY BE DIFFERENT ENDPOINT THAN REGULAR GENERATE I JUST COPIED FOR PLACEHOLDER
-          return apiClient.post(`/api/v1/suggestions/hub/${userId}`, data) 
+          return apiClient.post(`/api/v1/suggestions/hub/${userId}`, data)
             .then(res => ({ iso, suggestions: res.data?.slice(0, outfitCount) || [] }))
             .catch(err => { console.error(`Date ${iso} failed:`, err); return { iso, suggestions: [] }; });
         })
@@ -424,26 +491,61 @@ export default function TripOutfit() {
           ))}
         </ScrollView>
 
-        {/* Destination */}
-        <ThemedText style={styles.sectionLabel}>Destination:</ThemedText>
+        <ThemedText style={styles.sectionLabel}>Location:</ThemedText>
         <TextInput
-          placeholder="City, State, Country"
-          placeholderTextColor="#aaa"
-          value={location}
-          onChangeText={text => { setLocation(text); setShowDropdown(text.length > 0); }}
-          style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
+            placeholder="Search city, state, or country..."
+            placeholderTextColor="#aaa"
+            value={location}
+            onFocus={() => setShowDropdown(true)}
+            onChangeText={(text) => {
+              handleLocationSearch(text);
+              setShowDropdown(true);
+            }}
+            style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
         />
-        {showDropdown && filteredLocations.length > 0 && (
-          <ScrollView style={styles.filterList} keyboardShouldPersistTaps="handled" nestedScrollEnabled>
-            {filteredLocations.map((locate, index) => (
-              <ThemedText key={index} style={styles.dropdownItem}
-                onPress={() => { setLocation(`${locate.city}, ${locate.state}, ${locate.country}`); setShowDropdown(false); }}
+
+        {showDropdown && (
+            <ScrollView
+                style={styles.filterList}
+                keyboardShouldPersistTaps="handled"
+                nestedScrollEnabled
+            >
+              <TouchableOpacity
+                  style={[styles.dropdownItem, { backgroundColor: theme.colors.card }]}
+                  onPress={handleCurrentLocation}
               >
-                {locate.city}, {locate.state}, {locate.country}
-              </ThemedText>
-            ))}
-          </ScrollView>
+                <ThemedText style={{ fontWeight: 'bold', color: theme.colors.tabIconSelected }}>
+                  📍 Use Current Location
+                </ThemedText>
+              </TouchableOpacity>
+
+              {isSearchingLocation && (
+                  <View style={{ padding: 10 }}>
+                    <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
+                  </View>
+              )}
+
+              {/* Dynamic Open-Meteo Results */}
+              {!isSearchingLocation && searchResults.map((place) => {
+                // Format: "City, State, Country" (Admin1 is usually the state/province)
+                const displayName = [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+                return (
+                    <TouchableOpacity
+                        key={place.id}
+                        style={styles.dropdownItem}
+                        onPress={() => {
+                          setLocation(displayName);
+                          setLocationCoords(`${place.latitude},${place.longitude}`);
+                          setShowDropdown(false);
+                        }}
+                    >
+                      <ThemedText>{displayName}</ThemedText>
+                    </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
         )}
+
 
         <View style={styles.divider} />
 

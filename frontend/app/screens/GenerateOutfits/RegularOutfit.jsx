@@ -1,8 +1,9 @@
 import Entypo from "@expo/vector-icons/Entypo";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useTheme } from "@react-navigation/native";
 import * as Location from "expo-location";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -162,6 +163,21 @@ const EditOutfitModal = ({
     setReplaceTargetIndex(null);
   };
 
+  const isOuterwearItem = (item) => {
+    const normalizedType = normalizeType(getItemType(item));
+    return normalizedType === "OUTERWEAR" || normalizedType === "OVER";
+  };
+
+  const handleRemoveOuterwear = (indexToRemove) => {
+    setItems((prev) => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const hasOuterwear = items.some((item) => isOuterwearItem(item));
+
+  const handleRemoveAllOuterwear = () => {
+    setItems((prev) => prev.filter((item) => !isOuterwearItem(item)));
+  };
+
   const handleDone = () => {
     const ids = items.map(getItemId).filter((id) => id !== null);
     if (ids.length === 0) {
@@ -192,17 +208,11 @@ const EditOutfitModal = ({
             { backgroundColor: theme.colors.background },
           ]}
         >
-          <View style={styles.chevronView}>
-            <Pressable onPress={onClose}>
-              <Entypo name="chevron-down" size={30} color={theme.colors.text} />
-            </Pressable>
-          </View>
-
           {!replaceModalVisible ? (
             <ScrollView contentContainerStyle={{ paddingBottom: 30 }}>
               <ThemedText style={styles.modalTitle}>Edit Outfit</ThemedText>
               <ThemedText style={styles.editSubtitle}>
-                Tap any item to replace it from your closet.
+                Tap image to replace, tap trash to remove outerwear.
               </ThemedText>
 
               {items.length === 0 && (
@@ -234,6 +244,21 @@ const EditOutfitModal = ({
                       </ThemedText>
                     </View>
                   )}
+
+                  {isOuterwearItem(item) && (
+                      <Pressable
+                        style={styles.trashIconOverlay}
+                        onPress={() => handleRemoveOuterwear(index)}
+                        hitSlop={8}
+                      >
+                        <Ionicons
+                          name="trash-outline"
+                          size={19}
+                          color={theme.colors.text}
+                        />
+                      </Pressable>
+                    )}
+                    
                   <View style={{ marginTop: 10 }}>
                     <ThemedText style={{ fontWeight: "bold", fontSize: 17 }}>
                       {formatEnum(getItemType(item))}
@@ -244,6 +269,7 @@ const EditOutfitModal = ({
                   </View>
                 </TouchableOpacity>
               ))}
+
 
               <TouchableOpacity
                 style={[
@@ -341,6 +367,8 @@ const EditOutfitModal = ({
     </>
   );
 };
+
+
 
 // ─── Outfit Details Modal ─────────────────────────────────────────────────────
 
@@ -480,9 +508,13 @@ export default function RegularOutfit() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [useMemory, setUseMemory] = useState(false);
   const [weatherEnabled, setWeatherEnabled] = useState(true);
-  const [location, setLocation] = useState("");
-  const [showDropdown, setShowDropdown] = useState(false);
   const [eventType, setEventType] = useState("");
+
+  const [location, setLocation] = useState("");
+  const [locationCoords, setLocationCoords] = useState(null); // Stores the final lat,lon for the payload
+  const [searchResults, setSearchResults] = useState([]); // Stores the Open-Meteo array
+  const [isSearchingLocation, setIsSearchingLocation] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false); // For location autocomplete dropdown
 
   // Modal state
   const [selectedOutfit, setSelectedOutfit] = useState(null);
@@ -521,6 +553,131 @@ export default function RegularOutfit() {
       .includes(location.toLowerCase()),
   );
 
+  // Helper function to get userId from AsyncStorage
+  const getUserId = async () => {
+    try {
+      const storedIdString = await AsyncStorage.getItem("userId");
+      if (storedIdString !== null) return parseInt(storedIdString, 10);
+    } catch (error) {
+      console.error("Storage error", error);
+    }
+    return null;
+  };
+
+  // --- Open-Meteo Geocoding Search ---
+  const handleLocationSearch = async (text) => {
+    setLocation(text);
+    setLocationCoords(null); // Reset coords if they start typing again
+
+    if (text.length < 3) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setIsSearchingLocation(true);
+      const res = await fetch(
+        `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(text)}&count=5&language=en&format=json`,
+      );
+      const data = await res.json();
+
+      if (data.results) {
+        setSearchResults(data.results);
+      } else {
+        setSearchResults([]);
+      }
+    } catch (error) {
+      console.error("Geocoding error:", error);
+    } finally {
+      setIsSearchingLocation(false);
+    }
+  };
+
+  const handleCurrentLocation = async () => {
+    try {
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Allow location access to use this feature.",
+        );
+        return;
+      }
+
+      // 1. Instantly close dropdown and show loading text in the search bar
+      setShowDropdown(false);
+      setLocation("Locating...");
+
+      // 2. Fetch coords (Using Balanced accuracy prevents hanging on Android/Emulators)
+      const gps = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      // 3. Reverse geocode to get City, State, Country
+      const geocode = await Location.reverseGeocodeAsync({
+        latitude: gps.coords.latitude,
+        longitude: gps.coords.longitude,
+      });
+
+      if (geocode && geocode.length > 0) {
+        const place = geocode;
+        const city = place.city || place.subregion || place.district || "";
+        const state = place.region || "";
+        const country = place.country || "";
+
+        // Filter out empty strings and join with commas
+        const formattedLocation = [city, state, country]
+          .filter(Boolean)
+          .join(", ");
+
+        // 4. If we successfully got a name, use it. Otherwise, fallback to coordinates!
+        if (formattedLocation.trim() !== "") {
+          setLocation(formattedLocation);
+        } else {
+          const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+          setLocationCoords(coordString); // Save exact coords for payload
+          setLocation(
+            formattedLocation.trim() !== "" ? formattedLocation : coordString,
+          ); // Display readable name
+        }
+      } else {
+        // Fallback if the geocoder completely fails to return an array
+        const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+        setLocationCoords(coordString); // Save exact coords for payload
+        setLocation(
+          formattedLocation.trim() !== "" ? formattedLocation : coordString,
+        ); // Display readable name
+      }
+    } catch (error) {
+      console.error("Location error:", error);
+      setLocation(""); // Clear the "Locating..." text if it crashes
+      Alert.alert(
+        "Error",
+        "Could not fetch current location. Please try typing it manually.",
+      );
+    }
+  };
+
+  // On screen focus, load any saved constraints from AsyncStorage (if user navigated back from different screen)
+  useFocusEffect(
+    useCallback(() => {
+      const load = async () => {
+        const saved = await AsyncStorage.getItem("recommendationConstraints");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setLocation(parsed.location || "");
+          setFormality(parsed.formality || "CASUAL");
+          setEventType(parsed.eventType || "");
+          setWeatherEnabled(
+            parsed.weatherEnabled === true || parsed.weatherEnabled === "true",
+          );
+          setConstraints(parsed);
+        }
+      };
+      load();
+    }, []),
+  );
+
   // Restore saved constraints on focus
   useFocusEffect(
     useCallback(() => {
@@ -550,64 +707,86 @@ export default function RegularOutfit() {
     }, []),
   );
 
-  const getUserId = async () => {
-    try {
-      const s = await AsyncStorage.getItem("userId");
-      if (s !== null) return parseInt(s, 10);
-    } catch (e) {
-      console.error("Storage error", e);
-    }
-    return null;
-  };
-
   const handleGenerateOutfit = async () => {
-    if (!location || !formality) {
-      Toast.show({
-        type: "error",
-        text1: "Missing fields",
-        text2: "Location and occasion are required.",
-      });
-      return;
-    }
-    try {
-      setShowDropdown(false);
-      setIsGenerating(true);
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
+      if (!locationCoords || !formality) {
         Toast.show({
           type: "error",
-          text1: "Permission denied",
-          text2: "Location is required for weather-based outfits.",
+          text1: "Missing fields",
+          text2: "Location and Occasion are required.",
         });
         return;
       }
-      const gps = await Location.getCurrentPositionAsync({});
-      const locationCoords = `${gps.coords.latitude},${gps.coords.longitude}`;
+
+      try {
+        const userId = await getUserId();
+        const itemsRes = await apiClient.get(`/api/items/user/${userId}`);
+        const userItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+
+        const tops = userItems.filter(item => normalizeType(getItemType(item)) === "TOP");
+        const bottoms = userItems.filter(item => normalizeType(getItemType(item)) === "BOTTOM");
+
+        if (tops.length < 2 || bottoms.length < 2) {
+          Toast.show({
+            type: "error",
+            text1: "Not enough items",
+            text2: `You need at least 2 tops and 2 bottoms.`,
+            text3: `You have ${tops.length} top(s) and ${bottoms.length} bottom(s).`,
+
+          });
+          return;
+        }
+      } catch (e) {
+        if (e?.response?.status !== 500) {
+          console.error("Generate outfit error:", e);
+        }
+        Toast.show({
+          type: "error",
+          text1: "Could not load closet",
+          text2: "Please try again.",
+        });
+        return;
+      }
+
+
+    try {
+      setIsGenerating(true);
+
+      // Get GPS coords for weather
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permission Denied",
+          "Location is required for weather-based outfits.",
+        );
+        setIsGenerating(false);
+        return;
+      }
+      const finalLocation = locationCoords || location;
       const userId = await getUserId();
 
       const data = {
-        location: locationCoords,
+        location: finalLocation,
         event: formality,
         useMemory,
+        // Additional fields
         manualLocation: location,
         eventType,
         weatherEnabled,
-        topFit,
-        topLength,
-        bottomFit,
-        bottomLength,
-        fullBody,
-        fullBodyLength,
-        outerwear,
-        outerFit,
-        patterns,
-        color,
       };
+      setShowDropdown(false);
+      
+      console.log("=== Generate Outfit Request ===");
+      console.log("UserId:", userId);
+      console.log("Payload:", JSON.stringify(data, null, 2));
 
       const res = await apiClient.post(
         `/api/v1/suggestions/hub/${userId}`,
         data,
       );
+
+      console.log("=== Generate Outfit Response ===");
+      console.log("Response:", JSON.stringify(res.data, null, 2));
+
       setSuggestions(res.data?.slice(0, 10) || []);
       Toast.show({
         type: "success",
@@ -784,36 +963,73 @@ export default function RegularOutfit() {
             />
           </View>
         )}
-
+        {/* Location */}
         <ThemedText style={styles.sectionLabel}>Location:</ThemedText>
         <TextInput
-          placeholder="City, State, Country"
+          placeholder="Search city, state, or country..."
           placeholderTextColor="#aaa"
           value={location}
-          onChangeText={(t) => {
-            setLocation(t);
-            setShowDropdown(t.length > 0);
+          onFocus={() => setShowDropdown(true)}
+          onChangeText={(text) => {
+            handleLocationSearch(text);
+            setShowDropdown(true);
           }}
           style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
         />
-        {showDropdown && filteredLocations.length > 0 && (
+
+        {showDropdown && (
           <ScrollView
             style={styles.filterList}
             keyboardShouldPersistTaps="handled"
             nestedScrollEnabled
           >
-            {filteredLocations.map((l, i) => (
+            <TouchableOpacity
+              style={[
+                styles.dropdownItem,
+                { backgroundColor: theme.colors.card },
+              ]}
+              onPress={handleCurrentLocation}
+            >
               <ThemedText
-                key={i}
-                style={styles.dropdownItem}
-                onPress={() => {
-                  setLocation(`${l.city}, ${l.state}, ${l.country}`);
-                  setShowDropdown(false);
+                style={{
+                  fontWeight: "bold",
+                  color: theme.colors.tabIconSelected,
                 }}
               >
-                {l.city}, {l.state}, {l.country}
+                📍 Use Current Location
               </ThemedText>
-            ))}
+            </TouchableOpacity>
+
+            {isSearchingLocation && (
+              <View style={{ padding: 10 }}>
+                <ActivityIndicator
+                  size="small"
+                  color={theme.colors.tabIconSelected}
+                />
+              </View>
+            )}
+
+            {/* Dynamic Open-Meteo Results */}
+            {!isSearchingLocation &&
+              searchResults.map((place) => {
+                // Format: "City, State, Country"
+                const displayName = [place.name, place.admin1, place.country]
+                  .filter(Boolean)
+                  .join(", ");
+                return (
+                  <TouchableOpacity
+                    key={place.id}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setLocation(displayName);
+                      setLocationCoords(`${place.latitude},${place.longitude}`);
+                      setShowDropdown(false);
+                    }}
+                  >
+                    <ThemedText>{displayName}</ThemedText>
+                  </TouchableOpacity>
+                );
+              })}
           </ScrollView>
         )}
 
@@ -1037,6 +1253,15 @@ const styles = StyleSheet.create({
   // Edit modal item cards
   editItemCard: { padding: 12, borderRadius: 10, marginBottom: 14 },
   editItemImage: { width: "100%", height: 180, borderRadius: 10 },
+  trashIconOverlay: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    borderRadius: 6,
+    padding: 6,
+    zIndex: 10,
+  },
   noImage: {
     alignItems: "center",
     justifyContent: "center",

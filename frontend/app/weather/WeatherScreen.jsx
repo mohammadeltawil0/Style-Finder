@@ -10,6 +10,7 @@ export default function WeatherScreen() {
 
     const cardStyle = {
         backgroundColor: theme.colors.lightBrown,
+        marginHorizontal: 30,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 20,
@@ -21,6 +22,7 @@ export default function WeatherScreen() {
         flexDirection: "row",
         alignSelf: "stretch",
         justifyContent: "center",
+        height: 120
     };
 
     if (loading) return <ActivityIndicator size="large" />;
@@ -33,7 +35,8 @@ export default function WeatherScreen() {
 
     const { temperature_2m, weather_code, wind_speed_10m } = weather.current;
     const now = new Date();
-    const date = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const day = now.toLocaleDateString(undefined, { weekday: 'short' });
+    const date = now.toLocaleDateString();
     const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
     return (

@@ -21,20 +21,9 @@ import {
     PATTERN_OPTIONS,
     SEASON_OPTIONS,
 } from "../../constants/options";
+import Feather from "@expo/vector-icons/Feather";
 
 const DEFAULT_COLOR = "#74512D";
-
-const getContrastColor = (hexColor) => {
-    if (!hexColor || typeof hexColor !== "string" || !hexColor.startsWith("#") || hexColor.length < 7) {
-        return "#FFFFFF";
-    }
-
-    const r = parseInt(hexColor.substring(1, 3), 16);
-    const g = parseInt(hexColor.substring(3, 5), 16);
-    const b = parseInt(hexColor.substring(5, 7), 16);
-    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 125 ? "#000000" : "#FFFFFF";
-};
 
 const titleCaseFromEnum = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
@@ -60,67 +49,25 @@ const titleCaseFromEnum = (value) => {
         .replace(/\b\w/g, (char) => char.toUpperCase());
 };
 
-const MATERIAL_LABELS = {
-    1: "Cotton",
-    2: "Linen/Hemp",
-    3: "Wool/Fleece",
-    4: "Silk/Satin",
-    5: "Leather/Faux Leather",
-    6: "Synthetics",
-    7: "Other",
-};
-
 const materialToLabel = (value) => {
     if (value === null || value === undefined || value === "") return "Not specified";
-    if (typeof value === "number") return MATERIAL_LABELS[value] || "Not specified";
 
-    const raw = String(value).trim();
-    if (!raw) return "Not specified";
-
-    const asNumber = Number(raw);
-    if (!Number.isNaN(asNumber) && MATERIAL_LABELS[asNumber]) return MATERIAL_LABELS[asNumber];
-
-    const upper = raw.toUpperCase();
-    const enumMap = {
-        COTTON: 1,
-        LINEN_HEMP: 2,
-        WOOL_FLEECE: 3,
-        SILK_SATIN: 4,
-        LEATHER_FAUX_LEATHER: 5,
-        SYNTHETICS: 6,
-        OTHER: 7,
-    };
-
-    if (enumMap[upper]) return MATERIAL_LABELS[enumMap[upper]];
-
-    const key = raw.toLowerCase().replace(/[_-]/g, " ").replace(/\s+/g, " ").trim();
     const labelMap = {
-        cotton: 1,
-        "linen/hemp": 2,
-        "linen hemp": 2,
-        "wool/fleece": 3,
-        "wool fleece": 3,
-        "silk/satin": 4,
-        "silk satin": 4,
-        "leather/faux leather": 5,
-        "leather faux leather": 5,
-        synthetics: 6,
-        other: 7,
+        COTTON: "Cotton",
+        LINEN: "Linen/Hemp",
+        WOOL: "Wool",
+        SILK: "Silk/Satin",
+        LEATHER: "Leather/Faux Leather",
+        POLYESTER: "Synthetics",
+        DENIM: "Denim",
+        KNIT: "Knit/Jersey",
+        FLEECE: "Fleece",
     };
 
-    return labelMap[key] ? MATERIAL_LABELS[labelMap[key]] : titleCaseFromEnum(raw);
+    return labelMap[String(value).toUpperCase()] || titleCaseFromEnum(value);
 };
 
 export default function EditItemsModal({ item, setModalVisible }) {
-// TO DO: edit item logic
-    useEffect(() => {
-        const t = Date.now();
-        console.log('[EditItemsModal] mount at', new Date(t).toISOString());
-        return () => {
-            console.log('[EditItemsModal] unmount at', new Date().toISOString());
-        };
-    }, []);
-
     const [uri, setUri] = useState(null);
     const [category, setCategory] = useState("TOP");
     const [pattern, setPattern] = useState("SOLID");
@@ -132,7 +79,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [length, setLength] = useState(null);
     const [bulk, setBulk] = useState(null);
     const [imageDataForSave, setImageDataForSave] = useState(null);
-    const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
     const [isCategoryModalVisible, setIsCategoryModalVisible] = useState(false);
     const [isPatternModalVisible, setIsPatternModalVisible] = useState(false);
     const [isFormalityModalVisible, setIsFormalityModalVisible] = useState(false);
@@ -149,7 +95,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const theme = useTheme();
     const queryClient = useQueryClient();
 
-    const hasImageUrl = typeof uri === "string" && uri.trim().length > 0;
+    const hasImageUrl = uri && typeof uri === 'string' && (uri.startsWith('http') || uri.startsWith('file') || uri.startsWith('data:'));
 
     const fitToSliderValue = (value) => {
         if (typeof value === "number") return value;
@@ -229,34 +175,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
 
     const normalizeMaterial = (value) => {
         if (value === null || value === undefined || value === "") return null;
-        if (typeof value === "number") return value;
-
-        const asNumber = Number(value);
-        if (!Number.isNaN(asNumber) && asNumber >= 1 && asNumber <= 7) return asNumber;
-
-        const upper = String(value).toUpperCase();
-        const enumMap = {
-            COTTON: 1,
-            LINEN_HEMP: 2,
-            WOOL_FLEECE: 3,
-            SILK_SATIN: 4,
-            LEATHER_FAUX_LEATHER: 5,
-            SYNTHETICS: 6,
-            OTHER: 7,
-        };
-        if (enumMap[upper]) return enumMap[upper];
-
-        const map = {
-            cotton: 1,
-            "linen/hemp": 2,
-            "wool/fleece": 3,
-            "silk/satin": 4,
-            "leather/faux leather": 5,
-            synthetics: 6,
-            other: 7,
-        };
-        const key = String(value).toLowerCase();
-        return map[key] || value;
+        return String(value).toUpperCase();
     };
 
     const normalizeBulk = (value) => {
@@ -300,31 +219,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
         if (value === null || value === undefined || value === "") return "Not specified";
         return options.find((option) => option.value === value)?.label || titleCaseFromEnum(value);
     };
-
-    const deleteItemMutation = useMutation({
-        mutationFn: async (itemId) => {
-            await apiClient.delete(`/api/items/${itemId}`);
-        },
-        onSuccess: async () => {
-            // Keep query keys aligned with ClosetScreen useQuery(['items', userId]).
-            await queryClient.invalidateQueries({ queryKey: ["items"] });
-            Toast.show({
-                type: "success",
-                text1: "Item deleted",
-                text2: "The item was removed successfully.",
-            });
-            setIsDeleteModalVisible(false);
-            setModalVisible(false);
-        },
-        onError: (error) => {
-            console.error("Failed to delete item:", error);
-            Toast.show({
-                type: "error",
-                text1: "Delete failed",
-                text2: "We could not delete this item. Please try again.",
-            });
-        },
-    });
 
     const updateItemMutation = useMutation({
         mutationFn: async (changes) => {
@@ -402,16 +296,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
         },
     });
 
-    const handleDeleteItem = () => {
-        const resolvedItemId = itemId ?? item?.itemId ?? item?.id;
-        if (!resolvedItemId || deleteItemMutation.isPending) {
-            console.error("Delete blocked: missing item id", item);
-            return;
-        }
-
-        deleteItemMutation.mutate(resolvedItemId);
-    };
-
     const convertToBase64 = async (localUri) => {
         const base64 = await FileSystem.readAsStringAsync(localUri, {
             encoding: "base64",
@@ -488,21 +372,13 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         width: "100%",
                     }}
                 >
-                    <View className="chevronView" style={styles.chevronView}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -17 }}>
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
-                                // { backgroundColor: theme.colors.card }
                             ]}
                         >
-                            <Entypo name="chevron-left" size={30} color="black" />
-                        </Pressable>
-                        <Pressable
-                            style={[styles.topActionButton,
-                            { backgroundColor: theme.colors.tabIconSelected }
-                            ]}
-                            onPress={() => setIsDeleteModalVisible(true)}>
-                            <FontAwesome6 name="trash" size={24} color={theme.colors.text} />
+                            <Feather name="arrow-left" size={30} color={theme.colors.text} />
                         </Pressable>
                     </View>
                     {!hasImageUrl ? (
@@ -513,16 +389,20 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 styles.imageContainer,
                                 {
                                     backgroundColor: theme.colors.card,
-                                    borderRadius: 10,
-                                    padding: 20,
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    // borderRadius: 10,
                                 },
                             ]}
                         >
-                            <ThemedText style={{ textAlign: "center" }}>
-                                No image found for this item.
-                            </ThemedText>
+                            <View
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
+                            >
+                                <Feather name="image" size={60} color={theme.colors.text} />
+                            </View>
                             <View
                                 style={{
                                     position: "absolute",
@@ -792,7 +672,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     },
                                 ]}
                             >
-                                Event:
+                                Formality:
                             </ThemedText>
                             <ThemedText
                                 style={[
@@ -1261,7 +1141,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsImageModalVisible(false)}
             >
                 <View style={styles.imageModalOverlay}>
-                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}> 
+                    <View style={[styles.imageModalCard, { backgroundColor: theme.colors.lightBrown }]}>
                         <View style={styles.imageModalHeader}>
                             <ThemedText
                                 style={{
@@ -1279,6 +1159,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 uri={draftImageUri}
                                 setPage={() => setIsImageModalVisible(false)}
                                 hideNextButton={true}
+                                isEditing={true}
                             />
                         </View>
                         <View style={styles.confirmActions}>
@@ -1331,6 +1212,8 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onSelect={(nextCategory) => {
                     setCategory(nextCategory);
                     updateItemMutation.mutate({ type: nextCategory });
+                    setIsLengthModalVisible(true);
+                    return;
                 }}
                 options={CATEGORY_OPTIONS}
                 title="Edit Category"
@@ -1367,7 +1250,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 onRequestClose={() => setIsColorModalVisible(false)}
             >
                 <View style={styles.confirmOverlay}>
-                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}> 
+                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}>
                         <ThemedText
                             style={{
                                 fontSize: theme.sizes.h2,
@@ -1484,7 +1367,11 @@ export default function EditItemsModal({ item, setModalVisible }) {
                     setLength(nextLength);
                     updateItemMutation.mutate({ length: nextLength });
                 }}
-                options={LENGTH_OPTIONS}
+                options={LENGTH_OPTIONS.filter((opt) =>
+                    category === "TOP" || category === "OUTERWEAR"
+                        ? ["SLEEVELESS", "CAP", "SHORT_SLEEVE", "THREE_QUARTER", "LONG_SLEEVE"].includes(opt.value)
+                        : ["ABOVE_KNEE", "KNEE_LENGTH_OR_BERMUDA", "MIDI_OR_CAPRI", "MAXI_OR_FULL_LENGTH"].includes(opt.value)
+                )}
                 title="Edit Length"
                 isSaving={updateItemMutation.isPending}
             />
@@ -1501,49 +1388,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 title="Edit Bulk"
                 isSaving={updateItemMutation.isPending}
             />
-
-            <Modal
-                visible={isDeleteModalVisible}
-                transparent
-                animationType="fade"
-                onRequestClose={() => setIsDeleteModalVisible(false)}
-            >
-                <View style={styles.confirmOverlay}>
-                    <View style={[styles.confirmCard, { backgroundColor: theme.colors.card }]}>
-                        <ThemedText style={{
-                            fontSize: theme.sizes.h2,
-                            fontWeight: "700",
-                            marginBottom: 8,
-                            fontFamily: theme.fonts.bold,
-                        }}>Delete this item?</ThemedText>
-                        <ThemedText style={styles.confirmText}>
-                            This action cannot be undone. This will remove this item from any outfits it's included in, and will remove outfit as well.
-                        </ThemedText>
-
-                        <View style={styles.confirmActions}>
-                            <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
-                                onPress={() => setIsDeleteModalVisible(false)}
-                                disabled={deleteItemMutation.isPending}
-                            >
-                                <ThemedText>Cancel</ThemedText>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: theme.colors.tabIconSelected, opacity: deleteItemMutation.isPending ? 0.7 : 1 }]}
-                                onPress={handleDeleteItem}
-                                disabled={deleteItemMutation.isPending}
-                            >
-                                {deleteItemMutation.isPending ? (
-                                    <ActivityIndicator size="small" color="#fff" />
-                                ) : (
-                                    <ThemedText style={{ color: theme.colors.text }}>Delete</ThemedText>
-                                )}
-                            </TouchableOpacity>
-                        </View>
-                    </View>
-                </View>
-            </Modal>
         </>
     );
 }
@@ -1565,7 +1409,6 @@ const styles = {
     chevronView: {
         justifyContent: "space-between",
         alignItems: "center",
-        paddingVertical: 20,
         width: "100%",
         flexDirection: "row",
     },
@@ -1577,11 +1420,13 @@ const styles = {
         justifyContent: "center",
     },
     imageContainer: {
-        height: 200,
-        width: 200,
-        justifyContent: "center",
-        alignItems: "center",
-        alignSelf: "center",
+        marginTop: 13,
+        height: 250,
+        // width: 200,
+        // justifyContent: "center",
+        // alignItems: "center",
+        // alignSelf: "center",
+        borderRadius: 20
     },
     responseContainer: {
         width: "100%",
@@ -1590,13 +1435,6 @@ const styles = {
         borderRadius: 10,
         flexDirection: "row",
         marginTop: 20,
-    },
-    deleteBtn: {
-        marginTop: 24,
-        paddingVertical: 14,
-        borderRadius: 10,
-        alignItems: "center",
-        justifyContent: "center",
     },
     confirmOverlay: {
         flex: 1,
@@ -1614,23 +1452,6 @@ const styles = {
     logoWrap: {
         marginBottom: 10,
         transform: [{ scale: 2 }],
-    },
-    confirmText: {
-        textAlign: "center",
-        marginBottom: 16,
-    },
-    confirmActions: {
-        marginTop: "10%",
-        width: "100%",
-        flexDirection: "row",
-        gap: 10,
-    },
-    confirmBtn: {
-        flex: 1,
-        borderRadius: 10,
-        paddingVertical: 12,
-        alignItems: "center",
-        justifyContent: "center",
     },
     colorWheelWrap: {
         width: 260,
@@ -1671,4 +1492,17 @@ const styles = {
         width: "100%",
         height: 400,
     },
+    confirmActions: {
+        width: "100%",
+        flexDirection: "row",
+        gap: 10,
+    },
+    confirmBtn: {
+        flex: 1,
+        borderRadius: 10,
+        paddingVertical: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
 };
+

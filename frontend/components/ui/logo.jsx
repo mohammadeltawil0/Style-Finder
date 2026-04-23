@@ -7,7 +7,6 @@ export const Logo = () => {
   return (
     <Pressable
       onPress={() => {
-        console.log("pressed profile");
         router.push("/settings/Profile");
       }}
     >

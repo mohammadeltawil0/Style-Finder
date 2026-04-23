@@ -13,7 +13,7 @@ public class MaterialTypeConverter implements AttributeConverter<MaterialType, S
             return null;
         }
 
-        return Integer.toString(attribute.ordinal());
+        return attribute.name();
     }
 
     @Override
