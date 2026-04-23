@@ -84,24 +84,6 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
-              name="screens/AdditionalConstraints"
-              options={{
-                header: () => <CustomHeader page="AdditionalConstraints" />,
-              }}
-            />
-            <Stack.Screen
-              name="screens/OutfitswaitingScreen"
-              options={{
-                header: () => <CustomHeader page="OutfitswaitingScreen" />,
-              }}
-            />
-            <Stack.Screen
-              name="screens/DisplayOutfits"
-              options={{
-                header: () => <CustomHeader page="AdditionalConstraints" />,
-              }}
-            />
-            <Stack.Screen
               name="screens/survey/preferences2"
               options={{
                 header: () => <CustomHeader page="survey" />,
@@ -116,7 +98,7 @@ export default function RootLayout() {
             <Stack.Screen
               name="closet/outfitsHistory/itemProperty"
               options={{
-                header: () => <CustomHeader page="RegularOutfitDetail" />,
+                header: () => <CustomHeader page="OutfitDetail" />,
               }}
             />
             <Stack.Screen
@@ -172,6 +154,7 @@ export default function RootLayout() {
               name="settings/adminFolder/adminUsers"
               options={{
                 header: () => <CustomHeader page="AdminPortal" />,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
@@ -184,12 +167,20 @@ export default function RootLayout() {
               name="settings/adminFolder/adminLanding"
               options={{
                 header: () => <CustomHeader page="adminwelcomepage" />,
+                headerShown: false,
+                gestureEnabled: false,
               }}
             />
             <Stack.Screen
               name="settings/adminFolder/adminUserDetail"
               options={{
                 header: () => <CustomHeader page="adminUserDetail" />,
+              }}
+            />
+            <Stack.Screen
+              name="closet/edit-item-screen"
+              options={{
+                header: () => <CustomHeader page="closet" />,
               }}
             />
           </Stack>

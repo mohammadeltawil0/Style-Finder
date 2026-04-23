@@ -282,6 +282,8 @@ export default function Register() {
         role: "USER",
         createdAt: new Date().toISOString(),
       });
+      console.log("REGISTER RESPONSE:", response.data);
+      console.log("Saved token:", await AsyncStorage.getItem("token"));
 
       Toast.show({
         type: "success",
@@ -290,6 +292,7 @@ export default function Register() {
       });
 
       await AsyncStorage.multiSet([
+        ["token", response.data.token],
         ["userId", String(response.data.userId)],
         ["username", response.data.username || username],
         ["profileImageUrl", response.data.profileImageUrl || ""],

@@ -660,8 +660,8 @@ export default function RegularOutfit() {
 
   // On screen focus, load any saved constraints from AsyncStorage (if user navigated back from different screen)
   useFocusEffect(
-    React.useCallback(() => {
-      const loadSavedConstraints = async () => {
+    useCallback(() => {
+      const load = async () => {
         const saved = await AsyncStorage.getItem("recommendationConstraints");
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -674,7 +674,7 @@ export default function RegularOutfit() {
           setConstraints(parsed);
         }
       };
-      loadSavedConstraints();
+      load();
     }, []),
   );
 
@@ -774,7 +774,7 @@ export default function RegularOutfit() {
         weatherEnabled,
       };
       setShowDropdown(false);
-
+      
       console.log("=== Generate Outfit Request ===");
       console.log("UserId:", userId);
       console.log("Payload:", JSON.stringify(data, null, 2));

@@ -29,6 +29,11 @@ public class AdminController {
         return ResponseEntity.ok(userService.getUserByUsername(username));
     }
 
+    @GetMapping("/test")
+    public String adminTest() {
+        return "Admin access granted";
+    }
+
     // DELETE /api/admin/users/{id}
     // Called from adminUserDetail.jsx delete button
     @DeleteMapping("/users/{id}")

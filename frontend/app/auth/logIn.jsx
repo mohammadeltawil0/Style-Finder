@@ -161,27 +161,35 @@ export default function Login() {
     try {
       console.log("Sending login request...");
       const response = await apiClient.post("/api/users/login", {
-        username,
-        password,
+        username: username.trim(),
+        password: password.trim(),
       });
 
       loginData = response.data;
+      if (!loginData?.token) {
+        throw new Error("Token missing");
+      }
       console.log("Login successful:", loginData);
+
+      await AsyncStorage.multiSet([
+        ["token", loginData.token],
+        ["userId", String(loginData.userId)],
+        ["username", loginData.username || ""],
+        ["role", loginData.role || "USER"],
+      ]);
+
     } catch (error) {
       const details = describeApiError(error);
-      const status = details.status;
-
-      console.error("Login request failed:", details);
-
+      console.error("Login FAILED:", details);
       const messages = {
         401: "Invalid username or password.",
-        500: details.message || "Server error. Please try again later.",
+        500: details.message || "Server error.",
       };
 
       Toast.show({
         type: "error",
         text1: "Login Failed",
-        text2: messages[status] || details.message || "Something went wrong.",
+        text2: messages[details.status] || details.message,
       });
       return;
     }
@@ -189,50 +197,37 @@ export default function Login() {
     let hasPreferences = false;
     try {
       const prefResponse = await apiClient.get(
-        `/api/preferences/${loginData.userId}`,
+        `/api/preferences/${loginData.userId}`
       );
       hasPreferences = Boolean(prefResponse?.data);
     } catch (error) {
       const details = describeApiError(error);
 
       if (details.status !== 404) {
-        console.error("Preferences check failed after login:", details);
+        console.error("Preferences check failed:", details);
       }
-
-      hasPreferences = false;
     }
 
     try {
       resetAnswers();
-      await AsyncStorage.setItem("username", loginData.username);
-      await AsyncStorage.setItem("userId", String(loginData.userId));
-      let resolvedRole = loginData.role || "";
+
       let displayName = loginData.username;
-      await AsyncStorage.setItem(
-        "profileImageUrl",
-        loginData.profileImageUrl || "",
-      );
 
       try {
         const userResponse = await apiClient.get(
-          `/api/users/${loginData.userId}`,
+          `/api/users/${loginData.userId}`
         );
         displayName = userResponse?.data?.firstName || displayName;
         await AsyncStorage.setItem(
           "profileImageUrl",
-          userResponse?.data?.profileImageUrl || "",
+          userResponse?.data?.profileImageUrl || ""
         );
-        if (!resolvedRole && userResponse?.data?.role) {
-          resolvedRole = userResponse.data.role;
-        }
+
       } catch (error) {
-        const details = describeApiError(error);
-        console.error("Failed to hydrate profile image after login:", details);
+        console.log("Profile fetch failed (non-critical)");
       }
 
       await AsyncStorage.setItem("name", displayName);
-
-      await AsyncStorage.setItem("role", resolvedRole || "USER");
 
       Toast.show({
         type: "success",
@@ -240,19 +235,20 @@ export default function Login() {
         text2: "You have successfully logged in.",
       });
 
-      if (resolvedRole === "ADMIN") {
+      if (loginData.role === "ADMIN") {
         router.replace("/settings/adminFolder/adminLanding");
       } else if (hasPreferences) {
-        router.replace("/(tabs)"); //for returniing user
+        router.replace("/(tabs)");
       } else {
         router.replace("/screens/survey/preferences1");
       }
     } catch (error) {
-      console.error("Post-login client step failed:", error);
+      console.error("Post-login setup failed:", error);
+
       Toast.show({
         type: "error",
-        text1: "Login Partially Completed",
-        text2: "Signed in, but app setup failed. Please retry.",
+        text1: "Login Partial",
+        text2: "Signed in but setup failed.",
       });
     } finally {
       setIsLoggingIn(false);

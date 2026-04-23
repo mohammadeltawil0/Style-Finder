@@ -12,9 +12,13 @@ import CS431.Style_Finder.model.UserWeights;
 import CS431.Style_Finder.repository.UserRepository;
 import CS431.Style_Finder.repository.UserWeightsRepository;
 import CS431.Style_Finder.service.UserService;
+import CS431.Style_Finder.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import CS431.Style_Finder.dto.auth.LoginResponseDto;
+import CS431.Style_Finder.model.enums.Role;
 
 
 import java.util.List;
@@ -27,9 +31,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserWeightsRepository userWeightsRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserDto createUser(UserDto dto) {
+    public LoginResponseDto createUser(UserDto dto) {
         if (dto == null) {
             throw new InvalidUserDataException("User data cannot be null");
         }
@@ -45,13 +50,32 @@ public class UserServiceImpl implements UserService {
         if (userRepository.existsByUsername(dto.getUsername())) {
             throw new DuplicateUsernameException(dto.getUsername());
         }
+
         try {
-            User saved = userRepository.save(userMapper.toEntity(dto));
+            User user = userMapper.toEntity(dto);
+            user.setPassword(passwordEncoder.encode(dto.getPassword()));
+            if (user.getRole() == null) {
+                user.setRole(Role.USER);
+            }
+            User saved = userRepository.save(user);
+
             UserWeights defaultWeights = new UserWeights();
             defaultWeights.setUser(saved);
             saved.setUserWeights(defaultWeights);
             userWeightsRepository.save(defaultWeights);
-            return userMapper.toDto(saved);
+
+            String token = jwtUtil.generateToken(
+                    saved.getUsername(),
+                    saved.getRole().name()
+            );
+
+            return new LoginResponseDto(
+                    token,
+                    saved.getUserId(),
+                    saved.getUsername(),
+                    saved.getRole().name()
+            );
+
         } catch (Exception e) {
             throw new UserCreationException("Failed to create user", e);
         }
@@ -103,7 +127,7 @@ public class UserServiceImpl implements UserService {
             }
 
             if (dto.getPassword() != null && !dto.getPassword().isBlank()) {
-                user.setPassword(dto.getPassword());
+                user.setPassword(passwordEncoder.encode(dto.getPassword()));
             }
 
             if (dto.getProfileImageUrl() != null) {
@@ -127,18 +151,24 @@ public class UserServiceImpl implements UserService {
         userRepository.deleteById(userId);
     }
 
-    public UserDto login(String username, String password) {
+    private final JwtUtil jwtUtil;
+
+    public LoginResponseDto login(String username, String password) {
+        System.out.println("LOGIN HIT with username: " + username);
+
         User user = userRepository.findByUsername(username)
             .orElseThrow(() -> new InvalidCredentialsException());
 
-        if (!user.getPassword().equals(password)) {
+        System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            //System.out.println("PASSWORD MISMATCH");
             throw new InvalidCredentialsException();
         }
+        userRepository.save(user);
+        String token = jwtUtil.generateToken(user.getUsername(), user.getRole().name());
 
-        return UserDto.builder()
-                .userId(user.getUserId())
-                .username(user.getUsername())
-                .build();
+        return new LoginResponseDto(token, user.getUserId(), user.getUsername(), user.getRole().name());
     }
 
     @Override

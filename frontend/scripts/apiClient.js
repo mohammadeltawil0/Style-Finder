@@ -1,5 +1,7 @@
 import {API_URL} from '@env';
 import axios from 'axios';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 
 // 1. Verify the URL loaded correctly (Debugging)
 // const API_URL = "https://api.stylefinder.tech";
@@ -21,8 +23,30 @@ export const apiClient = axios.create({
     timeout: 20000 // Stop trying if the backend takes longer than 10 seconds
 });
 
-export function describeApiError(error) {
-    // Normalize axios/network/runtime errors into one shape for UI messaging.
+apiClient.interceptors.request.use(
+  async (config) => {
+    const token = await AsyncStorage.getItem("token");
+
+    //only attach token for protected routes
+    const isPublicRoute =
+      config.url.includes("/login") ||
+      config.url.includes("/register") ||
+      config.url.includes("/check-username") ||
+      config.url.includes("/reset-password");
+
+    if (token && !isPublicRoute) {
+      config.headers.Authorization = `Bearer ${token}`;
+    } else {
+      delete config.headers.Authorization; //remove bad header
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+export const describeApiError = (error) => {
+   // Normalize axios/network/runtime errors into one shape for UI messaging.
     if (axios.isAxiosError(error)) {
         const status = error.response?.status ?? null;
         const data = error.response?.data;
@@ -45,4 +69,4 @@ export function describeApiError(error) {
         message: error?.message || 'Unexpected error occurred.',
         data: null,
     };
-}
+};

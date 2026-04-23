@@ -4,6 +4,8 @@ import CS431.Style_Finder.model.Item;
 import CS431.Style_Finder.model.enums.ItemType;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
 import java.util.List;

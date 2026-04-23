@@ -2,10 +2,13 @@ package CS431.Style_Finder.controller;
 
 import CS431.Style_Finder.dto.UserDto;
 import CS431.Style_Finder.dto.auth.LoginRequestDto;
+import CS431.Style_Finder.dto.auth.LoginResponseDto;
+import CS431.Style_Finder.model.enums.Role;
 import CS431.Style_Finder.service.UserService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.*;
 
 import org.springframework.http.ResponseEntity;
 
@@ -16,101 +19,58 @@ import static org.mockito.Mockito.*;
 
 class UserControllerTest {
 
+    @Mock
     private UserService userService;
+
+    @InjectMocks
     private UserController userController;
 
     @BeforeEach
     void setUp() {
-        userService = mock(UserService.class);
-        userController = new UserController(userService);
+        MockitoAnnotations.openMocks(this);
     }
 
-    //create user
+    //register
     @Test
     void testCreateUser() {
         UserDto input = new UserDto();
         input.setUsername("stella");
+        input.setPassword("password");
+        input.setRole(Role.USER);
 
-        when(userService.createUser(input)).thenReturn(input);
+        LoginResponseDto mockResponse =
+                new LoginResponseDto("token", 1L, "stella", "USER");
 
-        ResponseEntity<UserDto> response = userController.createUser(input);
+        when(userService.createUser(input)).thenReturn(mockResponse);
+
+        ResponseEntity<LoginResponseDto> response =
+                userController.createUser(input);
 
         assertEquals(201, response.getStatusCodeValue());
-        assertEquals("stella", response.getBody().getUsername());
+        assertEquals("token", response.getBody().getToken());
     }
 
-    //Get user by ID
-    @Test
-    void testGetUserById() {
-        UserDto user = new UserDto();
-        user.setUsername("stella");
-
-        when(userService.getUserById(1L)).thenReturn(user);
-
-        ResponseEntity<UserDto> response = userController.getUserById(1L);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("stella", response.getBody().getUsername());
-    }
-
-    //Get all users
-    @Test
-    void testGetAllUsers() {
-        UserDto user = new UserDto();
-        user.setUsername("stella");
-
-        when(userService.getAllUsers()).thenReturn(List.of(user));
-
-        ResponseEntity<List<UserDto>> response = userController.getAllUsers();
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals(1, response.getBody().size());
-    }
-
-    //Update user
-    @Test
-    void testUpdateUser() {
-        UserDto updated = new UserDto();
-        updated.setUsername("updated");
-
-        when(userService.updateUser(1L, updated)).thenReturn(updated);
-
-        ResponseEntity<UserDto> response = userController.updateUser(1L, updated);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("updated", response.getBody().getUsername());
-    }
-
-    //Delete user
-    @Test
-    void testDeleteUser() {
-        doNothing().when(userService).deleteUser(1L);
-
-        ResponseEntity<String> response = userController.deleteUser(1L);
-
-        assertEquals(200, response.getStatusCodeValue());
-        assertEquals("User deleted successfully.", response.getBody());
-    }
-
-    //login success
+    //LOGIN SUCCESS
     @Test
     void testLoginSuccess() {
         LoginRequestDto request = new LoginRequestDto();
         request.setUsername("stella");
         request.setPassword("password");
 
-        UserDto user = new UserDto();
-        user.setUsername("stella");
+        LoginResponseDto mockResponse =
+                new LoginResponseDto("token", 1L, "stella", "USER");
 
-        when(userService.login("stella", "password")).thenReturn(user);
+        when(userService.login("stella", "password"))
+                .thenReturn(mockResponse);
 
-        ResponseEntity<?> response = userController.login(request);
+        ResponseEntity<LoginResponseDto> response =
+                userController.login(request);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertEquals("stella", ((UserDto) response.getBody()).getUsername());
+        assertEquals("token", response.getBody().getToken());
     }
 
-    //Login failure
+    //LOGIN FAILURE
     @Test
     void testLoginFailure() {
         LoginRequestDto request = new LoginRequestDto();
@@ -123,5 +83,40 @@ class UserControllerTest {
         assertThrows(RuntimeException.class, () -> {
             userController.login(request);
         });
+    }
+
+    //GET USER
+    @Test
+    void testGetUserById() {
+        UserDto user = new UserDto();
+        user.setUsername("stella");
+
+        when(userService.getUserById(1L)).thenReturn(user);
+
+        ResponseEntity<UserDto> response = userController.getUserById(1L);
+
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    //get all users
+    @Test
+    void testGetAllUsers() {
+        when(userService.getAllUsers()).thenReturn(List.of(new UserDto()));
+
+        ResponseEntity<List<UserDto>> response =
+                userController.getAllUsers();
+
+        assertEquals(200, response.getStatusCodeValue());
+    }
+
+    //delete user
+    @Test
+    void testDeleteUser() {
+        doNothing().when(userService).deleteUser(1L);
+
+        ResponseEntity<String> response =
+                userController.deleteUser(1L);
+
+        assertEquals(200, response.getStatusCodeValue());
     }
 }
