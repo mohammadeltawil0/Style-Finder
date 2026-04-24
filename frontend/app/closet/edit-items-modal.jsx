@@ -281,6 +281,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setImageDataForSave(updatedItem.imageUrl);
             }
             await queryClient.invalidateQueries({ queryKey: ["items"] });
+            await queryClient.invalidateQueries({ queryKey: ["item", item?.itemId ?? item?.id] });
             Toast.show({
                 type: "success",
                 text1: "Item updated",
