@@ -62,6 +62,7 @@ export default function RootLayout() {
               options={{
                 header: () => <CustomHeader page="register" />,
                 gestureEnabled: false,
+                headerShown: false,
               }}
             />
             <Stack.Screen

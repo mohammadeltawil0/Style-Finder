@@ -50,15 +50,20 @@ export const CustomHeader = ({ page }) => {
       style={{
         flex: 0,
         backgroundColor:
-          page === "Profile"
+          page === "Profile" || page === "adminSettings"
             ? theme.colors.background
             : theme.colors.card,
+        shadowColor: theme.colors.text,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.5,
+        shadowRadius: 3.84,
+        elevation: 5,
       }}
     >
       <View
         style={{
           backgroundColor:
-            page === "Profile"
+            page === "Profile" || page == "adminSettings"
               ? theme.colors.background
               : theme.colors.card,
           alignItems: "center",
@@ -206,7 +211,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                ADMIN SETTINGS
+                MANAGE ADMIN
               </ThemedText>
             </>
           )}
@@ -254,7 +259,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                CHANGE PASSWORD
+                BACK
               </ThemedText>
             </>
           )}
@@ -289,7 +294,7 @@ export const CustomHeader = ({ page }) => {
                     color: theme.colors.text,
                   }}
                 >
-                  Back
+                  BACK
                 </ThemedText>
               </TouchableOpacity>
             </View>
@@ -316,7 +321,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Generating Outfits...
+                GENERATING OUTFITS...
               </ThemedText>
             </>
           )}
@@ -329,11 +334,11 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Item Details
+                ITEM DETAILS
               </ThemedText>
             </>
           )}
-          {page === "RegularOutfitDetail" && (
+          {page === "OutfitDetail" && (
             <>
               <TouchableOpacity
                 onPress={() =>
@@ -356,11 +361,38 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Regular Outfit Details
+                OUTFIT DETAILS
               </ThemedText>
             </>
           )}
-          {page === "TripOutfitDetail" && (
+          {/* {page === "RegularOutfitDetail" && (
+            <>
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace({
+                    pathname: "/(tabs)/closet",
+                    params: { tab: "outfits" },
+                  })
+                }
+              >
+                <Ionicons
+                  name="arrow-back"
+                  size={24}
+                  color={theme.colors.text}
+                />
+              </TouchableOpacity>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h2,
+                  fontFamily: theme.fonts.bold,
+                  color: theme.colors.text,
+                }}
+              >
+                REGULAR OUTFIT DETAILS
+              </ThemedText>
+            </>
+          )} */}
+          {/* {page === "TripOutfitDetail" && (
             <>
               <TouchableOpacity onPress={() => router.back()}>
                 <Ionicons
@@ -376,10 +408,10 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Trip Outfit Details
+                TRIP OUTFIT DETAILS
               </ThemedText>
             </>
-          )}
+          )} */}
           {page === "Item" && (
             <>
               <TouchableOpacity
@@ -485,7 +517,7 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                Back
+                BACK
               </ThemedText>
             </>
           )}

@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { View, Text, Switch, TextInput, TouchableOpacity, ScrollView,
-  StyleSheet, Image, Alert, ActivityIndicator, FlatList, Modal, Pressable } from "react-native";
+import {
+  View, Text, Switch, TextInput, TouchableOpacity, ScrollView,
+  StyleSheet, Image, Alert, ActivityIndicator, FlatList, Modal, Pressable
+} from "react-native";
 import { ThemedText } from "../../../components";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
@@ -36,8 +38,8 @@ const getDateRange = (start, end) => {
 const InlineDatePicker = ({ label, date, onChange, theme }) => {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState(date.getMonth());
-  const [day, setDay]     = useState(date.getDate());
-  const [year, setYear]   = useState(date.getFullYear());
+  const [day, setDay] = useState(date.getDate());
+  const [year, setYear] = useState(date.getFullYear());
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const safeDay = Math.min(day, daysInMonth);
@@ -120,8 +122,8 @@ const InlineDatePicker = ({ label, date, onChange, theme }) => {
 };
 
 const FORMALITY_OPTIONS = ["CASUAL", "FORMAL", "WORK_OR_SMART", "PARTY_OR_NIGHT_OUT", "VERSATILE"];
-const WEATHER_OPTIONS   = ["SUNNY", "CLOUDY", "RAINY", "SNOWY", "WINDY", "HOT", "COLD"];
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const WEATHER_OPTIONS = ["SUNNY", "CLOUDY", "RAINY", "SNOWY", "WINDY", "HOT", "COLD"];
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 
 // Andres Outift Details Modal not sure if gonna be same for trip - but i still coplied it ;)
@@ -316,7 +318,7 @@ export default function TripOutfit() {
   // Handles confirm date range to later show per-date outfit  controls and enable generation
   const handleConfirmRange = () => {
     const start = new Date(startDate);
-    const end   = new Date(endDate);
+    const end = new Date(endDate);
 
     if (end < start) {
       Alert.alert("Invalid Range", "End date must be after start date.");
@@ -413,14 +415,14 @@ export default function TripOutfit() {
 
     try {
       await apiClient.post(`/api/v1/suggestions/feedback`, {
-        userId:          await getUserId(),
-        suggestionId:    selectedOutfit.suggestionId,
+        userId: await getUserId(),
+        suggestionId: selectedOutfit.suggestionId,
         originalItemIds: selectedOutfit.itemIds,
-        finalItemIds:    editedItemIds || selectedOutfit.itemIds,
-        action:          actionType,
-        contextTemp:     72,
+        finalItemIds: editedItemIds || selectedOutfit.itemIds,
+        action: actionType,
+        contextTemp: 72,
         contextOccasion: formality || "Casual",
-        tripDate:        activeDate,
+        tripDate: activeDate,
       });
 
       console.log("Feedback");
@@ -474,7 +476,13 @@ export default function TripOutfit() {
         />
       </View>
 
-      <View style={styles.controlsContainer}>
+      <View style={[styles.controlsContainer, {
+        shadowColor: theme.colors.text,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3.5,
+        elevation: 5,
+      }]}>
         {/* Select Occasion */}
         <ThemedText style={styles.sectionLabel}>Select Occasion:</ThemedText>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -493,57 +501,57 @@ export default function TripOutfit() {
 
         <ThemedText style={styles.sectionLabel}>Location:</ThemedText>
         <TextInput
-            placeholder="Search city, state, or country..."
-            placeholderTextColor="#aaa"
-            value={location}
-            onFocus={() => setShowDropdown(true)}
-            onChangeText={(text) => {
-              handleLocationSearch(text);
-              setShowDropdown(true);
-            }}
-            style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
+          placeholder="Search city, state, or country..."
+          placeholderTextColor="#aaa"
+          value={location}
+          onFocus={() => setShowDropdown(true)}
+          onChangeText={(text) => {
+            handleLocationSearch(text);
+            setShowDropdown(true);
+          }}
+          style={[styles.input, { color: theme.colors.text, marginBottom: 4 }]}
         />
 
         {showDropdown && (
-            <ScrollView
-                style={styles.filterList}
-                keyboardShouldPersistTaps="handled"
-                nestedScrollEnabled
+          <ScrollView
+            style={styles.filterList}
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled
+          >
+            <TouchableOpacity
+              style={[styles.dropdownItem, { backgroundColor: theme.colors.card }]}
+              onPress={handleCurrentLocation}
             >
-              <TouchableOpacity
-                  style={[styles.dropdownItem, { backgroundColor: theme.colors.card }]}
-                  onPress={handleCurrentLocation}
-              >
-                <ThemedText style={{ fontWeight: 'bold', color: theme.colors.tabIconSelected }}>
-                  📍 Use Current Location
-                </ThemedText>
-              </TouchableOpacity>
+              <ThemedText style={{ fontWeight: 'bold', color: theme.colors.tabIconSelected }}>
+                📍 Use Current Location
+              </ThemedText>
+            </TouchableOpacity>
 
-              {isSearchingLocation && (
-                  <View style={{ padding: 10 }}>
-                    <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
-                  </View>
-              )}
+            {isSearchingLocation && (
+              <View style={{ padding: 10 }}>
+                <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
+              </View>
+            )}
 
-              {/* Dynamic Open-Meteo Results */}
-              {!isSearchingLocation && searchResults.map((place) => {
-                // Format: "City, State, Country" (Admin1 is usually the state/province)
-                const displayName = [place.name, place.admin1, place.country].filter(Boolean).join(", ");
-                return (
-                    <TouchableOpacity
-                        key={place.id}
-                        style={styles.dropdownItem}
-                        onPress={() => {
-                          setLocation(displayName);
-                          setLocationCoords(`${place.latitude},${place.longitude}`);
-                          setShowDropdown(false);
-                        }}
-                    >
-                      <ThemedText>{displayName}</ThemedText>
-                    </TouchableOpacity>
-                );
-              })}
-            </ScrollView>
+            {/* Dynamic Open-Meteo Results */}
+            {!isSearchingLocation && searchResults.map((place) => {
+              // Format: "City, State, Country" (Admin1 is usually the state/province)
+              const displayName = [place.name, place.admin1, place.country].filter(Boolean).join(", ");
+              return (
+                <TouchableOpacity
+                  key={place.id}
+                  style={styles.dropdownItem}
+                  onPress={() => {
+                    setLocation(displayName);
+                    setLocationCoords(`${place.latitude},${place.longitude}`);
+                    setShowDropdown(false);
+                  }}
+                >
+                  <ThemedText>{displayName}</ThemedText>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         )}
 
 
@@ -572,9 +580,9 @@ export default function TripOutfit() {
         <ThemedText style={styles.helperText}>Max 7 days</ThemedText>
 
         <InlineDatePicker label="Start Date" date={startDate} onChange={(d) => { setStartDate(d); setRangeConfirmed(false); }} theme={theme} />
-        <InlineDatePicker  label="End Date" date={endDate} onChange={(d) => { setEndDate(d); setRangeConfirmed(false); }} theme={theme} />
+        <InlineDatePicker label="End Date" date={endDate} onChange={(d) => { setEndDate(d); setRangeConfirmed(false); }} theme={theme} />
 
-        <TouchableOpacity  onPress={handleConfirmRange} style={[styles.confirmRangeBtn, { borderColor: theme.colors.tabIconSelected }]} >
+        <TouchableOpacity onPress={handleConfirmRange} style={[styles.confirmRangeBtn, { borderColor: theme.colors.tabIconSelected }]} >
           <Text style={[styles.confirmRangeText, { color: theme.colors.tabIconSelected }]}>
             {rangeConfirmed ? "Range Confirmed — Edit ^" : "Confirm Date Range"}
           </Text>
@@ -597,7 +605,7 @@ export default function TripOutfit() {
                     {formatDateDisplay(dateObj)}
                   </ThemedText>
                   <View style={styles.miniStepper}>
-                    <TouchableOpacity style={[styles.miniStepBtn, { backgroundColor: '#e0e0e0' }]}  onPress={() => handleOutfitCountChange(iso, -1)} >
+                    <TouchableOpacity style={[styles.miniStepBtn, { backgroundColor: '#e0e0e0' }]} onPress={() => handleOutfitCountChange(iso, -1)} >
                       <Text style={styles.miniStepText}>−</Text>
                     </TouchableOpacity>
                     <ThemedText style={styles.miniStepVal}>{count}</ThemedText>
@@ -616,7 +624,7 @@ export default function TripOutfit() {
         {/* Generate button */}
         <TouchableOpacity onPress={handleGenerateTrip} activeOpacity={0.7} disabled={isGenerating || !rangeConfirmed}
           style={[styles.generateBtn, { backgroundColor: rangeConfirmed ? theme.colors.tabIconSelected : '#ccc' }]} >
-          {isGenerating ? <ActivityIndicator color="#fff" />  : <Text style={styles.generateBtnText}>{buttonText}</Text> }
+          {isGenerating ? <ActivityIndicator color="#fff" /> : <Text style={styles.generateBtnText}>{buttonText}</Text>}
         </TouchableOpacity>
         {!rangeConfirmed && (
           <ThemedText style={[styles.helperText, { textAlign: 'center', marginTop: 6 }]}>
@@ -627,7 +635,7 @@ export default function TripOutfit() {
 
       {/* Results — one section per date LOOK @ Figma for representation will cchange for place holder ONLY */}
       {hasSuggestions && Object.keys(dateConfig).sort().map(iso => {
-        const dateObj        = new Date(iso + "T00:00:00");
+        const dateObj = new Date(iso + "T00:00:00");
         const dateSuggestions = suggestionsByDate[iso] || [];
         return (
           <View key={iso} style={styles.daySection}>

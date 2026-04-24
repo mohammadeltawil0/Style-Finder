@@ -246,19 +246,19 @@ const EditOutfitModal = ({
                   )}
 
                   {isOuterwearItem(item) && (
-                      <Pressable
-                        style={styles.trashIconOverlay}
-                        onPress={() => handleRemoveOuterwear(index)}
-                        hitSlop={8}
-                      >
-                        <Ionicons
-                          name="trash-outline"
-                          size={19}
-                          color={theme.colors.text}
-                        />
-                      </Pressable>
-                    )}
-                    
+                    <Pressable
+                      style={styles.trashIconOverlay}
+                      onPress={() => handleRemoveOuterwear(index)}
+                      hitSlop={8}
+                    >
+                      <Ionicons
+                        name="trash-outline"
+                        size={19}
+                        color={theme.colors.text}
+                      />
+                    </Pressable>
+                  )}
+
                   <View style={{ marginTop: 10 }}>
                     <ThemedText style={{ fontWeight: "bold", fontSize: 17 }}>
                       {formatEnum(getItemType(item))}
@@ -708,44 +708,44 @@ export default function RegularOutfit() {
   );
 
   const handleGenerateOutfit = async () => {
-      if (!locationCoords || !formality) {
+    if (!locationCoords || !formality) {
+      Toast.show({
+        type: "error",
+        text1: "Missing fields",
+        text2: "Location and Occasion are required.",
+      });
+      return;
+    }
+
+    try {
+      const userId = await getUserId();
+      const itemsRes = await apiClient.get(`/api/items/user/${userId}`);
+      const userItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
+
+      const tops = userItems.filter(item => normalizeType(getItemType(item)) === "TOP");
+      const bottoms = userItems.filter(item => normalizeType(getItemType(item)) === "BOTTOM");
+
+      if (tops.length < 2 || bottoms.length < 2) {
         Toast.show({
           type: "error",
-          text1: "Missing fields",
-          text2: "Location and Occasion are required.",
+          text1: "Not enough items",
+          text2: `You need at least 2 tops and 2 bottoms.`,
+          text3: `You have ${tops.length} top(s) and ${bottoms.length} bottom(s).`,
+
         });
         return;
       }
-
-      try {
-        const userId = await getUserId();
-        const itemsRes = await apiClient.get(`/api/items/user/${userId}`);
-        const userItems = Array.isArray(itemsRes.data) ? itemsRes.data : [];
-
-        const tops = userItems.filter(item => normalizeType(getItemType(item)) === "TOP");
-        const bottoms = userItems.filter(item => normalizeType(getItemType(item)) === "BOTTOM");
-
-        if (tops.length < 2 || bottoms.length < 2) {
-          Toast.show({
-            type: "error",
-            text1: "Not enough items",
-            text2: `You need at least 2 tops and 2 bottoms.`,
-            text3: `You have ${tops.length} top(s) and ${bottoms.length} bottom(s).`,
-
-          });
-          return;
-        }
-      } catch (e) {
-        if (e?.response?.status !== 500) {
-          console.error("Generate outfit error:", e);
-        }
-        Toast.show({
-          type: "error",
-          text1: "Could not load closet",
-          text2: "Please try again.",
-        });
-        return;
+    } catch (e) {
+      if (e?.response?.status !== 500) {
+        console.error("Generate outfit error:", e);
       }
+      Toast.show({
+        type: "error",
+        text1: "Could not load closet",
+        text2: "Please try again.",
+      });
+      return;
+    }
 
 
     try {
@@ -774,7 +774,7 @@ export default function RegularOutfit() {
         weatherEnabled,
       };
       setShowDropdown(false);
-      
+
       console.log("=== Generate Outfit Request ===");
       console.log("UserId:", userId);
       console.log("Payload:", JSON.stringify(data, null, 2));
@@ -915,7 +915,13 @@ export default function RegularOutfit() {
       </View>
 
       {/* ── Controls ── */}
-      <View style={styles.controlsContainer}>
+      <View style={[styles.controlsContainer, {
+        shadowColor: theme.colors.text,
+        shadowOffset: { width: 0, height: 5 },
+        shadowOpacity: 0.3,
+        shadowRadius: 3.5,
+        elevation: 5
+      }]}>
         <ThemedText style={styles.sectionLabel}>Select Occasion:</ThemedText>
         <ScrollView
           horizontal

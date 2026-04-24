@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, StyleSheet, View, } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
+import Feather from "@expo/vector-icons/Feather";
 
 const titleCaseFromEnum = (value) => {
   if (value === null || value === undefined || value === "") {
@@ -164,10 +165,13 @@ export default function ItemDetail() {
     );
   }
 
+  const isValidUri = item?.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:'));
+
+
   return (
     <ScrollView showsVerticalScrollIndicator>
       <ThemedView style={styles.container}>
-        {item?.imageUrl ? (
+        {isValidUri ? (
           <Image
             source={{ uri: item.imageUrl }}
             style={[
@@ -184,7 +188,7 @@ export default function ItemDetail() {
               { backgroundColor: theme.colors.card },
             ]}
           >
-            <ThemedText>No image available.</ThemedText>
+            <Feather name="image" size={60} color={theme.colors.text} />
           </View>
         )}
         {/* // Display item properties in a card format  - very similar to item edit page*/}
@@ -244,9 +248,7 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   imageContainer: {
-    height: 220,
-    width: 220,
-    alignSelf: "center",
+    height: 250,
     borderRadius: 10,
     marginTop: 16,
     marginBottom: 20,

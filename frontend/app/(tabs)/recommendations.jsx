@@ -6,7 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { useEffect } from "react";
 import RegularOutfit from "../screens/GenerateOutfits/RegularOutfit";
 import TripOutfit from "../screens/GenerateOutfits/TripOutfit";
-
+import { useTheme } from "@react-navigation/native";
 
 // --- MAIN SCREEN ---
 export default function SuggestionHub() {
@@ -17,6 +17,8 @@ export default function SuggestionHub() {
     setIsRegularOutfit(value);
     await AsyncStorage.setItem("recommendationTab", value ? "regular" : "trip");
   };
+
+  const theme = useTheme();
 
   return (
     <ThemedView gradient={false} style={{ flex: 1 }}>

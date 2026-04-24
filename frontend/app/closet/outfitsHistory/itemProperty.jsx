@@ -154,7 +154,7 @@ export default function ItemProperty() {
     );
   }
 
-  const isValidUri = item?.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:'));
+  const isValidUri = currentItem?.imageUrl && typeof currentItem.imageUrl === 'string' && (currentItem.imageUrl.startsWith('http') || currentItem.imageUrl.startsWith('file') || currentItem.imageUrl.startsWith('data:'));
 
   return (
     <>
@@ -208,7 +208,7 @@ export default function ItemProperty() {
             </View>
           )}
 
-          {currentItem?.imageUrl ? (
+          {isValidUri ? (
             <Image
               source={{ uri: currentItem.imageUrl }}
               style={styles.imagePlaceholder}

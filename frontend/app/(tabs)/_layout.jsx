@@ -1,18 +1,24 @@
-import {Tabs} from "expo-router";
-import {CustomHeader, HapticTab} from "../../components";
-import {IconSymbol} from "../../components/ui";
+import { Tabs } from "expo-router";
+import { CustomHeader, HapticTab } from "../../components";
+import { IconSymbol } from "../../components/ui";
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import Ionicons from '@expo/vector-icons/Ionicons';
-import {theme} from "../../constants";
+import { useTheme } from "@react-navigation/native";
 
 export default function TabLayout() {
-
+  const theme = useTheme();
   return (
     <Tabs
       screenOptions={{
         headerShown: true,
         tabBarActiveTintColor: theme.colors.tabIconSelected,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          shadowColor: theme.colors.text,
+          shadowOffset: { width: 0, height: -1 },
+          shadowOpacity: 0.5,
+          shadowRadius: 3.84,
+        },
       }}
     >
       <Tabs.Screen
@@ -66,10 +72,10 @@ export default function TabLayout() {
           title: "Recommendations",
           tabBarIcon: ({ focused }) => (
             <Ionicons name="sparkles-sharp" size={24} color={
-                focused
-                  ? theme.colors.tabIconSelected
-                  : theme.colors.tabIconDefault
-              } />
+              focused
+                ? theme.colors.tabIconSelected
+                : theme.colors.tabIconDefault
+            } />
           ),
           tabBarIconStyle: {
             marginTop: 5,
