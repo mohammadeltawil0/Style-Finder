@@ -180,7 +180,7 @@ export default function Login() {
 
     } catch (error) {
       const details = describeApiError(error);
-      console.error("Login FAILED:", details);
+      console.log("Login FAILED:", details);
       const messages = {
         401: "Invalid username or password.",
         500: details.message || "Server error.",

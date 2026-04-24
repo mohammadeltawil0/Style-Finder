@@ -199,11 +199,13 @@ export default function ItemDetail() {
             value={titleCaseFromEnum(item.pattern)}
             theme={theme}
           />
-          <FieldCard
-            label="Color"
-            value={titleCaseFromEnum(item.color)}
-            theme={theme}
-          />
+          {item.color && (
+            <FieldCard
+              label="Color"
+              value={titleCaseFromEnum(item.color)}
+              theme={theme}
+            />
+          )}
           <FieldCard
             label="Material"
             value={materialToDisplay(item.material)}

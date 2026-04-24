@@ -272,7 +272,7 @@ export default function ItemProperty() {
                   style={[styles.btn, styles.fullWidthBtn]}
                   onPress={() =>
                     router.push({
-                      pathname: "/closet/item-details-modal",
+                      pathname: "/closet/outfitsHistory/itemDetail",
                       params: {
                         tab: "items",
                         itemId: currentItem.itemId,
