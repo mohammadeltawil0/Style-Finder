@@ -121,7 +121,7 @@ export default function ItemDetailsModal() {
                     setModalVisible={setEditItemsModalVisible}
                 />
             ) : (
-                <View>
+                <View style={{ paddingHorizontal: 10}}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 20 }}>
                         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                             <Feather name="arrow-left" size={30} color={theme.colors.text} />

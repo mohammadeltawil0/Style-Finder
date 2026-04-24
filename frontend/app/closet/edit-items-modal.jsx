@@ -373,7 +373,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         width: "100%",
                     }}
                 >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -17 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -7}}>
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
@@ -390,7 +390,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 styles.imageContainer,
                                 {
                                     backgroundColor: theme.colors.card,
-                                    // borderRadius: 10,
                                 },
                             ]}
                         >
