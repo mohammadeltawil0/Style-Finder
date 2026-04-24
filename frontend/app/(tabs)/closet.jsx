@@ -57,7 +57,7 @@ export default function ClosetScreen() {
   const params = useLocalSearchParams();
   const router = useRouter();
   const theme = useTheme();
-  
+
   const fetchItems = async () => {
     if (!Number.isInteger(userId) || userId <= 0) return [];
     const response = await apiClient.get(`/api/items/user/${userId}`);
@@ -152,9 +152,14 @@ export default function ClosetScreen() {
           const userIdStr = await AsyncStorage.getItem("userId");
           const parsedId = userIdStr ? parseInt(userIdStr, 10) : null;
 
-          const savedTab = await AsyncStorage.getItem("closetTab");
-          setIsItems(savedTab !== "outfits"); // always trust AsyncStorageP
-
+          // If we have an openOutfitId param, force outfits tab
+          if (params.openOutfitId) {
+            setIsItems(false);
+            await AsyncStorage.setItem("closetTab", "outfits");
+          } else {
+            const savedTab = await AsyncStorage.getItem("closetTab");
+            setIsItems(savedTab !== "outfits");
+          }
 
           if (parsedId) {
             await Promise.all([
@@ -173,24 +178,6 @@ export default function ClosetScreen() {
       loadTabStateAndData();
     }, [params.tab, refetch]),
   );
-
-  const handledOutfitId = useRef(null);
-
-  // Replace your openOutfitId effect with this
-  useEffect(() => {
-    if (!params.openOutfitId) return;
-    if (handledOutfitId.current === params.openOutfitId) return; // ✅ skip if already handled
-    if (dbOutfits.length === 0) return;
-
-    const outfit = dbOutfits.find(
-      (o) => String(o.outfitId || o.id) === String(params.openOutfitId),
-    );
-
-    if (outfit) {
-      handledOutfitId.current = params.openOutfitId;
-      openOutfitDetails(outfit.outfitId);
-    }
-  }, [params.openOutfitId, dbOutfits]);
 
   const handleToggleItems = async (value) => {
     setIsItems(value);

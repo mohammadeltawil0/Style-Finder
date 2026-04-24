@@ -9,16 +9,18 @@ export default function WeatherScreen() {
     const { weather, location, loading, error } = useWeather();
 
     const cardStyle = {
+        borderColor: theme.colors.text,
+        borderWidth: 1,
         backgroundColor: theme.colors.lightBrown,
         marginHorizontal: 20,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 20,
-        shadowColor: theme.colors.text,
-        shadowOffset: { width: 0, height: 5 },
-        shadowOpacity: 0.3,
-        shadowRadius: 3.5,
-        elevation: 5,
+        // shadowColor: theme.colors.text,
+        // shadowOffset: { width: 0, height: 5 },
+        // shadowOpacity: 0.3,
+        // shadowRadius: 3.5,
+        // elevation: 5,
         flexDirection: "row",
         alignSelf: "stretch",
         justifyContent: "center",

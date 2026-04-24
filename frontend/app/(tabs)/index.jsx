@@ -150,15 +150,12 @@ export default function HomeScreen() {
             <View
               className="not-worn-items"
               style={{
+                borderColor: theme.colors.text,
+                borderWidth: 1,
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
                 paddingHorizontal: 20,
                 paddingVertical: 20,
-                shadowColor: theme.colors.text,
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.3,
-                shadowRadius: 3.5,
-                elevation: 5,
                 height: 150,
                 marginHorizontal: 20
               }}
@@ -190,6 +187,8 @@ export default function HomeScreen() {
                         overflow: "hidden",
                         alignItems: "center",
                         justifyContent: "center",
+                        borderColor: theme.colors.text,
+                        borderWidth: 1,
                       }}
                       onPress={() => {
                         router.navigate({
@@ -217,15 +216,17 @@ export default function HomeScreen() {
             <View
               className="past-outfits"
               style={{
+                borderColor: theme.colors.text,
+                borderWidth: 1,
                 backgroundColor: theme.colors.lightBrown,
                 borderRadius: 10,
                 paddingHorizontal: 20,
                 paddingVertical: 20,
-                shadowColor: theme.colors.text,
-                shadowOffset: { width: 0, height: 5 },
-                shadowOpacity: 0.3,
-                shadowRadius: 3.5,
-                elevation: 5,
+                // shadowColor: theme.colors.text,
+                // shadowOffset: { width: 0, height: 5 },
+                // shadowOpacity: 0.3,
+                // shadowRadius: 3.5,
+                // elevation: 5,
                 height: isLoadingOutfits ? 90 : pastOutfits.length === 0 ? 110 : 170,
                 marginHorizontal: 20
               }}
@@ -239,7 +240,10 @@ export default function HomeScreen() {
                 </>
               ) : pastOutfits.length === 0 ? (
                 <>
-                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                  <View style={{
+                    flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderColor: theme.colors.text,
+                    borderWidth: 1,
+                  }}>
                     <View>
                       <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
                         Look at past outfits
@@ -279,13 +283,16 @@ export default function HomeScreen() {
                       {pastOutfits.slice(0, 3).map((item) => (
                         <Pressable
                           key={String(item.outfitId || item.id)}
-                          style={{ width: 90, height: 90 }}
-                          onPress={() => router.navigate({
-                            pathname: "/(tabs)/closet",
+                          style={{
+                            width: 90, height: 90, borderColor: theme.colors.text, borderRadius: 10,
+                            borderWidth: 1,
+                          }}
+                          onPress={() => router.push({
+                            pathname: "/closet/outfitsHistory/itemProperty",
                             params: {
-                              tab: "outfits",
-                              openOutfitId: String(item.outfitId || item.id)
-                            }
+                              outfitId: String(item.outfitId || item.id),
+                              isOutfit: "true",
+                            },
                           })}
                         >
                           <OutfitCoverImage
