@@ -771,13 +771,17 @@ export default function ReviewPage({
                   setIsImageModalVisible(false);
                 }}
                 disabled={isPending}
-                style={[
-                  styles.confirmBtn,
-                  {
-                    backgroundColor: theme.colors.card,
-                    opacity: isPending ? 0.7 : 1,
-                  },
-                ]}
+                style={{
+                  marginTop: 4,
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  backgroundColor: theme.colors.transparent,
+                  opacity: 1,
+                  width: "40%",
+                  borderWidth: 2,
+                  borderColor: theme.colors.text,
+                }}
               >
                 <ThemedText style={{ fontFamily: theme.fonts.bold }}>
                   Cancel
@@ -798,13 +802,17 @@ export default function ReviewPage({
                   setIsImageModalVisible(false);
                 }}
                 disabled={isPending}
-                style={[
-                  styles.confirmBtn,
-                  {
-                    backgroundColor: theme.colors.tabIconSelected,
-                    opacity: isPending ? 0.7 : 1,
-                  },
-                ]}
+                style={{
+                  marginTop: 4,
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  backgroundColor: theme.colors.transparent,
+                  opacity: 1,
+                  width: "40%",
+                  borderWidth: 2,
+                  borderColor: theme.colors.text,
+                }}
               >
                 <ThemedText style={{ fontFamily: theme.fonts.bold }}>
                   Save
@@ -851,9 +859,19 @@ export default function ReviewPage({
             </View>
 
             <View style={[styles.colorPreviewBadge, { backgroundColor: normalizeColor(tempColor) }]} />
-            <View style={styles.confirmActions}>
+            <View style={[styles.confirmActions, { justifyContent: "space-between" }]}>
               <Pressable
-                style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
+                style={{
+                  marginTop: 4,
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  backgroundColor: theme.colors.transparent,
+                  opacity: 1,
+                  width: "40%",
+                  borderWidth: 2,
+                  borderColor: theme.colors.text
+                }}
                 onPress={() => {
                   setTempColor(normalizeColor(color));
                   setIsColorModalVisible(false);
@@ -864,13 +882,17 @@ export default function ReviewPage({
               </Pressable>
 
               <Pressable
-                style={[
-                  styles.confirmBtn,
-                  {
-                    backgroundColor: theme.colors.tabIconSelected,
-                    opacity: isPending ? 0.7 : 1,
-                  },
-                ]}
+                style={{
+                  marginTop: 4,
+                  borderRadius: 10,
+                  paddingVertical: 12,
+                  alignItems: "center",
+                  backgroundColor: theme.colors.transparent,
+                  opacity: 1,
+                  width: "40%",
+                  borderWidth: 2,
+                  borderColor: theme.colors.text
+                }}
                 onPress={() => {
                   applyLocalUpdate("Color", () => {
                     setColor(normalizeColor(tempColor));
@@ -890,20 +912,18 @@ export default function ReviewPage({
         modalVisible={isCategoryModalVisible}
         setModalVisible={setIsCategoryModalVisible}
         value={itemType}
-        onSelect={(nextValue) =>
-          setTempCategory(nextValue)
-        }
+        onSelect={(nextValue) => setTempCategory(nextValue)}
         onCancel={() => {
+          setTempCategory(itemType);           // roll back draft
           setIsCategoryModalVisible(false);
         }}
         onDone={() => {
           setIsCategoryModalVisible(false);
-          setIsLengthModalVisible(true);
+          setIsLengthModalVisible(true);       // chain to length
         }}
         options={CATEGORY_OPTIONS}
         title="Edit Category"
         isSaving={isPending}
-        category={tempCategory}
       />
 
       <EditModal
@@ -990,8 +1010,13 @@ export default function ReviewPage({
         setModalVisible={setIsLengthModalVisible}
         value={length}
         onSelect={(nextLength) => {
-          setItemType(tempCategory);
+          setItemType(tempCategory);           // commit staged category
           setLength(nextLength);
+          showUpdateSuccess("Category & Length");
+        }}
+        onCancel={() => {
+          setTempCategory(itemType);           // roll back
+          setIsLengthModalVisible(false);
         }}
         options={LENGTH_OPTIONS.filter((opt) =>
           tempCategory === "TOP" || tempCategory === "OUTERWEAR"
@@ -1000,12 +1025,6 @@ export default function ReviewPage({
         )}
         title="Edit Length"
         isSaving={isPending}
-        onCancel={() => {
-          // Undo the tempCategory change if user cancels
-          setItemType(itemType);
-          setTempCategory(itemType);
-          setIsLengthModalVisible(false);
-        }}
       />
 
       <EditModal
@@ -1047,7 +1066,7 @@ export default function ReviewPage({
           <ThemedText style={{ textAlign: "center" }}>Submit</ThemedText>
         </Pressable>
       </View>
-    </ThemedView>
+    </ThemedView >
   );
 }
 
@@ -1142,7 +1161,8 @@ const styles = {
     width: "100%",
     flexDirection: "row",
     gap: 10,
-    paddingTop: 25
+    paddingTop: 25,
+    justifyContent: "space-between",
   },
   confirmBtn: {
     flex: 1,

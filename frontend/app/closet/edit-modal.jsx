@@ -8,35 +8,33 @@ export default function EditModal({
     setModalVisible,
     value,
     onSelect,
+    onCancel = null,
+    onDone = null,
     options,
     title,
     isSaving = false,
-    category = null
-    // onCancel = null,
-    // on 
 }) {
     const [localValue, setLocalValue] = useState(value);
     const theme = useTheme();
-    
+
     useEffect(() => {
         if (modalVisible) {
             setLocalValue(value);
         }
     }, [modalVisible, value]);
+
     const resolvedOptions = Array.isArray(options)
         ? options
             .map((option) => {
                 if (typeof option === "string") {
                     return { label: option, value: option };
                 }
-
                 if (option && typeof option === "object") {
                     return {
                         label: option.label ?? String(option.value ?? ""),
                         value: option.value,
                     };
                 }
-
                 return null;
             })
             .filter(
@@ -45,12 +43,30 @@ export default function EditModal({
             )
         : [];
 
+    const handleCancel = () => {
+        setLocalValue(value);
+        if (onCancel) {
+            onCancel();
+        } else {
+            setModalVisible(false);
+        }
+    };
+
+    const handleSave = () => {
+        onSelect(localValue);
+        if (onDone) {
+            onDone();
+        } else {
+            setModalVisible(false);
+        }
+    };
+
     return (
         <Modal
             animationType="fade"
             transparent
             visible={modalVisible}
-            onRequestClose={() => setModalVisible(false)}
+            onRequestClose={handleCancel}
         >
             <View
                 style={{
@@ -85,9 +101,7 @@ export default function EditModal({
                         return (
                             <Pressable
                                 key={option.value}
-                                onPress={() => {
-                                    setLocalValue(option.value);
-                                }}
+                                onPress={() => setLocalValue(option.value)}
                                 disabled={isSaving}
                                 style={{
                                     borderRadius: 10,
@@ -98,25 +112,16 @@ export default function EditModal({
                                         : theme.colors.lightBrown,
                                 }}
                             >
-                                <ThemedText
-                                    style={{
-                                        color: theme.colors.text,
-                                    }}
-                                >
+                                <ThemedText style={{ color: theme.colors.text }}>
                                     {option.label}
                                 </ThemedText>
                             </Pressable>
                         );
                     })}
+
                     <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}>
                         <Pressable
-                            onPress={() => {
-                                setLocalValue(value);
-                                setModalVisible(false);
-                                if (category) {
-                                    onSelect(category);
-                                }
-                            }}
+                            onPress={handleCancel}
                             disabled={isSaving}
                             style={{
                                 marginTop: 4,
@@ -135,10 +140,7 @@ export default function EditModal({
                             </ThemedText>
                         </Pressable>
                         <Pressable
-                            onPress={() => {
-                                onSelect(localValue);
-                                setModalVisible(false);
-                            }}
+                            onPress={handleSave}
                             disabled={isSaving}
                             style={{
                                 marginTop: 4,
