@@ -241,8 +241,7 @@ export default function HomeScreen() {
               ) : pastOutfits.length === 0 ? (
                 <>
                   <View style={{
-                    flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderColor: theme.colors.text,
-                    borderWidth: 1,
+                    flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 20
                   }}>
                     <View>
                       <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
