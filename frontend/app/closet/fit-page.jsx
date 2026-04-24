@@ -26,7 +26,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
   ];
   const lowerOptions = [
     { id: 0, label: "Skinny/Bodycon", description: "Very tight fit, body-hugging" },
-    { id: 1, label: "Straight", description: "Straight fit, not too tight or loose" },
+    { id: 1, label: "Regular", description: "Straight fit, not too tight or loose" },
     { id: 2, label: "Baggy", description: "Loose fit, lots of room" },
   ];
   const options = isUpperBodyItem ? upperOptions : lowerOptions;

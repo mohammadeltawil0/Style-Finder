@@ -95,9 +95,6 @@ export default function ReviewPage({
   const convertedFit = getOptionLabel(FIT_OPTIONS, fitToLabel(fit), true);
   const convertedBulk = getOptionLabel(BULK_OPTIONS, bulk, false);
 
-  console.log("fit: ", fit);
-  console.log("converted fit: ", convertedFit);
-
   const openEditModal = (field) => {
     if (field === 1) {
       setDraftImageUri(uri ?? null);
@@ -961,24 +958,17 @@ export default function ReviewPage({
       />
 
       <EditModal
-        modalVisible={isCategoryModalVisible}
-        setModalVisible={setIsCategoryModalVisible}
-        value={tempCategory}
-        onSelect={(nextValue) => {
-          setTempCategory(nextValue);
-        }}
-        onCancel={() => {
-          setTempCategory(itemType);
-          setIsCategoryModalVisible(false);
-        }}
-        onDone={() => {
-          setIsCategoryModalVisible(false);
-          setIsLengthModalVisible(true);
-        }}
-        options={CATEGORY_OPTIONS}
-        title="Edit Category"
+        modalVisible={isFitModalVisible}
+        setModalVisible={setIsFitModalVisible}
+        value={fitToLabel(fit ?? 1)}
+        onSelect={(nextValue) =>
+          applyLocalUpdate("Fit", () => {
+            setFit(nextValue);
+          })
+        }
+        options={FIT_OPTIONS}
+        title="Edit Fit"
         isSaving={isPending}
-        category={tempCategory}
       />
 
       <EditModal
@@ -1152,6 +1142,7 @@ const styles = {
     width: "100%",
     flexDirection: "row",
     gap: 10,
+    paddingTop: 25
   },
   confirmBtn: {
     flex: 1,
