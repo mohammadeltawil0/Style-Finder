@@ -29,7 +29,7 @@ export default function BulkPage({
   const isWeb = Platform.OS === "web";
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
-  const showNext = bulk !== null && bulk !== undefined;
+  const showNext = bulk !== "" && bulk !== null && bulk !== undefined;
 
   return (
     <ThemedView
@@ -83,7 +83,7 @@ export default function BulkPage({
             >
               <View style={styles.bulkOptions}>
                 {options.map((option) => {
-                  const isSelected = Math.round(bulk) === option.id;
+                  const isSelected = bulk === option.id;
                   return (
                     <Pressable
                       key={option.id}
