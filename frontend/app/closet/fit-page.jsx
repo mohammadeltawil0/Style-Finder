@@ -17,7 +17,8 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
   const isWide = width >= 768;
   const buttonWidth = isWide ? 220 : "30%";
 
-  const showNext = fit !== null && fit !== undefined;
+  const showNext = fit !== "" && fit !== null && fit !== undefined;
+  console.log("fit:", fit, "showNext:", showNext);
   const isUpperBodyItem = itemType === "Top" || itemType === "Full Body" || itemType === "TOP" || itemType === "FULL_BODY";
   const upperOptions = [
     { id: 0, label: "Skinny", description: "Tight fit, hugs the body" },
@@ -26,7 +27,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
   ];
   const lowerOptions = [
     { id: 0, label: "Skinny/Bodycon", description: "Very tight fit, body-hugging" },
-    { id: 1, label: "Straight", description: "Straight fit, not too tight or loose" },
+    { id: 1, label: "Regular", description: "Straight fit, not too tight or loose" },
     { id: 2, label: "Baggy", description: "Loose fit, lots of room" },
   ];
   const options = isUpperBodyItem ? upperOptions : lowerOptions;
@@ -89,7 +90,7 @@ export default function FitPage({ setPage, goBack, itemType, fit, setFit, uri, p
             </View>
             <View className="fitOptionsView" style={{ gap: 16, width: "100%", alignItems: "center" }}>
               {options.map((option) => {
-                const isSelected = Math.round(fit) === option.id;
+                const isSelected = fit === option.id;
                 return (
                   <Pressable
                     key={option.id}

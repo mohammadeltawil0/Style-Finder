@@ -91,6 +91,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
     const [isImageModalVisible, setIsImageModalVisible] = useState(false);
     const [draftImageUri, setDraftImageUri] = useState(null);
     const [tempColor, setTempColor] = useState(DEFAULT_COLOR);
+    const [tempCategory, setTempCategory] = useState(category);
 
     const theme = useTheme();
     const queryClient = useQueryClient();
@@ -280,6 +281,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setImageDataForSave(updatedItem.imageUrl);
             }
             await queryClient.invalidateQueries({ queryKey: ["items"] });
+            await queryClient.invalidateQueries({ queryKey: ["item", item?.itemId ?? item?.id] });
             Toast.show({
                 type: "success",
                 text1: "Item updated",
@@ -372,7 +374,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         width: "100%",
                     }}
                 >
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -17 }}>
+                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingTop: 13.5, marginHorizontal: -7 }}>
                         <Pressable
                             onPress={() => setModalVisible(false)}
                             style={[styles.topActionButton,
@@ -389,7 +391,6 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 styles.imageContainer,
                                 {
                                     backgroundColor: theme.colors.card,
-                                    // borderRadius: 10,
                                 },
                             ]}
                         >
@@ -410,6 +411,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     top: 6,
                                     borderRadius: 12,
                                     padding: 4,
+                                    backgroundColor: theme.colors.tabIconSelected
                                 }}
                             >
                                 <Ionicons
@@ -446,7 +448,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                     borderRadius: 12,
                                     padding: 4,
                                     justifyContent: "center",
-                                    backgroundColor: "rgba(255,255,255,0.5)",
+                                    backgroundColor: theme.colors.tabIconSelected
                                 }}
                             >
                                 <Ionicons
@@ -1162,20 +1164,23 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 isEditing={true}
                             />
                         </View>
-                        <View style={styles.confirmActions}>
+                        <View style={[styles.confirmActions, { justifyContent: "space-between" }]}>
                             <TouchableOpacity
                                 onPress={() => {
                                     setDraftImageUri(uri ?? null);
                                     setIsImageModalVisible(false);
                                 }}
                                 disabled={updateItemMutation.isPending}
-                                style={[
-                                    styles.confirmBtn,
-                                    {
-                                        backgroundColor: theme.colors.card,
-                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
-                                    },
-                                ]}
+                                style={{
+                                    marginTop: 4,
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    alignItems: "center",
+                                    backgroundColor: theme.colors.transparent,
+                                    width: "40%",
+                                    borderWidth: 2,
+                                    borderColor: theme.colors.text,
+                                }}
                             >
                                 <ThemedText style={{ fontFamily: theme.fonts.bold }}>
                                     Cancel
@@ -1184,13 +1189,16 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             <TouchableOpacity
                                 onPress={saveImageChanges}
                                 disabled={updateItemMutation.isPending}
-                                style={[
-                                    styles.confirmBtn,
-                                    {
-                                        backgroundColor: theme.colors.tabIconSelected,
-                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
-                                    },
-                                ]}
+                                style={{
+                                    marginTop: 4,
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    alignItems: "center",
+                                    backgroundColor: theme.colors.transparent,
+                                    width: "40%",
+                                    borderWidth: 2,
+                                    borderColor: theme.colors.text,
+                                }}
                             >
                                 {updateItemMutation.isPending ? (
                                     <ActivityIndicator size="small" color="#fff" />
@@ -1210,10 +1218,15 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setModalVisible={setIsCategoryModalVisible}
                 value={category}
                 onSelect={(nextCategory) => {
-                    setCategory(nextCategory);
-                    updateItemMutation.mutate({ type: nextCategory });
-                    setIsLengthModalVisible(true);
-                    return;
+                    setTempCategory(nextCategory); // stage only, no mutation yet
+                }}
+                onCancel={() => {
+                    setTempCategory(category);     // roll back draft
+                    setIsCategoryModalVisible(false);
+                }}
+                onDone={() => {
+                    setIsCategoryModalVisible(false);
+                    setIsLengthModalVisible(true); // chain to length
                 }}
                 options={CATEGORY_OPTIONS}
                 title="Edit Category"
@@ -1269,9 +1282,18 @@ export default function EditItemsModal({ item, setModalVisible }) {
                                 style={{ width: "100%" }}
                             />
                         </View>
-                        <View style={styles.confirmActions}>
+                        <View style={[styles.confirmActions, { justifyContent: "space-between", marginTop: 30 }]}>
                             <TouchableOpacity
-                                style={[styles.confirmBtn, { backgroundColor: theme.colors.lightBrown }]}
+                                style={{
+                                    marginTop: 4,
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    alignItems: "center",
+                                    backgroundColor: theme.colors.transparent,
+                                    width: "40%",
+                                    borderWidth: 2,
+                                    borderColor: theme.colors.text,
+                                }}
                                 onPress={() => {
                                     setTempColor(color || DEFAULT_COLOR);
                                     setIsColorModalVisible(false);
@@ -1282,13 +1304,16 @@ export default function EditItemsModal({ item, setModalVisible }) {
                             </TouchableOpacity>
 
                             <TouchableOpacity
-                                style={[
-                                    styles.confirmBtn,
-                                    {
-                                        backgroundColor: theme.colors.tabIconSelected,
-                                        opacity: updateItemMutation.isPending ? 0.7 : 1,
-                                    },
-                                ]}
+                                style={{
+                                    marginTop: 4,
+                                    borderRadius: 10,
+                                    paddingVertical: 12,
+                                    alignItems: "center",
+                                    backgroundColor: theme.colors.transparent,
+                                    width: "40%",
+                                    borderWidth: 2,
+                                    borderColor: theme.colors.text,
+                                }}
                                 onPress={() => {
                                     setColor(tempColor);
                                     updateItemMutation.mutate({ color: tempColor });
@@ -1305,7 +1330,7 @@ export default function EditItemsModal({ item, setModalVisible }) {
                         </View>
                     </View>
                 </View>
-            </Modal>
+            </Modal >
 
             <EditModal
                 modalVisible={isFormalityModalVisible}
@@ -1364,11 +1389,19 @@ export default function EditItemsModal({ item, setModalVisible }) {
                 setModalVisible={setIsLengthModalVisible}
                 value={length}
                 onSelect={(nextLength) => {
+                    setCategory(tempCategory);          // commit staged category
                     setLength(nextLength);
-                    updateItemMutation.mutate({ length: nextLength });
+                    updateItemMutation.mutate({         // single atomic mutation
+                        type: tempCategory,
+                        length: nextLength,
+                    });
+                }}
+                onCancel={() => {
+                    setTempCategory(category);          // roll back, nothing mutated
+                    setIsLengthModalVisible(false);
                 }}
                 options={LENGTH_OPTIONS.filter((opt) =>
-                    category === "TOP" || category === "OUTERWEAR"
+                    tempCategory === "TOP" || tempCategory === "OUTERWEAR"
                         ? ["SLEEVELESS", "CAP", "SHORT_SLEEVE", "THREE_QUARTER", "LONG_SLEEVE"].includes(opt.value)
                         : ["ABOVE_KNEE", "KNEE_LENGTH_OR_BERMUDA", "MIDI_OR_CAPRI", "MAXI_OR_FULL_LENGTH"].includes(opt.value)
                 )}

@@ -133,7 +133,7 @@ export default function HomeScreen() {
           <>
             <View
               className="header-text"
-                style={{ flexDirection: "row", width: "100%", marginHorizontal: 20 }}
+              style={{ flexDirection: "row", width: "100%", marginHorizontal: 20 }}
             >
               <View style={{ width: "70%" }}>
                 <ThemedText
@@ -142,11 +142,11 @@ export default function HomeScreen() {
                     fontFamily: theme.fonts.bold,
                   }}
                 >
-                    Hello, {name}!
+                  Hello, {name}!
                 </ThemedText>
               </View>
             </View>
-              <WeatherScreen />
+            <WeatherScreen />
             <View
               className="not-worn-items"
               style={{
@@ -230,75 +230,75 @@ export default function HomeScreen() {
                 marginHorizontal: 20
               }}
             >
-                {isLoadingOutfits ? (
-                  <>
-                    <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
-                      Look at past outfits
-                    </ThemedText>
-                    <ThemedText>Loading...</ThemedText>
-                  </>
-                ) : pastOutfits.length === 0 ? (
-                  <>
-                    <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                      <View>
-                        <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
-                          Look at past outfits
-                        </ThemedText>
-                          <ThemedText style={{ opacity: 0.7 }}>
-                            Generate some outfits and they'll
-                          </ThemedText>
-                          <ThemedText style={{ opacity: 0.7 }}>
-                            show up here!
-                          </ThemedText>
-                        </View>
-                        <AntDesign
-                          style={{ alignSelf: "center" }}
-                          name="right"
-                          size={24}
-                          color={theme.colors.card}
-                          onPress={() => router.replace({ pathname: "/(tabs)/recommendations" })}
-                        />
-                      </View>
-                    </>
-                  ) : (
-                    <>
+              {isLoadingOutfits ? (
+                <>
+                  <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
+                    Look at past outfits
+                  </ThemedText>
+                  <ActivityIndicator size="small" color={theme.colors.tabIconSelected} />
+                </>
+              ) : pastOutfits.length === 0 ? (
+                <>
+                  <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <View>
                       <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
                         Look at past outfits
                       </ThemedText>
-                      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-                        <ScrollView
-                          horizontal
-                          showsHorizontalScrollIndicator={false}
-                          contentContainerStyle={{
-                            flexGrow: 1,
-                            justifyContent: "center",
-                            alignItems: "center",
-                            gap: 12,
-                          }}
+                      <ThemedText style={{ opacity: 0.7 }}>
+                        Generate some outfits and they'll
+                      </ThemedText>
+                      <ThemedText style={{ opacity: 0.7 }}>
+                        show up here!
+                      </ThemedText>
+                    </View>
+                    <AntDesign
+                      style={{ alignSelf: "center" }}
+                      name="right"
+                      size={24}
+                      color={theme.colors.card}
+                      onPress={() => router.replace({ pathname: "/(tabs)/recommendations" })}
+                    />
+                  </View>
+                </>
+              ) : (
+                <>
+                  <ThemedText style={{ fontSize: theme.sizes.h3, marginBottom: 10 }}>
+                    Look at past outfits
+                  </ThemedText>
+                  <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+                    <ScrollView
+                      horizontal
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{
+                        flexGrow: 1,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: 12,
+                      }}
+                    >
+                      {pastOutfits.slice(0, 3).map((item) => (
+                        <Pressable
+                          key={String(item.outfitId || item.id)}
+                          style={{ width: 90, height: 90 }}
+                          onPress={() => router.navigate({
+                            pathname: "/(tabs)/closet",
+                            params: {
+                              tab: "outfits",
+                              openOutfitId: String(item.outfitId || item.id)
+                            }
+                          })}
                         >
-                          {pastOutfits.slice(0, 3).map((item) => (
-                            <Pressable
-                              key={String(item.outfitId || item.id)}
-                              style={{ width: 90, height: 90 }}
-                              onPress={() => router.navigate({
-                                pathname: "/(tabs)/closet",
-                                params: {
-                                  tab: "outfits",
-                                  openOutfitId: String(item.outfitId || item.id)
-                                }
-                              })}
-                            >
-                              <OutfitCoverImage
-                                itemIds={item.itemIds || []}
-                                height={90}
-                              />
-                            </Pressable>
-                          ))}
-                          </ScrollView>
-                        </View>
-                  </>
-                )}
-              </View>
+                          <OutfitCoverImage
+                            itemIds={item.itemIds || []}
+                            height={90}
+                          />
+                        </Pressable>
+                      ))}
+                    </ScrollView>
+                  </View>
+                </>
+              )}
+            </View>
           </>
         )}
       </ThemedView>

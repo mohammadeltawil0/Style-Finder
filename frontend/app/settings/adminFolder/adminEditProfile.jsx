@@ -25,7 +25,7 @@ const MAX_PROFILE_IMAGE_DATA_URI_LENGTH = 2000000;
 
 function UsernameRules({ username }) {
   const rules = [
-    { label: "At least 5 letters", pass: username.length >= 5  && /[a-zA-Z]/.test(username) }
+    { label: "At least 5 letters", pass: username.length >= 5 && /[a-zA-Z]/.test(username) }
   ];
 
   return (
@@ -371,12 +371,12 @@ function AdminEditProfile() {
   }, []);
 
   return (
-    <ThemedView gradient style={{ flex: 1 }}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
-      >
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: theme.colors.card }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+    >
+      <ThemedView gradient={false} style={{ flex: 1, backgroundColor: theme.colors.card }}>
         <ScrollView
           contentContainerStyle={{ flexGrow: 1, padding: 20 }}
           keyboardShouldPersistTaps="handled"
@@ -419,11 +419,11 @@ function AdminEditProfile() {
                     backgroundColor: "rgba(255,255,255,0.6)",
                   }}
                 >
-                    <AntDesign
-                      name="edit"
-                      size={20}
-                      color={theme.colors.text}
-                    />
+                  <AntDesign
+                    name="edit"
+                    size={20}
+                    color={theme.colors.text}
+                  />
                 </View>
               </TouchableOpacity>
               <ThemedText
@@ -445,7 +445,7 @@ function AdminEditProfile() {
                   fontFamily: theme.fonts.bold,
                 }}
               >
-                Name:
+                First Name:
               </ThemedText>
               <TextInput
                 value={name}
@@ -571,8 +571,8 @@ function AdminEditProfile() {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
-    </ThemedView>
+      </ThemedView>
+    </KeyboardAvoidingView>
   );
 }
 

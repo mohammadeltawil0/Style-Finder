@@ -13,6 +13,7 @@ import {
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
 import EditItemsModal from "../edit-items-modal";
+import Feather from "@expo/vector-icons/Feather";
 
 // Helper to format backend Enums (e.g. "FULL_BODY" -> "Full Body", "PARTY_OR_NIGHT_OUT" -> "Party / Night Out")
 // --- FORMATTING HELPER ---
@@ -153,6 +154,8 @@ export default function ItemProperty() {
     );
   }
 
+  const isValidUri = item?.imageUrl && typeof item.imageUrl === 'string' && (item.imageUrl.startsWith('http') || item.imageUrl.startsWith('file') || item.imageUrl.startsWith('data:'));
+
   return (
     <>
       <ScrollView showsVerticalScrollIndicator={true}>
@@ -212,7 +215,9 @@ export default function ItemProperty() {
               resizeMode="cover"
             />
           ) : (
-            <View style={styles.imagePlaceholder} />
+            <View style={[styles.imagePlaceholder, { justifyContent: "center", alignItems: "center" }]}>
+                <Feather name="image" size={60} color={theme.colors.text} />
+            </View>
           )}
 
           <View style={styles.info}>

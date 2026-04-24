@@ -5,9 +5,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system/legacy";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView,
+import {
+  Alert, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView,
   Platform,
-  ScrollView, } from "react-native";
+  ScrollView,
+} from "react-native";
 import Toast from "react-native-toast-message";
 import { ThemedText, ThemedView } from "../../components";
 import ProfilePic from "../../components/profile-pic";
@@ -375,218 +377,217 @@ function EditProfile() {
   }, []);
 
   return (
-    <ThemedView gradient style={{ flex: 1 }}>
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: theme.colors.card }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 0}
+    >
+      <ThemedView style={{ flex: 1, backgroundColor: theme.colors.card }}>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, padding: 20 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View
+            style={{
+              flex: 1,
+              paddingVertical: 30,
+              gap: 30,
+              marginLeft: 15,
+              width: "90%",
+            }}
           >
-            <ScrollView
-              contentContainerStyle={{ flexGrow: 1, padding: 20 }}
-              keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
+            <View
+              className="profile-and-name"
+              style={{ alignItems: "center", gap: 12 }}
             >
-              <View
+              <TouchableOpacity style={{ position: "relative" }} onPress={pickProfileImage}>
+                <ProfilePic
+                  username={username}
+                  imageUrl={profileImageUrl}
+                  onPress={pickProfileImage}
+                  style={{
+                    height: 200,
+                    width: 200,
+                  }}
+                  containerStyle={{
+                    backgroundColor: "transparent",
+                    padding: 0,
+                    borderRadius: 16,
+                    shadowColor: "#000",
+                    shadowOffset: { width: 0, height: 8 },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 10,
+                    elevation: 12,
+                  }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    right: 6,
+                    top: 6,
+                    borderRadius: 12,
+                    padding: 4,
+                  }}
+                >
+                  <View onPress={pickProfileImage}>
+                    <AntDesign name="edit" size={20} color={theme.colors.text} />
+                  </View>
+                </View>
+              </TouchableOpacity>
+              <ThemedText
                 style={{
-                  flex: 1,
-                  paddingVertical: 30,
-                  gap: 30,
-                  marginLeft: 15,
-                  width: "90%",
+                  fontSize: theme.sizes.h2,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
                 }}
               >
-        <View
-          className="profile-and-name"
-          style={{ alignItems: "center", gap: 12 }}
-        >
-          <TouchableOpacity style={{ position: "relative" }} onPress={pickProfileImage}>
-            <ProfilePic
-              username={username}
-              imageUrl={profileImageUrl}
-              onPress={pickProfileImage}
-              style={{
-                height: 200,
-                width: 200,
-              }}
-              containerStyle={{
-                backgroundColor: "transparent",
-                padding: 0,
-                borderRadius: 16,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 8 },
-                shadowOpacity: 0.25,
-                shadowRadius: 10,
-                elevation: 12,
-              }}
-            />
-            <View
-              style={{
-                position: "absolute",
-                right: 6,
-                top: 6,
-                borderRadius: 12,
-                padding: 4,
-              }}
-            >
-              <View onPress={pickProfileImage}>
-                <AntDesign name="edit" size={20} color={theme.colors.text} />
-              </View>
+                {originalName || name}
+              </ThemedText>
             </View>
-          </TouchableOpacity>
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h2,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-            }}
-          >
-            {originalName || name}
-          </ThemedText>
-        </View>
-        <View
-          className="edit-name"
-          style={{ flexDirection: "column", gap: 12 }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-            }}
-          >
-            Name:
-          </ThemedText>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter your name"
-            style={{
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: theme.colors.background,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.regular,
-            }}
-          />
-        </View>
-        <View
-          className="edit-username"
-          style={{ flexDirection: "column", gap: 12 }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-            }}
-          >
-            Username:
-          </ThemedText>
-          <TextInput
-            value={editedUsername}
-            onChangeText={(value) => {
-              setEditedUsername(value);
-              queryClient.removeQueries({ queryKey: ["usernameExists"] });
-            }}
-            onBlur={async () => {
-              try {
-                await usernameAvailabilityQuery.refetch();
-              } catch (error) {
-                console.error(
-                  "Failed to check username availability:",
-                  error?.response?.data || error?.message || error,
-                );
-              }
-            }}
-            placeholder="Enter your username"
-            style={{
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: theme.colors.background,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.regular,
-            }}
-          />
-          {usernameAvailabilityQuery.isFetching && (
-            <ThemedText
-              style={{ fontSize: theme.sizes.h4, color: theme.colors.text }}
+            <View
+              className="edit-name"
+              style={{ flexDirection: "column", gap: 12 }}
             >
-              Checking availability...
-            </ThemedText>
-          )}
-          {usernameAvailabilityQuery.data && (
-            <ThemedText style={{ fontSize: theme.sizes.h4, color: "#c1121f" }}>
-              Username already exists.
-            </ThemedText>
-          )}
-          {editedUsername.trim().length > 0 && (
-            <UsernameRules username={editedUsername.trim()} />
-          )}
-        </View>
-        <View
-          className="edit-email"
-          style={{ flexDirection: "column", gap: 12 }}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-            }}
-          >
-            Email:
-          </ThemedText>
-          <TextInput
-            value={email}
-            onChangeText={setEmail}
-            placeholder="Enter your email"
-            editable={false}
-            selectTextOnFocus={false}
-            style={{
-              borderRadius: 10,
-              padding: 10,
-              backgroundColor: theme.colors.background,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.regular,
-              opacity: 0.65,
-            }}
-          />
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h4,
-              color: theme.colors.text,
-              opacity: 0.7,
-            }}
-          >
-            This is the email used to register your account.
-          </ThemedText>
-        </View>
-        <TouchableOpacity
-          style={{
-            backgroundColor: theme.colors.lightBrown,
-            padding: 10,
-            borderRadius: 10,
-            opacity: isPending ? 0.7 : 1,
-          }}
-          onPress={handleSaveChanges}
-          disabled={isPending}
-        >
-          <ThemedText
-            style={{
-              fontSize: theme.sizes.h3,
-              color: theme.colors.text,
-              fontFamily: theme.fonts.bold,
-              textAlign: "center",
-            }}
-          >
-            {isPending ? "Saving..." : "Save Changes"}
-          </ThemedText>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                First Name:
+              </ThemedText>
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter your name"
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                }}
+              />
+            </View>
+            <View
+              className="edit-username"
+              style={{ flexDirection: "column", gap: 12 }}
+            >
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                Username:
+              </ThemedText>
+              <TextInput
+                value={editedUsername}
+                onChangeText={(value) => {
+                  setEditedUsername(value);
+                  queryClient.removeQueries({ queryKey: ["usernameExists"] });
+                }}
+                onBlur={async () => {
+                  try {
+                    await usernameAvailabilityQuery.refetch();
+                  } catch (error) {
+                    console.error(
+                      "Failed to check username availability:",
+                      error?.response?.data || error?.message || error,
+                    );
+                  }
+                }}
+                placeholder="Enter your username"
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                }}
+              />
+              {usernameAvailabilityQuery.isFetching && (
+                <ThemedText
+                  style={{ fontSize: theme.sizes.h4, color: theme.colors.text }}
+                >
+                  Checking availability...
+                </ThemedText>
+              )}
+              {usernameAvailabilityQuery.data && (
+                <ThemedText style={{ fontSize: theme.sizes.h4, color: "#c1121f" }}>
+                  Username already exists.
+                </ThemedText>
+              )}
+              {editedUsername.trim().length > 0 && (
+                <UsernameRules username={editedUsername.trim()} />
+              )}
+            </View>
+            <View
+              className="edit-email"
+              style={{ flexDirection: "column", gap: 12 }}
+            >
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                }}
+              >
+                Email:
+              </ThemedText>
+              <TextInput
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                editable={false}
+                selectTextOnFocus={false}
+                style={{
+                  borderRadius: 10,
+                  padding: 10,
+                  backgroundColor: theme.colors.background,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.regular,
+                  opacity: 0.65,
+                }}
+              />
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h4,
+                  color: theme.colors.text,
+                  opacity: 0.7,
+                }}
+              >
+                This is the email used to register your account.
+              </ThemedText>
+            </View>
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.tabIconSelected,
+                padding: 10,
+                borderRadius: 10,
+                opacity: isPending ? 0.7 : 1,
+              }}
+              onPress={handleSaveChanges}
+              disabled={isPending}
+            >
+              <ThemedText
+                style={{
+                  fontSize: theme.sizes.h3,
+                  color: theme.colors.text,
+                  fontFamily: theme.fonts.bold,
+                  textAlign: "center",
+                }}
+              >
+                {isPending ? "Saving..." : "Save Changes"}
+              </ThemedText>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </ThemedView>
     </KeyboardAvoidingView>
-
-    </ThemedView>
   );
 }
 

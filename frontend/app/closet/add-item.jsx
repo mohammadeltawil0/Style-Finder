@@ -36,10 +36,10 @@ export default function AddItemScreen() {
   const [formality, setFormality] = useState("");
   const [isSolid, setIsSolid] = useState(false);
   const [material, setMaterial] = useState("");
-  const [fit, setFit] = useState(null);
+  const [fit, setFit] = useState("");
   const [season, setSeason] = useState("");
   const [length, setLength] = useState("");
-  const [bulk, setBulk] = useState(null);
+  const [bulk, setBulk] = useState("");
 
   // UI & Editing States
   const [editing, setEditing] = useState(false);

@@ -34,6 +34,13 @@ export default function ItemDetailsModal() {
     const [editItemsModalVisible, setEditItemsModalVisible] = useState(false);
     const [isMenuVisible, setIsMenuVisible] = useState(false);
 
+    // refreshes data
+    useEffect(() => {
+        if (!editItemsModalVisible) {
+            queryClient.invalidateQueries({ queryKey: ["item", itemId] });
+        }
+    }, [editItemsModalVisible]);
+
     const deleteItemMutation = useMutation({
         mutationFn: async (itemId) => {
             await apiClient.delete(`/api/items/${itemId}`);
@@ -121,7 +128,7 @@ export default function ItemDetailsModal() {
                     setModalVisible={setEditItemsModalVisible}
                 />
             ) : (
-                <View>
+                <View style={{ paddingHorizontal: 10 }}>
                     <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 20, paddingTop: 20 }}>
                         <TouchableOpacity onPress={() => router.back()} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
                             <Feather name="arrow-left" size={30} color={theme.colors.text} />
@@ -269,8 +276,8 @@ const styles = StyleSheet.create({
         margin: 20,
         borderRadius: 14,
         backgroundColor: "#d6c6b8",
-        // alignItems: "center",
-        // justifyContent: "center",
+        alignItems: "center",
+        justifyContent: "center",
     },
     info: {
         paddingHorizontal: 20,

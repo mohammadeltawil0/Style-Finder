@@ -10,7 +10,7 @@ export default function WeatherScreen() {
 
     const cardStyle = {
         backgroundColor: theme.colors.lightBrown,
-        marginHorizontal: 30,
+        marginHorizontal: 20,
         borderRadius: 10,
         paddingHorizontal: 20,
         paddingVertical: 20,
