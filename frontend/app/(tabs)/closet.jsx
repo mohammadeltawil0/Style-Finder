@@ -26,6 +26,7 @@ import {
 import { apiClient } from "../../scripts/apiClient";
 import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
+import OutfitCoverImage from "../closet/outfit-cover-image";
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -318,9 +319,18 @@ export default function ClosetScreen() {
     name: `${formatItemType(item.type)} (Item ${index + 1})`,
   }));
 
-  const getOutfitCoverImage = (outfit) => {
-    const firstOutfitItem = outfit?.outfitItems?.[0]?.item;
-    return firstOutfitItem?.imageUrl || outfit?.imageUrl || null;
+  const getOutfitCoverImages = (outfit) => {
+    const urlsFromOutfitItems = (outfit?.outfitItems || [])
+      .map((oi) => oi?.item?.imageUrl || oi?.item?.image_url)
+      .filter((url) => typeof url === "string" && url.trim().length > 0)
+      .slice(0, 3);
+
+    if (urlsFromOutfitItems.length > 0) {
+      return urlsFromOutfitItems;
+    }
+
+    const fallback = outfit?.imageUrl || outfit?.image_url;
+    return fallback ? [fallback] : [];
   };
 
   const normalize = (text) => text?.toString().toLowerCase().replace(/_/g, " "); //normalize helper
@@ -678,21 +688,11 @@ export default function ClosetScreen() {
                                   color={theme.colors.text}
                                 />
                               </View>
-                              {getOutfitCoverImage(item) ? (
-                                <Image
-                                  source={{ uri: getOutfitCoverImage(item) }}
-                                  style={styles.outfitImage}
-                                  resizeMode="cover"
-                                />
-                              ) : (
-                                <View style={styles.outfitPlaceholder}>
-                                  <ThemedText
-                                    style={{ color: "#666", fontSize: 12 }}
-                                  >
-                                    Items: {item.itemIds?.length || 0}
-                                  </ThemedText>
-                                </View>
-                              )}
+                              <OutfitCoverImage
+                                imageUrls={getOutfitCoverImages(item)}
+                                itemIds={item.itemIds || []}
+                                height={175}
+                              />
                             </TouchableOpacity>
 
                             <View style={styles.outfitFooter}>
