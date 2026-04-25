@@ -17,5 +17,6 @@ public class OutfitDto {
     private String comments;
     private LocalDateTime createdAt;
     private List<Long> itemIds;
+    private List<String> imageUrls;
     private String coverImageUrl;
 }

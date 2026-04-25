@@ -244,7 +244,7 @@ export default function ClosetScreen() {
 
   const handleShareTrip = async (trip) => {
     try {
-      const tripId = trip.tripId;
+      const tripId = trip.id;
       const res = await apiClient.post(`/api/share/trip/${tripId}`);
       const link = res.data.shareLink;
       const result = await Share.share({
@@ -797,7 +797,7 @@ export default function ClosetScreen() {
                       paddingHorizontal: 15,
                       width: "100%",
                     }}
-                    renderItem={({ item }) => (
+                    renderItem={({ item, index }) => (
                       <View className="TripOufit" style={styles.tripCard}>
                         <TouchableOpacity
                           onPress={() =>
@@ -835,7 +835,7 @@ export default function ClosetScreen() {
                         </View>
                         <View style={styles.tripFooter}>
                           <Pressable
-                            onPress={() => handleShareTrip(item, index)}
+                            onPress={() => handleShareTrip(item)}
                             hitSlop={8}
                           >
                             <Ionicons

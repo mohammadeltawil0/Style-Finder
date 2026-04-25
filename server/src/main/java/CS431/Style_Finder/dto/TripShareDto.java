@@ -2,6 +2,7 @@ package CS431.Style_Finder.dto;
 
 import lombok.*;
 import java.util.List;
+import java.time.LocalDate;
 
 @Getter
 @Setter
@@ -9,11 +10,10 @@ import java.util.List;
 @AllArgsConstructor
 @Builder
 public class TripShareDto {
-
-    private Long tripId;
-    private String tripLocation;
+    private String tripLocation;  
+    private LocalDate startDate;    
+    private LocalDate endDate;      
+    private List<TripDayDto> days;  
     private String shareLink;
-    private String token;
-
-    private List<TripDayDto> days;
+    private String token; 
 }

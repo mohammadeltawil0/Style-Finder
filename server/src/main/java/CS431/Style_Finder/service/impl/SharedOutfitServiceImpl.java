@@ -9,6 +9,8 @@ import CS431.Style_Finder.repository.SharedOutfitRepository;
 import CS431.Style_Finder.service.SharedOutfitService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
@@ -20,6 +22,8 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
 
     private final SharedOutfitRepository sharedOutfitRepository;
     private final OutfitRepository outfitRepository;
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Override
     public SharedOutfitDto createShareLink(Long outfitId) {
@@ -32,7 +36,14 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
                 sharedOutfitRepository.findByOutfit_OutfitId(outfitId);
 
         if (existing.isPresent()) {
-            return buildDto(existing.get());
+            SharedOutfit shared = existing.get();
+
+            if (!shared.isActive()) {
+                shared.setActive(true);
+                sharedOutfitRepository.save(shared);
+            }
+
+            return buildDto(shared);
         }
 
         String token = UUID.randomUUID().toString();
@@ -51,6 +62,7 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
     }
 
     @Override
+    @Transactional
     public OutfitDto getSharedOutfit(String token) {
 
         SharedOutfit shared = sharedOutfitRepository.findByShareToken(token)
@@ -59,8 +71,6 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
         if (!shared.isActive()) {
             throw new RuntimeException("This link has been disabled");
         }
-
-        sharedOutfitRepository.save(shared);
 
         return mapToOutfitDto(shared.getOutfit());
     }
@@ -77,7 +87,8 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
 
     private SharedOutfitDto buildDto(SharedOutfit shared) {
         return SharedOutfitDto.builder()
-                .shareLink("https://api.stylefinder.tech/api/share/" + shared.getShareToken())
+                .shareLink(baseUrl + "/api/share/view/" + shared.getShareToken())
+                //.shareLink("exp://192.168.1.31:8081/--/share/" + token)
                 .token(shared.getShareToken())
                 .outfitId(shared.getOutfit().getOutfitId())
                 .build();
@@ -85,17 +96,15 @@ public class SharedOutfitServiceImpl implements SharedOutfitService {
 
     private OutfitDto mapToOutfitDto(Outfit outfit) {
         return OutfitDto.builder()
-                .outfitId(outfit.getOutfitId())
-                .userId(outfit.getUser() != null ? outfit.getUser().getUserId() : null)
-                .saved(outfit.getSaved())
-                .createdAt(outfit.getCreatedAt())
-                .itemIds(
-                    outfit.getOutfitItems() != null
-                        ? outfit.getOutfitItems().stream()
-                            .map(outfitItem -> outfitItem.getItem().getItemId())
-                            .toList()
-                        : null
-                )
-                .build();
+        .outfitId(outfit.getOutfitId())
+        .userId(outfit.getUser() != null ? outfit.getUser().getUserId() : null)
+        .saved(outfit.getSaved())
+        .createdAt(outfit.getCreatedAt())
+        .itemIds(outfit.getOutfitItems() != null ? outfit.getOutfitItems().stream().map(oi -> oi.getItem().getItemId()).toList() : null)
+        .imageUrls(outfit.getOutfitItems() != null ? outfit.getOutfitItems().stream().map(oi -> oi.getItem().getImageUrl()).toList() : null)
+
+        // optional: main image
+        .coverImageUrl(outfit.getOutfitItems() != null && !outfit.getOutfitItems().isEmpty() ? outfit.getOutfitItems().get(0).getItem().getImageUrl() : null)
+        .build();
     }
 }
