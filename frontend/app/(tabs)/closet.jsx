@@ -217,9 +217,12 @@ export default function ClosetScreen() {
   const handleShareOutfit = async (outfit, index) => {
     try {
       const itemCount = outfit?.itemIds?.length || 0;
+      const res = await apiClient.post(`/api/share/${outfit.outfitId}`);
+      const link = res.data.shareLink;
       await Share.share({
-        message: `Check out Outfit ${index + 1} from my closet on StyleFinder (${itemCount} item${itemCount === 1 ? "" : "s"})!`,
+        message: `Check out Outfit ${index + 1} from my closet on StyleFinder (${itemCount} item${itemCount === 1 ? "" : "s"})!\n\n${link}`,
       });
+      console.log("Outfit shared successfully:", link);
     } catch (error) {
       console.error("Failed to share outfit:", error);
     }
@@ -227,9 +230,17 @@ export default function ClosetScreen() {
 
   const handleShareTrip = async (trip) => {
     try {
-      await Share.share({
-        message: `Check out my trip to ${trip?.name} from ${trip?.dates} on StyleFinder!`,
+      const tripId = trip.id;
+      const res = await apiClient.post(`/api/share/trip/${tripId}`);
+      const link = res.data.shareLink;
+      const result = await Share.share({
+        message: `Check out my trip to ${trip.tripLocation || "this destination"} on StyleFinder!\n\n${link}`,
       });
+      if (result.action === Share.sharedAction) {
+      console.log("Trip shared successfully:", link);
+      } else {
+        console.log("Share dismissed");
+      }
     } catch (error) {
       console.error("Failed to share trip:", error);
     }
@@ -771,7 +782,7 @@ export default function ClosetScreen() {
                       paddingHorizontal: 15,
                       width: "100%",
                     }}
-                    renderItem={({ item }) => (
+                    renderItem={({ item, index }) => (
                       <View className="TripOufit" style={styles.tripCard}>
                         <TouchableOpacity
                           onPress={() =>

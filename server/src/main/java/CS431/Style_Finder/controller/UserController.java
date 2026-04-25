@@ -31,6 +31,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto request) {
+        System.out.println("CONTROLLER HIT");
         LoginResponseDto response = userService.login(request.getUsername(), request.getPassword());
 
         return ResponseEntity.ok(response);
