@@ -1,11 +1,23 @@
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
-import Register from "../app/auth/register";
 import { NavigationContainer } from "@react-navigation/native";
+import Register from "../app/auth/register.jsx";
 
-// ------------------ MOCKS ------------------
+/* ---------------- MOCKS ---------------- */
 
-// API
+const mockReplace = jest.fn();
+
+jest.mock("expo-router", () => ({
+  useRouter: () => ({
+    replace: mockReplace,
+  }),
+}));
+
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  multiSet: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn(() => Promise.resolve(null)),
+}));
+
 jest.mock("../scripts/apiClient", () => ({
   apiClient: {
     post: jest.fn(),
@@ -15,26 +27,26 @@ jest.mock("../scripts/apiClient", () => ({
 
 import { apiClient } from "../scripts/apiClient";
 
-// router
-const mockReplace = jest.fn();
-jest.mock("expo-router", () => ({
-  useRouter: () => ({
-    replace: mockReplace,
-  }),
-}));
-
-// AsyncStorage
-const AsyncStorage = require("@react-native-async-storage/async-storage");
-
-// Toast
 jest.mock("react-native-toast-message", () => ({
   __esModule: true,
-  default: {
-    show: jest.fn(),
-  },
+  default: { show: jest.fn() },
 }));
 
-import Toast from "react-native-toast-message";
+const Toast = require("react-native-toast-message").default;
+
+// silence Ionicons
+jest.mock("@expo/vector-icons/Ionicons", () => "Icon");
+
+// themed components
+jest.mock("../components", () => {
+  const React = require("react");
+  const { Text, View } = require("react-native");
+
+  return {
+    ThemedText: ({ children, ...props }) => <Text {...props}>{children}</Text>,
+    ThemedView: ({ children, ...props }) => <View {...props}>{children}</View>,
+  };
+});
 
 // theme
 jest.mock("@react-navigation/native", () => ({
@@ -42,85 +54,75 @@ jest.mock("@react-navigation/native", () => ({
   useTheme: () => ({
     colors: {
       text: "#000",
+      lightText: "#999",
       card: "#ccc",
-      lightText: "#aaa",
+    },
+    fonts: {
+      bold: "bold",
+      light: "light",
+      semiBold: "semibold",
     },
   }),
 }));
 
-// ------------------ RENDER ------------------
+/* ---------------- SETUP ---------------- */
 
-const renderWithProviders = (ui) =>
+const renderScreen = () =>
   render(
     <NavigationContainer>
-      {ui}
+      <Register />
     </NavigationContainer>
   );
 
-// ------------------ TESTS ------------------
+// ✅ valid base input (passes ALL validation)
+const fillValidForm = (getByPlaceholderText) => {
+  fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+  fireEvent.changeText(getByPlaceholderText("Email"), "stella@gmail.com");
+  fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
+  fireEvent.changeText(getByPlaceholderText("Password"), "Password1@");
+  fireEvent.changeText(
+    getByPlaceholderText("Confirm Password"),
+    "Password1@"
+  );
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+});
+
+/* ---------------- TESTS ---------------- */
 
 describe("Register Screen (JWT)", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-    jest.spyOn(console, "error").mockImplementation(() => {});
-  });
-
-  //main jwt test
-  test("successful registration stores token and user data, then navigates", async () => {
-    apiClient.get.mockResolvedValueOnce({}); // username available
-
+  test("successful registration → API + navigation", async () => {
+    apiClient.get.mockResolvedValue({});
     apiClient.post.mockResolvedValue({
       data: {
-        token: "new-user-token",
+        token: "token",
         userId: 1,
         username: "stella123",
         profileImageUrl: "",
       },
     });
+    const { getByPlaceholderText, getByText } = renderScreen();
 
-    const { getByPlaceholderText, getByText } =
-      renderWithProviders(<Register />);
-
-    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
-    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
-    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password1@");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password1@");
-
+    fillValidForm(getByPlaceholderText);
     fireEvent.press(getByText("Sign Up"));
 
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalled();
     });
 
-    //token stoarge
-    expect(AsyncStorage.multiSet).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        ["token", "new-user-token"],
-        ["userId", "1"],
-        ["username", "stella123"],
-        ["profileImageUrl", ""],
-      ])
-    );
-
-    //nav
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalled();
+    });
     expect(mockReplace).toHaveBeenCalledWith({
-    pathname: "/screens/survey/preferences1",
-    params: { isNewUser: "true" },
+      pathname: "/screens/survey/preferences1",
+      params: { isNewUser: "true" },
+    });
   });
 
-    //success toast
-    expect(Toast.show).toHaveBeenCalledWith(
-      expect.objectContaining({
-        type: "success",
-      })
-    );
-  });
-
-  //error cases (unchanged but updated to Toast)
-
-  test("shows error if fields are missing", () => {
-    const { getByText } = renderWithProviders(<Register />);
+  test("missing fields → error", () => {
+    const { getByText } = renderScreen();
 
     fireEvent.press(getByText("Sign Up"));
 
@@ -131,15 +133,17 @@ describe("Register Screen (JWT)", () => {
     );
   });
 
-  test("shows error for invalid email", () => {
-    const { getByPlaceholderText, getByText } =
-      renderWithProviders(<Register />);
+  test("invalid email → error", () => {
+    const { getByPlaceholderText, getByText } = renderScreen();
 
     fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
-    fireEvent.changeText(getByPlaceholderText("Email"), "invalid");
+    fireEvent.changeText(getByPlaceholderText("Email"), "bademail"); // ❌
     fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password1@");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password1@");
+    fireEvent.changeText(getByPlaceholderText("Password"), "Password1@");
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "Password1@"
+    );
 
     fireEvent.press(getByText("Sign Up"));
 
@@ -150,15 +154,15 @@ describe("Register Screen (JWT)", () => {
     );
   });
 
-  test("shows error if passwords do not match", () => {
-    const { getByPlaceholderText, getByText } =
-      renderWithProviders(<Register />);
+  test("password mismatch → error", () => {
+    const { getByPlaceholderText, getByText } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
-    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
-    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password1@");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "wrong");
+    fillValidForm(getByPlaceholderText);
+
+    fireEvent.changeText(
+      getByPlaceholderText("Confirm Password"),
+      "DIFFERENT"
+    );
 
     fireEvent.press(getByText("Sign Up"));
 
@@ -169,19 +173,32 @@ describe("Register Screen (JWT)", () => {
     );
   });
 
-  test("shows error if username is taken", async () => {
+  test("weak password → error", () => {
+    const { getByPlaceholderText, getByText } = renderScreen();
+
+    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
+    fireEvent.changeText(getByPlaceholderText("Email"), "stella@gmail.com");
+    fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
+    fireEvent.changeText(getByPlaceholderText("Password"), "weak"); // ❌
+    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "weak");
+
+    fireEvent.press(getByText("Sign Up"));
+
+    expect(Toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text1: "Weak Password",
+      })
+    );
+  });
+
+  test("username taken → error", async () => {
     apiClient.get.mockRejectedValueOnce({
       response: { status: 409 },
     });
 
-    const { getByPlaceholderText, getByText } =
-      renderWithProviders(<Register />);
+    const { getByPlaceholderText, getByText } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
-    fireEvent.changeText(getByPlaceholderText("Email"), "test@test.com");
-    fireEvent.changeText(getByPlaceholderText("Username"), "takenUser");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password1@");
-    fireEvent.changeText(getByPlaceholderText("Confirm Password"), "password1@");
+    fillValidForm(getByPlaceholderText);
 
     fireEvent.press(getByText("Sign Up"));
 

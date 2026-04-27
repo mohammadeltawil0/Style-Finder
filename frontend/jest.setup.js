@@ -18,7 +18,7 @@ afterEach(async () => {
   jest.clearAllMocks();
   jest.clearAllTimers();
 
-  await flushPromises(); 
+  await new Promise(setImmediate);
 });
 
 afterAll(() => {

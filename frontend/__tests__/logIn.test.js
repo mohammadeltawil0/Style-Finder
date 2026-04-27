@@ -1,32 +1,23 @@
-import * as SurveyContext from "../context/SurveyContext";
 import React from "react";
 import { render, fireEvent, waitFor } from "@testing-library/react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import Login from "../app/auth/logIn.jsx";
 
-beforeEach(() => {
-  jest.spyOn(SurveyContext, "useSurvey").mockReturnValue({
-    resetAnswers: jest.fn(),
-  });
-});
+/* ---------------- MOCKS ---------------- */
 
-//Router
 const mockReplace = jest.fn();
 
 jest.mock("expo-router", () => ({
   useRouter: () => ({
     replace: mockReplace,
-    push: jest.fn(),
   }),
 }));
 
-//AsyncStorage
 jest.mock("@react-native-async-storage/async-storage", () => ({
+  multiSet: jest.fn(() => Promise.resolve()),
   setItem: jest.fn(() => Promise.resolve()),
-  getItem: jest.fn(() => Promise.resolve(null)),
 }));
 
-//API
 jest.mock("../scripts/apiClient", () => ({
   apiClient: {
     post: jest.fn(),
@@ -40,13 +31,18 @@ jest.mock("../scripts/apiClient", () => ({
 
 import { apiClient } from "../scripts/apiClient";
 
-//Toast
+// Survey context
+import * as SurveyContext from "../context/SurveyContext";
+
+// Toast
 jest.mock("react-native-toast-message", () => ({
   __esModule: true,
   default: { show: jest.fn() },
 }));
 
-//Themed components
+const Toast = require("react-native-toast-message").default;
+
+// Themed components
 jest.mock("../components", () => {
   const React = require("react");
   const { Text, View } = require("react-native");
@@ -62,11 +58,10 @@ jest.mock("@react-navigation/native", () => ({
   ...jest.requireActual("@react-navigation/native"),
   useTheme: () => ({
     colors: {
-      primary: "#949F71",
-      lightBrown: "#E3D5CA",
       text: "#000",
       lightText: "#999",
       card: "#ccc",
+      lightBrown: "#E3D5CA",
     },
     fonts: {
       bold: "bold",
@@ -85,75 +80,66 @@ const renderScreen = () =>
     </NavigationContainer>
   );
 
+const fillLogin = (getByPlaceholderText, password = "Password1@") => {
+  fireEvent.changeText(getByPlaceholderText("Username"), "stella");
+  fireEvent.changeText(getByPlaceholderText("Password"), password);
+};
+
 beforeEach(() => {
   jest.clearAllMocks();
+
+  jest.spyOn(SurveyContext, "useSurvey").mockReturnValue({
+    resetAnswers: jest.fn(),
+  });
 });
 
 /* ---------------- TESTS ---------------- */
 
 describe("Login Screen", () => {
-  test("renders inputs", () => {
-    const { getByPlaceholderText } = renderScreen();
-
-    expect(getByPlaceholderText("Username")).toBeTruthy();
-    expect(getByPlaceholderText("Password")).toBeTruthy();
-  });
-
-  test("shows error if fields empty", () => {
+  test("missing fields → error", () => {
     const { getByText } = renderScreen();
 
     fireEvent.press(getByText("Sign In"));
 
-    const Toast = require("react-native-toast-message").default;
-    expect(Toast.show).toHaveBeenCalled();
+    expect(Toast.show).toHaveBeenCalledWith(
+      expect.objectContaining({
+        text1: "Missing Fields",
+      })
+    );
   });
 
-  test("successful login → navigates to tabs when preferences exist", async () => {
+  test("successful login → user landing (has preferences)", async () => {
     apiClient.post.mockResolvedValue({
-      data: {
-        token: "token",
-        userId: 1,
-        username: "stella",
-      },
+      data: { token: "token", userId: 1, username: "stella", role: "USER" },
     });
 
-    // preferences exist
     apiClient.get
       .mockResolvedValueOnce({ data: { preferenceId: 1 } }) // preferences
-      .mockResolvedValueOnce({ data: { firstName: "Stella" } }); // user fetch
+      .mockResolvedValueOnce({ data: { firstName: "Stella" } }); // user profile
 
     const { getByPlaceholderText, getByText } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText("Username"), "stella");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+    fillLogin(getByPlaceholderText);
 
     fireEvent.press(getByText("Sign In"));
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith("/(tabs)");
+      expect(mockReplace).toHaveBeenCalledWith("/screens/userLandingpage");
     });
   });
 
-  test("no preferences → navigates to survey", async () => {
+  test("no preferences → survey navigation", async () => {
     apiClient.post.mockResolvedValue({
-      data: {
-        token: "token",
-        userId: 1,
-        username: "stella",
-      },
+      data: { token: "token", userId: 1, username: "stella", role: "USER" },
     });
 
-    // preferences NOT found (404)
     apiClient.get
-      .mockRejectedValueOnce({
-        response: { status: 404 },
-      })
+      .mockRejectedValueOnce({ response: { status: 404 } }) // no preferences
       .mockResolvedValueOnce({ data: { firstName: "Stella" } });
 
     const { getByPlaceholderText, getByText } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText("Username"), "stella");
-    fireEvent.changeText(getByPlaceholderText("Password"), "password");
+    fillLogin(getByPlaceholderText);
 
     fireEvent.press(getByText("Sign In"));
 
@@ -164,24 +150,50 @@ describe("Login Screen", () => {
     });
   });
 
-  test("API failure shows error toast", async () => {
-    apiClient.post.mockRejectedValue({
-      response: {
-        status: 401,
-        data: { message: "Invalid credentials" },
+  test("admin user → admin landing", async () => {
+    apiClient.post.mockResolvedValue({
+      data: {
+        token: "token",
+        userId: 1,
+        username: "stella",
+        role: "ADMIN",
       },
+    });
+
+    apiClient.get
+      .mockResolvedValueOnce({ data: { preferenceId: 1 } })
+      .mockResolvedValueOnce({ data: { firstName: "Stella" } });
+
+    const { getByPlaceholderText, getByText } = renderScreen();
+
+    fillLogin(getByPlaceholderText);
+
+    fireEvent.press(getByText("Sign In"));
+
+    await waitFor(() => {
+      expect(mockReplace).toHaveBeenCalledWith(
+        "/settings/adminFolder/adminLanding"
+      );
+    });
+  });
+
+  test("login failure → toast error", async () => {
+    apiClient.post.mockRejectedValue({
+      response: { status: 401, data: { message: "Invalid credentials" } },
     });
 
     const { getByPlaceholderText, getByText } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText("Username"), "stella");
-    fireEvent.changeText(getByPlaceholderText("Password"), "wrong");
+    fillLogin(getByPlaceholderText, "wrong");
 
     fireEvent.press(getByText("Sign In"));
-    const Toast = require("react-native-toast-message").default;
 
     await waitFor(() => {
-      expect(Toast.show).toHaveBeenCalled();
+      expect(Toast.show).toHaveBeenCalledWith(
+        expect.objectContaining({
+          text1: "Login Failed",
+        })
+      );
     });
   });
 });

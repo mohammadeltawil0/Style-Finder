@@ -107,8 +107,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     combo.top().getMaterial(),
                     combo.bottom() != null ? combo.bottom().getMaterial() : null);
 
-            double finalScore = (fitScore + patternScore +
-                    materialScore + colorHarmonyScore + specificColorScore) - thermalPenalty;
+            double finalScore = (fitScore + patternScore + materialScore + colorHarmonyScore + specificColorScore) - thermalPenalty;
 
             OutfitSuggestionDto dto = new OutfitSuggestionDto();
             dto.setSuggestionId(UUID.randomUUID().toString());
@@ -120,7 +119,10 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         }
 
         validOutfits.sort((a, b) -> Double.compare(b.getScore(), a.getScore()));
-        return validOutfits.subList(1, Math.min(limit, validOutfits.size()));
+        if (validOutfits.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return validOutfits.subList(0, Math.min(limit, validOutfits.size()));
     }
 
     private <T extends Enum<T>> double getWeight(Map<T, Double> weightMap, T attribute) {
