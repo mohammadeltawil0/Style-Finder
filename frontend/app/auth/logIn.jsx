@@ -1,6 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
-import { useSurvey } from "../../context/SurveyContext";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
 } from "react-native";
 import Toast from "react-native-toast-message";
 import { ThemedText, ThemedView } from "../../components";
+import { useSurvey } from "../../context/SurveyContext";
 import { apiClient, describeApiError } from "../../scripts/apiClient";
 
 function PasswordRules({ password }) {
@@ -177,7 +177,6 @@ export default function Login() {
         ["username", loginData.username || ""],
         ["role", loginData.role || "USER"],
       ]);
-
     } catch (error) {
       const details = describeApiError(error);
       console.log("Login FAILED:", details);
@@ -197,7 +196,7 @@ export default function Login() {
     let hasPreferences = false;
     try {
       const prefResponse = await apiClient.get(
-        `/api/preferences/${loginData.userId}`
+        `/api/preferences/${loginData.userId}`,
       );
       hasPreferences = Boolean(prefResponse?.data);
     } catch (error) {
@@ -215,19 +214,21 @@ export default function Login() {
 
       try {
         const userResponse = await apiClient.get(
-          `/api/users/${loginData.userId}`
+          `/api/users/${loginData.userId}`,
         );
         displayName = userResponse?.data?.firstName || displayName;
         await AsyncStorage.setItem(
           "profileImageUrl",
-          userResponse?.data?.profileImageUrl || ""
+          userResponse?.data?.profileImageUrl || "",
         );
-
       } catch (error) {
         console.log("Profile fetch failed (non-critical)");
       }
 
-      await AsyncStorage.setItem("name", displayName);
+      await AsyncStorage.multiSet([
+        ["name", displayName],
+        ["welcomeName", displayName],
+      ]);
 
       Toast.show({
         type: "success",
@@ -238,7 +239,7 @@ export default function Login() {
       if (loginData.role === "ADMIN") {
         router.replace("/settings/adminFolder/adminLanding");
       } else if (hasPreferences) {
-        router.replace("/(tabs)");
+        router.replace("/screens/userLandingpage");
       } else {
         router.replace("/screens/survey/preferences1");
       }

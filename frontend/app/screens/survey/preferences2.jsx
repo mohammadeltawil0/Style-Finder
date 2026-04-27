@@ -1,4 +1,3 @@
-import { Ionicons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -44,7 +43,13 @@ export default function Preferences2() {
   const { answers, setAnswers } = useSurvey();
   const params = useLocalSearchParams();
   const { colors } = useTheme();
-  const isNewUser = params?.isNewUser === "true";
+
+  const normalizeBooleanParam = (value) => {
+    const raw = Array.isArray(value) ? value[0] : value;
+    return raw === "true" || raw === "1";
+  };
+
+  const isNewUserFromParams = normalizeBooleanParam(params?.isNewUser);
 
   const selectOne = (key, value) => {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -124,18 +129,31 @@ export default function Preferences2() {
         tripPriority: answers.tripPriority,
       };
 
-    // ACTION 1: Save to the raw Preferences table
-    await apiClient.post("/api/preferences", payload);
-    console.log("Raw preferences saved successfully.");
+      // ACTION 1: Save to the raw Preferences table
+      await apiClient.post("/api/preferences", payload);
+      console.log("Raw preferences saved successfully.");
 
-    // ACTION 2: Update the UserWeights table for the algorithm
-    await apiClient.post("/api/weights/update", payload);
-    console.log("Algorithm UserWeights updated successfully.");
+      // ACTION 2: Update the UserWeights table for the algorithm
+      await apiClient.post("/api/weights/update", payload);
+      console.log("Algorithm UserWeights updated successfully.");
+
+      const pendingFirstTimeLanding =
+        (await AsyncStorage.getItem("pendingFirstTimeLanding")) === "true";
+      const shouldShowFirstTimeLanding =
+        isNewUserFromParams || pendingFirstTimeLanding;
 
       setTimeout(() => {
         console.log("Successfully saved");
         showSuccessToast();
-        router.replace("/(tabs)");
+        if (shouldShowFirstTimeLanding) {
+          AsyncStorage.removeItem("pendingFirstTimeLanding");
+          router.replace({
+            pathname: "/screens/userLandingpage",
+            params: { firstTime: "true" },
+          });
+        } else {
+          router.replace("/(tabs)");
+        }
       }, 300);
     } catch (error) {
       console.error(
@@ -210,7 +228,9 @@ export default function Preferences2() {
         </View>
 
         <TouchableOpacity style={styles.btn} onPress={handleSave}>
-          <ThemedText style={{ fontFamily: theme.fonts.bold }}>Save Preferences</ThemedText>
+          <ThemedText style={{ fontFamily: theme.fonts.bold }}>
+            Save Preferences
+          </ThemedText>
         </TouchableOpacity>
       </ThemedView>
     </ScrollView>
@@ -227,6 +247,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#B49480",
     borderRadius: 10,
     alignItems: "center",
-    marginBottom: 20
+    marginBottom: 20,
   },
 });

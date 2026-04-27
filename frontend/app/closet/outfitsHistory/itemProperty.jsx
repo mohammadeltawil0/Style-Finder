@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
@@ -13,14 +14,16 @@ import {
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
 import EditItemsModal from "../edit-items-modal";
-import Feather from "@expo/vector-icons/Feather";
 
 // Helper to format backend Enums (e.g. "FULL_BODY" -> "Full Body", "PARTY_OR_NIGHT_OUT" -> "Party / Night Out")
 // --- FORMATTING HELPER ---
 const formatTagEnum = (str) => {
   if (!str) return "";
   let cleanStr = str.replace(/_OR_/g, " / ").replace(/_/g, " ");
-  return cleanStr.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+  return cleanStr.replace(
+    /\w\S*/g,
+    (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase(),
+  );
 };
 
 const formatDescriptionEnum = (str) => {
@@ -28,7 +31,6 @@ const formatDescriptionEnum = (str) => {
   let cleanStr = str.replace(/_OR_/g, " / ").replace(/_/g, " ");
   return cleanStr.toLowerCase();
 };
-
 
 // Material mapping to match the frontend selection options
 const materialMap = {
@@ -154,7 +156,12 @@ export default function ItemProperty() {
     );
   }
 
-  const isValidUri = currentItem?.imageUrl && typeof currentItem.imageUrl === 'string' && (currentItem.imageUrl.startsWith('http') || currentItem.imageUrl.startsWith('file') || currentItem.imageUrl.startsWith('data:'));
+  const isValidUri =
+    currentItem?.imageUrl &&
+    typeof currentItem.imageUrl === "string" &&
+    (currentItem.imageUrl.startsWith("http") ||
+      currentItem.imageUrl.startsWith("file") ||
+      currentItem.imageUrl.startsWith("data:"));
 
   return (
     <>
@@ -215,8 +222,13 @@ export default function ItemProperty() {
               resizeMode="cover"
             />
           ) : (
-            <View style={[styles.imagePlaceholder, { justifyContent: "center", alignItems: "center" }]}>
-                <Feather name="image" size={60} color={theme.colors.text} />
+            <View
+              style={[
+                styles.imagePlaceholder,
+                { justifyContent: "center", alignItems: "center" },
+              ]}
+            >
+              <Feather name="image" size={60} color={theme.colors.text} />
             </View>
           )}
 
@@ -226,10 +238,32 @@ export default function ItemProperty() {
             </ThemedText>
 
             <ThemedText style={styles.label}>Description:</ThemedText>
-            <ThemedText style={{ marginTop: 4, flexDirection: "row", alignItems: "center", flexWrap: "wrap" }}>
-              A{' '}
-              <View style={{ height: 20, width: 20, borderRadius: 10, backgroundColor: currentItem.color ? currentItem.color.toLowerCase() : "#ccc", marginHorizontal: 6, display: "inline-block" }} />
-              {' '} {formatDescriptionEnum(currentItem.fit)} fit {formatDescriptionEnum(currentItem.type).toLowerCase()} with a {formatDescriptionEnum(currentItem.pattern)} pattern, perfect for {formatDescriptionEnum(currentItem.formality).toLowerCase()} occasions.
+            <ThemedText
+              style={{
+                marginTop: 4,
+                flexDirection: "row",
+                alignItems: "center",
+                flexWrap: "wrap",
+              }}
+            >
+              A{" "}
+              <View
+                style={{
+                  height: 20,
+                  width: 20,
+                  borderRadius: 10,
+                  backgroundColor: currentItem.color
+                    ? currentItem.color.toLowerCase()
+                    : "#ccc",
+                  marginHorizontal: 6,
+                  display: "inline-block",
+                }}
+              />{" "}
+              {formatDescriptionEnum(currentItem.fit)} fit{" "}
+              {formatDescriptionEnum(currentItem.type).toLowerCase()} with a{" "}
+              {formatDescriptionEnum(currentItem.pattern)} pattern, perfect for{" "}
+              {formatDescriptionEnum(currentItem.formality).toLowerCase()}{" "}
+              occasions.
             </ThemedText>
 
             <ThemedText style={styles.label}>Tags:</ThemedText>
@@ -246,12 +280,16 @@ export default function ItemProperty() {
               )}
               {currentItem.formality && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatTagEnum(currentItem.formality)}</ThemedText>
+                  <ThemedText>
+                    {formatTagEnum(currentItem.formality)}
+                  </ThemedText>
                 </View>
               )}
               {currentItem.seasonWear && (
                 <View style={styles.tag}>
-                  <ThemedText>{formatTagEnum(currentItem.seasonWear)}</ThemedText>
+                  <ThemedText>
+                    {formatTagEnum(currentItem.seasonWear)}
+                  </ThemedText>
                 </View>
               )}
               {currentItem.fit && (
@@ -281,6 +319,8 @@ export default function ItemProperty() {
                       params: {
                         tab: "items",
                         itemId: currentItem.itemId,
+                        outfitId: outfitId ? String(outfitId) : undefined,
+                        itemIndex: String(currentItemIndex),
                       },
                     })
                   }

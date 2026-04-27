@@ -22,6 +22,7 @@ export const CustomHeader = ({ page }) => {
     page === "survey" ||
     page === "EditProfile" ||
     page === "UpdatePassword" ||
+    page === "userLandingpage" ||
     page === "adminSettings" ||
     page === "AdminChangePassword" ||
     page === "adminwelcomepage" ||
@@ -157,6 +158,17 @@ export const CustomHeader = ({ page }) => {
               }}
             >
               SIGN UP
+            </ThemedText>
+          )}
+          {page === "userLandingpage" && (
+            <ThemedText
+              style={{
+                fontSize: theme.sizes.h2,
+                fontFamily: theme.fonts.bold,
+                color: theme.colors.text,
+              }}
+            >
+              USER LANDING PAGE
             </ThemedText>
           )}
           {page === "Profile" && (
@@ -416,6 +428,14 @@ export const CustomHeader = ({ page }) => {
             <>
               <TouchableOpacity
                 onPress={() => {
+                  if (
+                    typeof router.canGoBack === "function" &&
+                    router.canGoBack()
+                  ) {
+                    router.back();
+                    return;
+                  }
+
                   const parentOutfitId = params?.outfitId;
                   const parentItemIndex = params?.itemIndex;
 

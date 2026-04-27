@@ -79,6 +79,13 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="screens/userLandingpage"
+              options={{
+                header: () => <CustomHeader page="userLandingpage" />,
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
               name="screens/survey/preferences1"
               options={{
                 header: () => <CustomHeader page="survey" />,

@@ -164,13 +164,25 @@ export default function Register() {
   const [username, setUserName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const popularEmailDomains = [
+    "gmail.com",
+    "yahoo.com",
+    "outlook.com",
+    "hotmail.com",
+    "icloud.com",
+  ];
 
   const theme = useTheme();
 
   // validate correct email format
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+
+    const domain = email.split("@")[1]?.toLowerCase();
+    return popularEmailDomains.includes(domain);
   };
 
   // if returns true, we want to fail the sign up process and show error toast that username is taken
@@ -213,7 +225,7 @@ export default function Register() {
       Toast.show({
         type: "error",
         text1: "Invalid Email",
-        text2: "Please enter a valid email address.",
+        text2: "Please use a valid domain.",
       });
       return;
     }
@@ -295,8 +307,11 @@ export default function Register() {
         ["token", response.data.token],
         ["userId", String(response.data.userId)],
         ["username", response.data.username || username],
+        ["welcomeName", firstName],
+        ["name", firstName],
         ["profileImageUrl", response.data.profileImageUrl || ""],
         ["role", response.data.role || "USER"],
+        ["pendingFirstTimeLanding", "true"],
       ]);
 
       router.replace({
