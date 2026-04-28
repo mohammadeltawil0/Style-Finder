@@ -14,12 +14,13 @@ public class ItemDto {
     private ItemType type;
     private String color;
     private PatternType pattern;
+    private ColorCategory colorCategory;
     private LengthType length;
     private MaterialType material;
-    private Double bulk;
     private Season seasonWear;
     private Formality formality;
     private Fit fit;
+    private Double bulk;
     private Integer timesWorn;
     private String imageUrl;
 }
