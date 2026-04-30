@@ -46,7 +46,10 @@ export default function UserLandingPage() {
           style={styles.welcome}
         >{`Welcome to StyleFinder, ${firstName}`}</Text>
       ) : (
-        <Text style={styles.welcome}>{`Welcome Back, ${firstName}`}</Text>
+        <>
+          <Text style={styles.welcome}>{`Welcome Back,`}</Text>
+          <Text style={styles.welcome}>{firstName}</Text>
+        </>
       )}
     </ThemedView>
   );

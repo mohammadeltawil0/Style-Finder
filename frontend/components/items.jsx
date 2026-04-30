@@ -2,6 +2,7 @@ import { FlatList, Image, TouchableOpacity, View } from "react-native";
 import Feather from "@expo/vector-icons/Feather";
 import { useTheme } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
+import { ThemedText } from ".";
 
 export const Items = ({
   items,
@@ -17,6 +18,11 @@ export const Items = ({
         className="items-list"
         data={paddedItems} // An array of user items
         ListHeaderComponent={listHeaderComponent || null}
+        ListEmptyComponent={
+          <ThemedText style={{ textAlign: "center", marginTop: 20 }}>
+            No saved items yet.
+          </ThemedText>
+        }
         keyExtractor={(item, index) =>
           item?.itemId != null ? String(item.itemId) : item?.id != null ? String(item.id) : `item-${index}`
         }

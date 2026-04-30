@@ -785,6 +785,23 @@ export default function ClosetScreen() {
                       paddingHorizontal: 15,
                       width: "100%",
                     }}
+                    ListEmptyComponent={() =>
+                      isLoading ? (
+                        <View style={styles.centerState}>
+                          <ActivityIndicator
+                            size="large"
+                            color={theme.colors.tabIconSelected}
+                          />
+                          <ThemedText>Loading outfits...</ThemedText>
+                        </View>
+                      ) : (
+                        <ThemedText
+                          style={{ textAlign: "center", marginTop: 20 }}
+                        >
+                          No saved trip outfits yet.
+                        </ThemedText>
+                      )
+                    }
                     renderItem={({ item, index }) => (
                       <View className="TripOufit" style={styles.tripCard}>
                         <TouchableOpacity
