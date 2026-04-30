@@ -110,6 +110,12 @@ export default function RootLayout() {
               }}
             />
             <Stack.Screen
+              name="closet/outfitsHistory/tripOutfits"
+              options={{
+                header: () => <CustomHeader page="tripdetails" />,
+              }}
+            />
+            <Stack.Screen
               name="closet/outfitsHistory/itemDetail"
               options={{
                 header: () => <CustomHeader page="Item" />,
@@ -120,12 +126,6 @@ export default function RootLayout() {
               options={{
                 header: () => <CustomHeader page="item-details-modal" />,
                 // headerShown: false,
-              }}
-            />
-            <Stack.Screen
-              name="closet/outfitsHistory/tripOutfits"
-              options={{
-                header: () => <CustomHeader page="TripOutfitDetail" />,
               }}
             />
             <Stack.Screen
