@@ -42,11 +42,22 @@ export default function UserLandingPage() {
         />
       </View>
       {isFirstTime ? (
-        <Text
-          style={styles.welcome}
-        >{`Welcome to StyleFinder, ${firstName}`}</Text>
+        <>
+          <Text
+            style={styles.welcome}
+          >{`Welcome to`}</Text>
+          <Text
+            style={styles.welcome}
+          >{`StyleFinder,`}</Text>
+          <Text
+            style={styles.welcome}
+          >{`${firstName}`}</Text>
+        </>
       ) : (
-        <Text style={styles.welcome}>{`Welcome Back, ${firstName}`}</Text>
+        <>
+          <Text style={styles.welcome}>{`Welcome Back,`}</Text>
+          <Text style={styles.welcome}>{firstName}</Text>
+        </>
       )}
     </ThemedView>
   );

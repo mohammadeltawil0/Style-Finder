@@ -83,6 +83,7 @@ export default function RootLayout() {
               options={{
                 header: () => <CustomHeader page="userLandingpage" />,
                 gestureEnabled: false,
+                headerShown: false,
               }}
             />
             <Stack.Screen
