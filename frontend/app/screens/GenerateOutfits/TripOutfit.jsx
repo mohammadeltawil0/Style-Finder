@@ -20,6 +20,8 @@ import {
 import { ThemedText } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
 import OutfitCoverImage from "../../closet/outfit-cover-image";
+import Toast from "react-native-toast-message";
+
 
 const formatEnum = (str) => {
   if (!str) return "";
@@ -340,10 +342,11 @@ const EditOutfitModal = ({ visible, initialItems, onClose, onDone, theme }) => {
   const handleDone = () => {
     const ids = items.map(getItemId).filter((id) => id !== null);
     if (ids.length === 0) {
-      Alert.alert(
-        "No Valid Items",
-        "Please keep at least one valid outfit item.",
-      );
+      Toast.show({
+        type: "error",
+        text1: "No Valid Items",
+        text2: "Please keep at least one valid outfit item.",
+      });
       return;
     }
 
@@ -771,126 +774,6 @@ const TripOutfitDetailsModal = ({
   );
 };
 
-// Andres Outift Details Modal not sure if gonna be same for trip - but i still coplied it ;)
-const OutfitDetailsModal = ({ visible, outfit, onClose, onAction, theme }) => {
-  const [items, setItems] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchOutfitItems = async () => {
-      if (!outfit || !outfit.itemIds) return;
-      try {
-        setIsLoading(true);
-        const itemPromises = outfit.itemIds.map((id) =>
-          apiClient.get(`/api/items/${id}`),
-        );
-        const results = await Promise.allSettled(itemPromises);
-        const fetchedItems = results
-          .filter((result) => result.status === "fulfilled")
-          .map((result) => result.value.data);
-
-        const missingCount = results.length - fetchedItems.length;
-        if (missingCount > 0) {
-          console.warn(`Skipped ${missingCount} missing outfit item(s).`);
-        }
-
-        const typeOrder = {
-          OVER: 1,
-          OUTERWEAR: 1,
-          TOP: 2,
-          FULL_BODY: 3,
-          BOTTOM: 4,
-        };
-        fetchedItems.sort(
-          (a, b) => (typeOrder[a.type] || 99) - (typeOrder[b.type] || 99),
-        );
-        setItems(fetchedItems);
-      } catch (error) {
-        console.error("Failed to load outfit items:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    if (visible) fetchOutfitItems();
-  }, [visible, outfit]);
-
-  return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
-      <View
-        style={[
-          styles.modalContainer,
-          { backgroundColor: theme.colors.background },
-        ]}
-      >
-        <View style={styles.chevronView}>
-          <Pressable onPress={onClose}>
-            <Entypo name="chevron-down" size={30} color={theme.colors.text} />
-          </Pressable>
-        </View>
-        {isLoading ? (
-          <ActivityIndicator size="large" color={theme.colors.text} />
-        ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: 40 }}>
-            <ThemedText style={styles.modalTitle}>Outfit Details</ThemedText>
-            {items.map((item, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.responseContainer,
-                  { backgroundColor: theme.colors.card },
-                ]}
-              >
-                <View style={{ flex: 1 }}>
-                  <ThemedText style={{ fontWeight: "bold", fontSize: 18 }}>
-                    {formatEnum(item.type)}
-                  </ThemedText>
-                  <ThemedText style={{ fontSize: 14, marginBottom: 10 }}>
-                    A {item.color?.toLowerCase()} {formatEnum(item.fit)} fit{" "}
-                    {formatEnum(item.type).toLowerCase()}.
-                  </ThemedText>
-                  <View
-                    style={[
-                      styles.itemImagePlaceholder,
-                      { backgroundColor: theme.colors.lightBrown },
-                    ]}
-                  />
-                </View>
-              </View>
-            ))}
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: "#b49480" }]}
-                onPress={() => onAction("SAVE")}
-              >
-                <Text style={styles.actionBtnText}>Save Outfit</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: "#e2d7cd" }]}
-                onPress={() => onAction("EDIT_SAVE")}
-              >
-                <Text style={[styles.actionBtnText, { color: "#000" }]}>
-                  Edit & Save
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.actionBtn, { backgroundColor: "#ff4444" }]}
-                onPress={() => onAction("REJECT")}
-              >
-                <Text style={styles.actionBtnText}>Reject</Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        )}
-      </View>
-    </Modal>
-  );
-};
-
 export default function TripOutfit() {
   const theme = useTheme();
 
@@ -967,10 +850,11 @@ export default function TripOutfit() {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert(
-          "Permission Denied",
-          "Allow location access to use this feature.",
-        );
+        Toast.show({
+          type: "error",
+          text1: "Permission Denied",
+          text2: "Allow location access to use this feature.",
+        });
         return;
       }
 
@@ -1015,10 +899,11 @@ export default function TripOutfit() {
     } catch (error) {
       console.error("Location error:", error);
       setLocation(""); // Clear the "Locating..." text if it crashes
-      Alert.alert(
-        "Error",
-        "Could not fetch current location. Please try typing it manually.",
-      );
+      Toast.show({
+        type: "error",
+        text1: "Location Error",
+        text2: "Could not fetch current location. Please try typing it manually.",
+      });
     }
   };
 
@@ -1027,14 +912,23 @@ export default function TripOutfit() {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    if (end < start) {
-      Alert.alert("Invalid Range", "End date must be after start date.");
+      if (end < start) {
+        // Alert.alert("Invalid Range", "End date must be after start date.");
+        Toast.show({
+          type: "error",
+          text1: "Invalid Range",
+          text2: "End date must be after start date.",
+        });
       return;
     }
 
     const dates = getDateRange(start, end);
     if (dates.length > 7) {
-      Alert.alert("Too Many Days", "Please select a range of 7 days or less.");
+       Toast.show({
+        type: "error",
+        text1: "Too Many Days",
+        text2: "Please select a range of 7 days or less.",
+      });
       return;
     }
 
@@ -1135,7 +1029,11 @@ export default function TripOutfit() {
 
   const handleSaveTrip = async () => {
     if (!generatedPlan || reviewDays.length === 0) {
-      Alert.alert("Missing", "Generate a trip before saving it.");
+      Toast.show({
+        type: "error",
+        text1: "Missing",
+        text2: "Generate a trip before saving it.",
+      });
       return;
     }
 
@@ -1146,7 +1044,11 @@ export default function TripOutfit() {
         days: reviewDays,
       });
 
-      Alert.alert("Success", "Your trip has been saved to your closet!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Your trip has been saved to your closet!",
+      });
       setIsReviewVisible(false);
       setReviewDays([]);
       setGeneratedPlan(null);
@@ -1158,7 +1060,11 @@ export default function TripOutfit() {
       setSuggestionsByDate({});
     } catch (error) {
       console.error("Trip save error:", error);
-      Alert.alert("Error", "Failed to save the trip. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save the trip. Please try again.",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -1166,14 +1072,19 @@ export default function TripOutfit() {
 
   const handleGenerateAndSaveTrip = async () => {
     if (!locationCoords && !location) {
-      Alert.alert("Missing", "Please select a location.");
+      Toast.show({
+        type: "error",
+        text1: "Missing",
+        text2: "Please select a location.",
+      });
       return;
     }
     if (!dateConfig || Object.keys(dateConfig).length === 0) {
-      Alert.alert(
-        "Missing",
-        "Please select your travel dates and configure outfit counts.",
-      );
+      Toast.show({
+        type: "error",
+        text1: "Missing",
+        text2: "Please select your travel dates and configure outfit counts.",
+      });
       return;
     }
 
@@ -1205,10 +1116,11 @@ export default function TripOutfit() {
       const flatOutfits = genRes.data || [];
 
       if (flatOutfits.length === 0) {
-        Alert.alert(
-          "Error",
-          "No outfits could be generated based on your wardrobe and these constraints.",
-        );
+        Toast.show({
+          type: "error",
+          text1: "No Outfits",
+          text2: "No outfits could be generated based on your wardrobe and these constraints.",
+        });
         return;
       }
 
@@ -1242,7 +1154,11 @@ export default function TripOutfit() {
       setIsReviewVisible(true);
     } catch (error) {
       console.error("Trip generation/save error:", error);
-      Alert.alert("Error", "Failed to generate the trip. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to generate the trip. Please try again.",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -1554,8 +1470,6 @@ export default function TripOutfit() {
           </ThemedText>
         )}
       </View>
-
-      {/* Results — one section per date LOOK @ Figma for representation will cchange for place holder ONLY */}
       {hasSuggestions &&
         Object.keys(dateConfig)
           .sort()

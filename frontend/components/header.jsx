@@ -12,6 +12,8 @@ export const CustomHeader = ({ page }) => {
   const router = useRouter();
   const params = useGlobalSearchParams();
   const isNewUserSurveyFlow = params?.isNewUser === "true";
+  const isFromTrip = params?.source === "trip";
+  const tripId = params?.tripId;
 
   const hideSettingsIcon =
     page === "Profile" ||
@@ -353,12 +355,21 @@ export const CustomHeader = ({ page }) => {
           {page === "OutfitDetail" && (
             <>
               <TouchableOpacity
-                onPress={() =>
+                onPress={() => {
+                  // If coming from trip, go back to trip outfits
+                  if (isFromTrip && tripId) {
+                    router.push({
+                      pathname: "/closet/outfitsHistory/tripOutfits",
+                      params: { id: tripId },
+                    });
+                    return;
+                  }
+
                   router.replace({
                     pathname: "/(tabs)/closet",
                     params: { tab: "outfits" },
-                  })
-                }
+                  });
+                }}
               >
                 <Ionicons
                   name="arrow-back"
@@ -377,7 +388,7 @@ export const CustomHeader = ({ page }) => {
               </ThemedText>
             </>
           )}
-          {/* {page === "RegularOutfitDetail" && (
+          {page === "tripdetails" && (
             <>
               <TouchableOpacity
                 onPress={() =>
@@ -400,30 +411,11 @@ export const CustomHeader = ({ page }) => {
                   color: theme.colors.text,
                 }}
               >
-                REGULAR OUTFIT DETAILS
+                TRIP DETAILS
               </ThemedText>
             </>
-          )} */}
-          {/* {page === "TripOutfitDetail" && (
-            <>
-              <TouchableOpacity onPress={() => router.back()}>
-                <Ionicons
-                  name="arrow-back"
-                  size={24}
-                  color={theme.colors.text}
-                />
-              </TouchableOpacity>
-              <ThemedText
-                style={{
-                  fontSize: theme.sizes.h2,
-                  fontFamily: theme.fonts.bold,
-                  color: theme.colors.text,
-                }}
-              >
-                TRIP OUTFIT DETAILS
-              </ThemedText>
-            </>
-          )} */}
+          )}
+
           {page === "Item" && (
             <>
               <TouchableOpacity
