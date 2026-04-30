@@ -58,6 +58,7 @@ public class OutfitController {
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteOutfit(@PathVariable Long id) {
         outfitService.deleteOutfit(id);
+        //System.out.println("DELETE OUTFIT HIT: " + id);
         return ResponseEntity.ok("Outfit deleted successfully.");
     }
 

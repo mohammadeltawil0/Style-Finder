@@ -177,6 +177,7 @@ export default function Login() {
         ["username", loginData.username || ""],
         ["role", loginData.role || "USER"],
       ]);
+      await new Promise(resolve => setTimeout(resolve, 100));
     } catch (error) {
       const details = describeApiError(error);
       console.log("Login FAILED:", details);

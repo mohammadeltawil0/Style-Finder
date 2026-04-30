@@ -27,6 +27,11 @@ apiClient.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem("token");
 
+    //console.log("TOKEN FROM STORAGE:", token);
+
+    //console.log("REQUEST URL:", config.url);
+    //console.log("TOKEN:", token);
+
     //only attach token for protected routes
     const isPublicRoute =
       config.url.includes("/login") ||
@@ -36,10 +41,11 @@ apiClient.interceptors.request.use(
 
     if (token && !isPublicRoute) {
       config.headers.Authorization = `Bearer ${token}`;
+      //console.log("AUTH HEADER ATTACHED");
     } else {
       delete config.headers.Authorization; //remove bad header
+      //console.log("NO AUTH HEADER");
     }
-
     return config;
   },
   (error) => Promise.reject(error)

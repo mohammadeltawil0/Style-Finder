@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 @Getter
 @Setter
@@ -26,6 +28,7 @@ public class SharedOutfit {
     // Link to the original outfit
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "outfit_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private Outfit outfit;
 
     // When the link was created
