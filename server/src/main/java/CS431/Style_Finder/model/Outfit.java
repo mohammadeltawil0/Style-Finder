@@ -1,11 +1,11 @@
 package CS431.Style_Finder.model;
 
-import jakarta.persistence.*;
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import jakarta.persistence.*;
+import lombok.*;
 
 @Getter
 @Setter
@@ -40,6 +40,15 @@ public class Outfit {
     @OneToMany(mappedBy = "outfit", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<OutfitItem> outfitItems = new ArrayList<>();
+
+    @OneToMany(mappedBy = "outfit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<TripOutfit> tripOutfits = new ArrayList<>();
+
+//    This is used so user can delete outfit what was shared before
+//    @OneToMany(mappedBy = "outfit", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @Builder.Default
+//    private List<SharedOutfit> sharedOutfits = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

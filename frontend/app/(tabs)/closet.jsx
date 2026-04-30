@@ -3,18 +3,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useTheme } from "@react-navigation/native";
 import { useQuery } from "@tanstack/react-query";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
-  Image,
   Modal,
   Pressable,
   ScrollView,
   Share,
   StyleSheet,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import {
   ClosetToggle,
@@ -24,10 +23,8 @@ import {
   ThemedView,
 } from "../../components";
 import { apiClient } from "../../scripts/apiClient";
-import EditItemsModal from "../closet/edit-items-modal";
-import OutfitDetailsModal from "../closet/outfit-details-modal";
 import OutfitCoverImage from "../closet/outfit-cover-image";
-
+import OutfitDetailsModal from "../closet/outfit-details-modal";
 
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
@@ -44,6 +41,8 @@ export default function ClosetScreen() {
   const [dbTrips, setDbTrips] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isOutfitsLoading, setIsOutfitsLoading] = useState(false);
+  const [loadingTrips, setIsLoadingTrips] = useState(false);
+
   const [selectedOutfit, setSelectedOutfit] = useState(null);
 
   const [isOutfitModalVisible, setIsOutfitModalVisible] = useState(false);
@@ -129,12 +128,15 @@ export default function ClosetScreen() {
       const response = await apiClient.get(`/api/trips/user/${id}`);
       if (response.status === 200) {
         const formattedTrips = response.data.map((trip) => {
-          const allOutfits = (trip.days || []).flatMap(day => day.outfits || []);
+          const allOutfits = (trip.days || []).flatMap(
+            (day) => day.outfits || [],
+          );
           return {
             id: trip.tripId?.toString(),
             name: trip.tripLocation || "Trip",
             location: trip.tripLocation || "",
-            dates: trip.startDate && trip.endDate
+            dates:
+              trip.startDate && trip.endDate
                 ? `${trip.startDate} - ${trip.endDate}`
                 : "",
             outfits: allOutfits, // Assign the flattened outfits here!
@@ -146,6 +148,8 @@ export default function ClosetScreen() {
       console.error("Failed to fetch trips:", error);
     }
   };
+
+  const normalizeId = (value) => (value == null ? null : String(value));
 
   useFocusEffect(
     useCallback(() => {
@@ -204,9 +208,17 @@ export default function ClosetScreen() {
   const handleDeleteOutfit = async (outfitId) => {
     try {
       await apiClient.delete(`/api/outfits/${outfitId}`);
+      const deletedId = normalizeId(outfitId);
       setDbOutfits((prev) =>
-        prev.filter((o) => o.outfitId !== outfitId && o.id !== outfitId),
+        prev.filter(
+          (o) =>
+            normalizeId(o.outfitId) !== deletedId &&
+            normalizeId(o.id) !== deletedId,
+        ),
       );
+      if (userId) {
+        await fetchUserOutfits(userId);
+      }
       setIsOutfitModalVisible(false);
       return true;
     } catch (error) {
@@ -238,7 +250,7 @@ export default function ClosetScreen() {
         message: `Check out my trip to ${trip.tripLocation || "this destination"} on StyleFinder!\n\n${link}`,
       });
       if (result.action === Share.sharedAction) {
-      console.log("Trip shared successfully:", link);
+        console.log("Trip shared successfully:", link);
       } else {
         console.log("Share dismissed");
       }
@@ -250,7 +262,11 @@ export default function ClosetScreen() {
   const handleDeleteTrip = async (tripId) => {
     try {
       await apiClient.delete(`/api/trips/${tripId}`);
-      setDbTrips((prev) => prev.filter((t) => t.id !== tripId));
+      const deletedId = normalizeId(tripId);
+      setDbTrips((prev) => prev.filter((t) => normalizeId(t.id) !== deletedId));
+      if (userId) {
+        await fetchUserTrips(userId);
+      }
       setIsDeleteTripModalVisible(false);
       return true;
     } catch (error) {
@@ -276,6 +292,19 @@ export default function ClosetScreen() {
     } finally {
       setIsDeletingTrip(false);
     }
+  };
+
+  const formatTripDateRange = (datesStr) => {
+    if (!datesStr) return "";
+    const [start, end] = datesStr.split(" - ");
+    const fmt = (iso) => {
+      if (!iso) return "";
+      const parts = iso.trim().split("-");
+      if (parts.length !== 3) return iso;
+      const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    };
+    return `${fmt(start)} — ${fmt(end)}`;
   };
 
   const requestDeleteOutfit = (outfitId) => {
@@ -313,9 +342,9 @@ export default function ClosetScreen() {
       params: {
         itemId,
         returnTab: "items",
-      }
+      },
     });
-  }
+  };
 
   const formatItemType = (type) => {
     if (!type) return "Item";
@@ -469,7 +498,9 @@ export default function ClosetScreen() {
       <SearchBar
         value={searchText}
         onChangeText={(text) => setSearchText(text)}
-        placeholder={"Search Item via Type, Formality, Season, Material, Pattern, "}
+        placeholder={
+          "Search Item via Type, Formality, Season, Material, Pattern, "
+        }
         onSubmit={handleSearchSubmit}
       />
       <View
@@ -486,7 +517,10 @@ export default function ClosetScreen() {
           <Pressable
             key={cat}
             style={{
-              backgroundColor: category === cat ? theme.colors.tabIconSelected : theme.colors.lightBrown,
+              backgroundColor:
+                category === cat
+                  ? theme.colors.tabIconSelected
+                  : theme.colors.lightBrown,
               borderRadius: 10,
               width: "30%",
               alignItems: "center",
@@ -495,8 +529,14 @@ export default function ClosetScreen() {
             }}
             onPress={() => setCategory((prev) => (prev === cat ? "all" : cat))}
           >
-            <ThemedText style={{ color: theme.colors.text, fontSize: theme.sizes.text }}>
-              {cat === "all" ? "All" : cat === "full_body" ? "Full Body" : cat.charAt(0).toUpperCase() + cat.slice(1)}
+            <ThemedText
+              style={{ color: theme.colors.text, fontSize: theme.sizes.text }}
+            >
+              {cat === "all"
+                ? "All"
+                : cat === "full_body"
+                  ? "Full Body"
+                  : cat.charAt(0).toUpperCase() + cat.slice(1)}
             </ThemedText>
           </Pressable>
         ))}
@@ -700,9 +740,7 @@ export default function ClosetScreen() {
                               </View>
                               <View style={styles.outfitActions}>
                                 <Pressable
-                                  onPress={() =>
-                                    handleShareOutfit(item, index)
-                                  }
+                                  onPress={() => handleShareOutfit(item, index)}
                                   hitSlop={8}
                                 >
                                   <Ionicons
@@ -746,74 +784,178 @@ export default function ClosetScreen() {
                   >
                     <SearchBar
                       value={tripSearchText}
-                      onChangeText={(text) => {
-                        setTripSearchText(text);
-                      }}
+                      onChangeText={(text) => setTripSearchText(text)}
                       placeholder="Search by trip location"
-                      onSubmit={() => { }}
+                      onSubmit={() => {}}
                     />
                   </View>
-                  <FlatList
-                    className="trip_Oufit_Details"
-                    data={trips}
-                    keyExtractor={(trip, index) =>
-                      trip.id || index.toString()
-                    }
-                    style={{
-                      marginVertical: 15,
-                      paddingHorizontal: 15,
-                      width: "100%",
-                    }}
-                    renderItem={({ item, index }) => (
-                      <View className="TripOufit" style={styles.tripCard}>
-                        <TouchableOpacity
-                          onPress={() =>
-                            router.push({
-                              pathname: "/closet/outfitsHistory/tripOutfits",
-                              params: { id: item.id },
-                            })
-                          }
-                        >
-                          <View style={styles.tripHeader}>
-                            <View>
-                              <ThemedText style={{ fontSize: 18, fontWeight: 'bold' }}> {item.name} </ThemedText>
-                              <ThemedText style={{ color: '#555' }}>{item.dates}</ThemedText>
-                              <ThemedText style={{ fontStyle: 'italic', color: '#888' }}># Trip</ThemedText>
-                            </View>
-                            <View style={styles.outfitViewBadge}>
-                              <Ionicons name="eye-outline" size={18} color={theme.colors.text} />
-                            </View>
-                          </View>
-                        </TouchableOpacity>
 
-                        <View style={styles.previewRow}>
-                          <ScrollView
+                  {/* Loading spinner */}
+                  {loadingTrips ? (
+                    <View style={styles.centerState}>
+                      <ActivityIndicator
+                        size="large"
+                        color={theme.colors.tabIconSelected}
+                      />
+                      <ThemedText>Loading trips...</ThemedText>
+                    </View>
+                  ) : (
+                    <FlatList
+                      className="trip_Oufit_Details"
+                      data={trips.filter((trip) =>
+                        tripSearchText
+                          ? trip.name
+                              ?.toLowerCase()
+                              .includes(tripSearchText.toLowerCase())
+                          : true,
+                      )}
+                      keyExtractor={(trip, index) =>
+                        trip.id || index.toString()
+                      }
+                      style={{
+                        marginVertical: 15,
+                        paddingHorizontal: 15,
+                        width: "100%",
+                      }}
+                      ListEmptyComponent={() => (
+                        <View style={styles.centerState}>
+                          <Ionicons
+                            name="airplane-outline"
+                            size={52}
+                            color={theme.colors.tabIconSelected}
+                            style={{ opacity: 0.35 }}
+                          />
+                          <ThemedText
+                            style={{
+                              textAlign: "center",
+                              marginTop: 14,
+                              opacity: 0.5,
+                              lineHeight: 22,
+                            }}
+                          >
+                            No trips yet.{"\n"}Generate a trip outfit to get
+                            started!
+                          </ThemedText>
+                        </View>
+                      )}
+                      renderItem={({ item, index }) => (
+                        <View className="TripOufit" style={styles.tripCard}>
+                          <TouchableOpacity
+                            onPress={() =>
+                              router.push({
+                                pathname: "/closet/outfitsHistory/tripOutfits",
+                                params: { id: item.id },
+                              })
+                            }
+                          >
+                            <View style={styles.tripHeader}>
+                              <View style={{ flex: 1, marginRight: 10 }}>
+                                <ThemedText
+                                  style={{
+                                    fontSize: 18,
+                                    fontFamily: "Figtree-Bold",
+                                  }}
+                                  numberOfLines={1}
+                                >
+                                  {item.name}
+                                </ThemedText>
+                                <ThemedText
+                                  style={{
+                                    color: "#888",
+                                    fontSize: 13,
+                                    marginTop: 2,
+                                  }}
+                                >
+                                  {formatTripDateRange(item.dates)}
+                                </ThemedText>
+                              </View>
+                              <View style={styles.outfitViewBadge}>
+                                <Ionicons
+                                  name="eye-outline"
+                                  size={18}
+                                  color={theme.colors.text}
+                                />
+                              </View>
+                            </View>
+                          </TouchableOpacity>
+
+                          <View style={styles.previewRow}>
+                            <ScrollView
                               horizontal
                               showsHorizontalScrollIndicator={false}
-                              contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
-                          >
-                            {(item.outfits || []).map((outfit, index) => (
-                                <View key={outfit.suggestionId || index} style={{ width: 100, height: 100, borderRadius: 10, overflow: 'hidden' }}>
-                                  <OutfitCoverImage itemIds={outfit.itemIds || []} height={100} />
+                              contentContainerStyle={{
+                                gap: 10,
+                                paddingVertical: 10,
+                              }}
+                            >
+                              {(item.outfits || []).length === 0 ? (
+                                <View
+                                  style={{
+                                    width: 100,
+                                    height: 100,
+                                    borderRadius: 10,
+                                    backgroundColor: "#eee",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                  }}
+                                >
+                                  <Ionicons
+                                    name="shirt-outline"
+                                    size={28}
+                                    color="#ccc"
+                                  />
                                 </View>
-                            ))}
-                          </ScrollView>
-                        </View>
+                              ) : (
+                                (item.outfits || []).map(
+                                  (outfit, outfitIndex) => (
+                                    <View
+                                      key={outfit.suggestionId || outfitIndex}
+                                      style={{
+                                        width: 100,
+                                        height: 100,
+                                        borderRadius: 10,
+                                        overflow: "hidden",
+                                      }}
+                                    >
+                                      <OutfitCoverImage
+                                        itemIds={outfit.itemIds || []}
+                                        height={100}
+                                      />
+                                    </View>
+                                  ),
+                                )
+                              )}
+                            </ScrollView>
+                          </View>
 
-                        <View style={styles.tripFooter}>
-                          <Pressable onPress={() => handleShareTrip(item)} hitSlop={8}>
-                            <Ionicons name="share-social-outline" size={19} color={theme.colors.text} />
-                          </Pressable>
-                          <Pressable onPress={() => requestDeleteTrip(item.id)} hitSlop={8}>
-                            <Ionicons name="trash-outline" size={19} color={theme.colors.text} />
-                          </Pressable>
+                          <View style={styles.tripFooter}>
+                            <Pressable
+                              onPress={() => handleShareTrip(item)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="share-social-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                            <Pressable
+                              onPress={() => requestDeleteTrip(item.id)}
+                              hitSlop={8}
+                            >
+                              <Ionicons
+                                name="trash-outline"
+                                size={19}
+                                color={theme.colors.text}
+                              />
+                            </Pressable>
+                          </View>
                         </View>
-                      </View>
-                    )}
-                  />
+                      )}
+                    />
+                  )}
                 </>
               )}
-
               <OutfitDetailsModal
                 visible={isOutfitModalVisible}
                 outfit={selectedOutfit}
@@ -850,8 +992,12 @@ export default function ClosetScreen() {
                       Delete this outfit?
                     </ThemedText>
                     <ThemedText style={styles.confirmText}>
-                      This action cannot be undone. This outfit will be
-                      removed permanently.
+                      This action cannot be undone. This outfit will be removed
+                      permanently. {"\n"} If this outfit is part of any trips,
+                      it will be removed from those trips but the trips
+                      themselves will not be deleted. {"\n"}
+                      If shared, the outfit will no longer be accessible via the
+                      share link.
                     </ThemedText>
 
                     <View style={styles.confirmActions}>
@@ -923,7 +1069,9 @@ export default function ClosetScreen() {
                     </ThemedText>
                     <ThemedText style={styles.confirmText}>
                       This action cannot be undone. This trip and all its
-                      outfits will be removed permanently.
+                      outfits will be removed permanently. {"\n"}
+                      If shared, the trip and its outfits will no longer be
+                      accessible via the share link.
                     </ThemedText>
 
                     <View style={styles.confirmActions}>

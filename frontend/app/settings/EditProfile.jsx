@@ -187,6 +187,7 @@ function EditProfile() {
     mutationFn: updateUserProfile,
     onSuccess: async (updatedUser, variables) => {
       await AsyncStorage.setItem("username", updatedUser.username || "");
+      await AsyncStorage.setItem("name", updatedUser.firstName || ""); 
       await AsyncStorage.setItem(
         "profileImageUrl",
         updatedUser.profileImageUrl || "",
