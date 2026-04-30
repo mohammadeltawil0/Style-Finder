@@ -2,14 +2,15 @@ import { TouchableOpacity, View } from "react-native";
 import { ThemedText, ThemedView } from "../../components";
 import ProfilePic from "../../components/profile-pic";
 import { useTheme } from "@react-navigation/native";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSurvey } from "../../context/SurveyContext";
 import { useRouter } from "expo-router";
 
 function Profile() {
   const theme = useTheme();
-  const router = useRouter();  
+  const router = useRouter();
   const { resetAnswers } = useSurvey();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -20,22 +21,17 @@ function Profile() {
     router.replace("/");
   };
 
-  useEffect(() => {
-    const loadUsername = async () => {
-      const storedUsername = await AsyncStorage.getItem("username");
-      const storedName = await AsyncStorage.getItem("name");
-
-      if (storedUsername) {
-        setUsername(storedUsername);
-      }
-
-      if (storedName) {
-        setName(storedName);
-      }
-    };
-
-    loadUsername();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      const loadUsername = async () => {
+        const storedUsername = await AsyncStorage.getItem("username");
+        const storedName = await AsyncStorage.getItem("name");
+        if (storedUsername) setUsername(storedUsername);
+        if (storedName) setName(storedName);
+      };
+      loadUsername();
+    }, [])
+  );
 
   return (
     <ThemedView
@@ -75,7 +71,7 @@ function Profile() {
               fontFamily: theme.fonts.bold,
             }}
           >
-            {name} 
+            {name}
           </ThemedText>
         </View>
 
