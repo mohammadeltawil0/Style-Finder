@@ -915,7 +915,9 @@ export default function ClosetScreen() {
                     </ThemedText>
                     <ThemedText style={styles.confirmText}>
                       This action cannot be undone. This outfit will be removed
-                      permanently.
+                      permanently. {"\n"} If this outfit is part of any trips, it will be removed from those
+                      trips but the trips themselves will not be deleted. {"\n"}
+                      If shared, the outfit will no longer be accessible via the share link.
                     </ThemedText>
 
                     <View style={styles.confirmActions}>
@@ -987,7 +989,8 @@ export default function ClosetScreen() {
                     </ThemedText>
                     <ThemedText style={styles.confirmText}>
                       This action cannot be undone. This trip and all its
-                      outfits will be removed permanently.
+                      outfits will be removed permanently. {"\n"}
+                      If shared, the trip and its outfits will no longer be accessible via the share link.
                     </ThemedText>
 
                     <View style={styles.confirmActions}>
