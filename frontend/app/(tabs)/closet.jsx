@@ -28,6 +28,7 @@ import EditItemsModal from "../closet/edit-items-modal";
 import OutfitDetailsModal from "../closet/outfit-details-modal";
 import OutfitCoverImage from "../closet/outfit-cover-image";
 
+
 export default function ClosetScreen() {
   const [isItems, setIsItems] = useState(true);
   const [searchText, setSearchText] = useState("");
@@ -123,21 +124,22 @@ export default function ClosetScreen() {
     }
   };
 
-  // TODO: Uncommend where this is user, had it, may be changed when trip feature implemented, just want to make sure outfits are loading for now.
   const fetchUserTrips = async (id) => {
     try {
       const response = await apiClient.get(`/api/trips/user/${id}`);
       if (response.status === 200) {
-        const formattedTrips = response.data.map((trip) => ({
-          id: trip.tripId?.toString(),
-          name: trip.tripLocation || "Trip",
-          location: trip.tripLocation || "",
-          dates:
-            trip.startDate && trip.endDate
-              ? `${trip.startDate} - ${trip.endDate}`
-              : "",
-          outfits: trip.tripOutfits || [],
-        }));
+        const formattedTrips = response.data.map((trip) => {
+          const allOutfits = (trip.days || []).flatMap(day => day.outfits || []);
+          return {
+            id: trip.tripId?.toString(),
+            name: trip.tripLocation || "Trip",
+            location: trip.tripLocation || "",
+            dates: trip.startDate && trip.endDate
+                ? `${trip.startDate} - ${trip.endDate}`
+                : "",
+            outfits: allOutfits, // Assign the flattened outfits here!
+          };
+        });
         setDbTrips(formattedTrips);
       }
     } catch (error) {
@@ -213,7 +215,6 @@ export default function ClosetScreen() {
     }
   };
 
-  //TODO: Placeholder for  share code right now, just shares a text message. Can update to share outfit image or details later....
   const handleShareOutfit = async (outfit, index) => {
     try {
       const itemCount = outfit?.itemIds?.length || 0;
@@ -440,7 +441,7 @@ export default function ClosetScreen() {
   });
 
   // Uncomment when we have trip feature implemented, just want to make sure outfits are loading for now.
-  // const trips = dbTrips;
+  const trips = dbTrips;
 
   // Filter outfits by date search, then show newest outfits first.
   const filteredOutfits = dbOutfits
@@ -460,25 +461,6 @@ export default function ClosetScreen() {
     filteredOutfits.length % 2 !== 0
       ? [...filteredOutfits, { id: "empty", isEmpty: true }]
       : filteredOutfits;
-
-  const dummyTrips = [
-    {
-      id: "t1",
-      name: "NYC Trip",
-      location: "New York City",
-      dates: "04/19/26 - 04/24/26",
-      outfits: [{}, {}, {}, {}],
-    },
-  ];
-
-  const trips = dummyTrips.filter((trip) => {
-    if (!tripSearchText) return true;
-    const query = tripSearchText.toLowerCase();
-    return (
-      trip.name.toLowerCase().includes(query) ||
-      trip.location.toLowerCase().includes(query)
-    );
-  });
 
   const categories = ["all", "tops", "bottoms", "full_body", "outerwear"];
 
@@ -794,50 +776,36 @@ export default function ClosetScreen() {
                         >
                           <View style={styles.tripHeader}>
                             <View>
-                              <ThemedText> {item.name} </ThemedText>
-                              <ThemedText>{item.dates}</ThemedText>
-                              <ThemedText># Trip</ThemedText>
+                              <ThemedText style={{ fontSize: 18, fontWeight: 'bold' }}> {item.name} </ThemedText>
+                              <ThemedText style={{ color: '#555' }}>{item.dates}</ThemedText>
+                              <ThemedText style={{ fontStyle: 'italic', color: '#888' }}># Trip</ThemedText>
                             </View>
                             <View style={styles.outfitViewBadge}>
-                              <Ionicons
-                                name="eye-outline"
-                                size={18}
-                                color={theme.colors.text}
-                              />
+                              <Ionicons name="eye-outline" size={18} color={theme.colors.text} />
                             </View>
                           </View>
                         </TouchableOpacity>
 
                         <View style={styles.previewRow}>
                           <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator
+                              horizontal
+                              showsHorizontalScrollIndicator={false}
+                              contentContainerStyle={{ gap: 10, paddingVertical: 10 }}
                           >
                             {(item.outfits || []).map((outfit, index) => (
-                              <View key={index} style={styles.previewBox} />
+                                <View key={outfit.suggestionId || index} style={{ width: 100, height: 100, borderRadius: 10, overflow: 'hidden' }}>
+                                  <OutfitCoverImage itemIds={outfit.itemIds || []} height={100} />
+                                </View>
                             ))}
                           </ScrollView>
                         </View>
+
                         <View style={styles.tripFooter}>
-                          <Pressable
-                            onPress={() => handleShareTrip(item)}
-                            hitSlop={8}
-                          >
-                            <Ionicons
-                              name="share-social-outline"
-                              size={19}
-                              color={theme.colors.text}
-                            />
+                          <Pressable onPress={() => handleShareTrip(item)} hitSlop={8}>
+                            <Ionicons name="share-social-outline" size={19} color={theme.colors.text} />
                           </Pressable>
-                          <Pressable
-                            onPress={() => requestDeleteTrip(item.id)}
-                            hitSlop={8}
-                          >
-                            <Ionicons
-                              name="trash-outline"
-                              size={19}
-                              color={theme.colors.text}
-                            />
+                          <Pressable onPress={() => requestDeleteTrip(item.id)} hitSlop={8}>
+                            <Ionicons name="trash-outline" size={19} color={theme.colors.text} />
                           </Pressable>
                         </View>
                       </View>

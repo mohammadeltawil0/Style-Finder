@@ -5,6 +5,7 @@ import CS431.Style_Finder.model.*;
 import CS431.Style_Finder.model.enums.ItemType;
 import CS431.Style_Finder.repository.*;
 import CS431.Style_Finder.service.FeedbackService;
+import CS431.Style_Finder.service.WeatherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,23 +23,26 @@ public class FeedbackServiceImp implements FeedbackService {
     private final OutfitRepository outfitRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final WeatherService weatherService;
 
     @Transactional
     public void processFeedback(FeedbackDto feedback) {
         UserWeights vw = weightsDb.findUserWeightsByUser_UserId(feedback.getUserId())
                 .orElseThrow(() -> new RuntimeException("User weights not found."));
 
+        WeatherService.WeatherContext weather = weatherService.getWeatherForLocation(feedback.getLocation());
+
         // EXPLICIT MEMORY: Create a new CBR Case
         if (feedback.getAction().equals("SAVE")) {
             OutfitCase newMemory = new OutfitCase();
             newMemory.setUserId(feedback.getUserId());
-            newMemory.setTemperature(feedback.getContextTemp());
+            newMemory.setTemperature(weather.temp());
             newMemory.setOccasion(feedback.getContextOccasion());
             newMemory.setItemIds(feedback.getFinalItemIds());
+            newMemory.setWeather(weather.condition());
             newMemory.setRating(5);
             cbrDb.save(newMemory);
 
-            // increment timesWorn for every item in the saved outfit  - for each item id in outfit
             for (Long itemId : feedback.getFinalItemIds()) {
                 itemRepository.findById(itemId).ifPresent(item -> {
                     item.setTimesWorn(item.getTimesWorn() == null ? 1 : item.getTimesWorn() + 1);

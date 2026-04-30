@@ -160,6 +160,8 @@ public class UserServiceImpl implements UserService {
             .orElseThrow(() -> new InvalidCredentialsException());
 
         System.out.println("DB PASSWORD (hashed): " + user.getPassword());
+        String hashedPassword = passwordEncoder.encode(password);
+        System.out.println("PASSWORD (hashed): " + hashedPassword);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
             //System.out.println("PASSWORD MISMATCH");

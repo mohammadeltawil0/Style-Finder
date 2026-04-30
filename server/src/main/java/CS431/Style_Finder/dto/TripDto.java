@@ -3,6 +3,7 @@ package CS431.Style_Finder.dto;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Getter
 @Setter
@@ -15,4 +16,5 @@ public class TripDto {
     private String tripLocation;
     private LocalDate startDate;
     private LocalDate endDate;
+    private List<TripDayDto> days;
 }

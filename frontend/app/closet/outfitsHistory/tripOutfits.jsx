@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import { ThemedText, ThemedView } from "../../../components";
 import { apiClient } from "../../../scripts/apiClient";
+import OutfitCoverImage from "../../closet/outfit-cover-image";
 
 export default function TripOutfits() {
   const { id } = useLocalSearchParams();
@@ -30,94 +31,52 @@ export default function TripOutfits() {
   const [isDeletingTrip, setIsDeletingTrip] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
-  // TODO: implement error handling and empty states for no outfits, failed load, etc.
-  // Fetch trip details and outfits on mount, for now its comment once we have it working to avoid unnecessary backend calls while developing the UI
-  //   useEffect(() => {
-  //     const fetchTripData = async () => {
-  //       try {
-  //         setIsLoading(true);
-  //         const tripRes = await apiClient.get(`/api/trips/${id}`);
-  //         setTrip(tripRes.data);
-
-  //         const outfitsRes = await apiClient.get(`/api/trips/${id}/outfits`);
-  //         // Group outfits by trip_date
-  //         const grouped = {};
-  //         outfitsRes.data.forEach((entry) => {
-  //           const date = entry.tripDate;
-  //           if (!grouped[date]) grouped[date] = [];
-  //           grouped[date].push(entry.outfit);
-  //         });
-
-  //         const sorted = Object.entries(grouped)
-  //           .sort(([a], [b]) => new Date(a) - new Date(b))
-  //           .map(([date, outfits]) => ({ date, outfits }));
-
-  //         setOutfitsByDay(sorted);
-  //       } catch (error) {
-  //         console.error("Failed to fetch trip data:", error);
-  //       } finally {
-  //         setIsLoading(false);
-  //       }
-  //     };
-
-  //     if (id) fetchTripData();
-  //   }, [id]);
-
-  // Dummy data for testing UI while backend is in progress - remove when real API is wired up
   useEffect(() => {
-    // Dummy data — remove when real API is wired
-    const dummyTrip = {
-      tripLocation: "New York City",
-      startDate: "2026-04-20",
-      endDate: "2026-04-25",
+    const fetchTripDetails = async () => {
+      if (!id) return;
+      try {
+        setIsLoading(true);
+        const res = await apiClient.get(`/api/trips/${id}`);
+        const tripData = res.data;
+
+        setTrip(tripData);
+
+        const fetchedDays = tripData.days || [];
+        setOutfitsByDay(fetchedDays);
+
+        // 🟢 CORRECTED FIX: Reset the carousel index to the first day (Day 0)
+        if (fetchedDays.length > 0) {
+          setCurrentDayIndex(0);
+        }
+
+      } catch (error) {
+        console.error("Failed to load trip:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    const dummyOutfitsByDay = [
-      {
-        date: "2026-04-20",
-        outfits: [
-          { outfitId: 1, outfitItems: [] },
-          { outfitId: 2, outfitItems: [] },
-        ],
-      },
-      {
-        date: "2026-04-21",
-        outfits: [{ outfitId: 3, outfitItems: [] }],
-      },
-      {
-        date: "2026-04-22",
-        outfits: [
-          { outfitId: 4, outfitItems: [] },
-          { outfitId: 5, outfitItems: [] },
-        ],
-      },
-      {
-        date: "2026-04-23",
-        outfits: [{ outfitId: 6, outfitItems: [] }],
-      },
-      {
-        date: "2026-04-24",
-        outfits: [{ outfitId: 7, outfitItems: [] }],
-      },
-      {
-        date: "2026-04-25",
-        outfits: [{ outfitId: 8, outfitItems: [] }],
-      },
-    ];
-
-    setTrip(dummyTrip);
-    setOutfitsByDay(dummyOutfitsByDay);
-    setIsLoading(false); // skip the loading spinner immediately
-  }, []);
+    fetchTripDetails();
+  }, [id]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    const parts = dateStr.split("-");
+
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1;
+      const day = parseInt(parts[2]);
+
+      const date = new Date(year, month, day);
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+      }
+    }
   };
 
   const currentDay = outfitsByDay[currentDayIndex];
@@ -163,31 +122,33 @@ export default function TripOutfits() {
       <View style={{ flex: 1 }}>
         {/* Outfit Grid */}
         <ScrollView contentContainerStyle={styles.outfitGrid}>
-          {currentDay?.outfits.map((outfit, index) => (
-            <TouchableOpacity
-              key={outfit.outfitId || index}
-              style={styles.outfitBox}
-              onPress={() =>
-                router.push({
-                  pathname: "/closet/outfitsHistory/itemProperty",
-                  params: {
-                    outfitId: outfit.outfitId,
-                    isOutfit: "true",
-                  },
-                })
-              }
-            >
-              {outfit.outfitItems?.[0]?.item?.imageUrl ? (
-                <Image
-                  source={{ uri: outfit.outfitItems[0].item.imageUrl }}
-                  style={styles.outfitImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.outfitImagePlaceholder} />
-              )}
-            </TouchableOpacity>
-          ))}
+          {currentDay?.outfits.map((outfit, index) => {
+
+            const actualOutfitId = outfit.suggestionId
+                ? outfit.suggestionId.replace("trip-outfit-", "")
+                : outfit.outfitId;
+            return (
+                <TouchableOpacity
+                    key={outfit.suggestionId || index}
+                    style={styles.outfitBox}
+                    onPress={() => {
+                      // 🟢 RESTORED: Route directly to itemProperty
+                      router.push({
+                        pathname: "/closet/outfitsHistory/itemProperty",
+                        params: {
+                          outfitId: actualOutfitId,
+                          isOutfit: "true",
+                        },
+                      });
+                    }}
+                >
+                  <OutfitCoverImage
+                      itemIds={outfit.itemIds || []}
+                      height={"100%"}
+                  />
+                </TouchableOpacity>
+            );
+          })}
         </ScrollView>
 
         {/* Date + arrows */}

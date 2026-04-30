@@ -1,4 +1,5 @@
 package CS431.Style_Finder.model;
+import CS431.Style_Finder.model.enums.Weather;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.List;
@@ -18,7 +19,9 @@ public class OutfitCase {
 
     private int temperature;
     private String occasion;
-    private String weather;
+
+    @Enumerated(EnumType.STRING)
+    private Weather weather;
 
     @ElementCollection
     private List<Long> itemIds;

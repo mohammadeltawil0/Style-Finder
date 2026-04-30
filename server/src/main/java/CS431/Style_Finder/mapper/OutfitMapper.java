@@ -16,10 +16,8 @@ import java.util.stream.Collectors;
 public class OutfitMapper {
 
     private final ItemRepository itemRepository;
-
     private String coverImageUrl(Outfit outfit){
         String coverUrl = null;
-
         if (outfit.getOutfitItems() != null) {
             for (OutfitItem item : outfit.getOutfitItems()) {
                 if ("FULL_BODY".equals(item.getItem().getType().name())) {
@@ -34,7 +32,6 @@ public class OutfitMapper {
                 }
             }
         }
-
         return coverUrl;
     }
 
@@ -79,7 +76,6 @@ public class OutfitMapper {
                 .build();
     }
 
-    // New mapper for suggestion dto
     public OutfitSuggestionDto toDto(OutfitCase outfitCase) {
         OutfitSuggestionDto dto = new OutfitSuggestionDto();
         dto.setSuggestionId(UUID.randomUUID().toString());

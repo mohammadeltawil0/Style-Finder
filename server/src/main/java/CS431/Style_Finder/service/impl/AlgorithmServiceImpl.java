@@ -33,10 +33,13 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         UserWeights vw = weightsDb.findUserWeightsByUser_UserId(userId)
             .orElseGet(() -> createDefaultWeights(userId));
 
-        WeatherService.WeatherContext weather = weatherService.getWeatherForLocation(location);
+        String[] locationSplit = location.split("\\|");
+        String coordinates = locationSplit[0];
+
+        WeatherService.WeatherContext weather = weatherService.getWeatherForLocation(coordinates);
         String occasion = (event != null && !event.isEmpty()) ? event : "Casual";
 
-        // PHASE 1: Episodic Retrieval (CBR) - ONLY EXECUTES IF TOGGLE IS ON!
+        // Episodic Retrieval (CBR)
         if (useMemory) {
             List<OutfitCase> memories =
                     cbrDb.findMatchingMemory(userId, occasion,
@@ -51,7 +54,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             }
         }
 
-        // PHASE 2: Parametric Generation (Fills the rest, or does 100% of the work if useMemory is false)
+        // Parametric Generation
         if (hub.size() < 15) {
             List<Item> closet = wardrobeDb.findByUser_UserId(userId);
             List<OutfitSuggestionDto> generated = runParametricFallback(closet, vw, weather.temp(), occasion, 15 - hub.size());
@@ -287,5 +290,22 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     (c1 == ColorCategory.PURPLE && c2 == ColorCategory.YELLOW) || (c1 == ColorCategory.YELLOW && c2 == ColorCategory.PURPLE) ||
                     (c1 == ColorCategory.RED && c2 == ColorCategory.PINK) || (c1 == ColorCategory.PINK && c2 == ColorCategory.RED);
         }
+    }
+
+    @Override
+    public List<OutfitSuggestionDto> generateTripSuggestions(Long userId, String location, String event, int totalOutfits) {
+
+
+        List<OutfitSuggestionDto> pool = generateSuggestionHub(userId, location, event, false);
+        List<OutfitSuggestionDto> tripOutfits = new ArrayList<>();
+
+        if (pool == null || pool.isEmpty()) {
+            return tripOutfits;
+        }
+
+        for (int i = 0; i < totalOutfits; i++) {
+            tripOutfits.add(pool.get(i % pool.size()));
+        }
+        return tripOutfits;
     }
 }

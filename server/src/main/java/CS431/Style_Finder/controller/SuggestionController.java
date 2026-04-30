@@ -33,4 +33,16 @@ public class SuggestionController {
         System.out.println("Feedback received: " + feedback.getSuggestionId());
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/trip/{userId}")
+    public ResponseEntity<List<OutfitSuggestionDto>> getTripHub(
+            @PathVariable Long userId,
+            @RequestParam int totalOutfits,
+            @RequestBody FilterRequestDto filter) {
+
+        return ResponseEntity.ok(
+                algorithmService.generateTripSuggestions(userId, filter.getLocation(),
+                        filter.getEvent(), totalOutfits)
+        );
+    }
 }

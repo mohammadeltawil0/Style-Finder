@@ -49,7 +49,7 @@ public class WeatherServiceImpl implements WeatherService {
                 }
             }
         } catch (Exception e) {
-            // If anything fails (network error, bad JSON, malformed string), it safely logs and falls back to defaults
+            // If anything fails
             System.err.println("Failed to fetch weather from Open-Meteo. Using defaults. Error: " + e.getMessage());
         }
 
@@ -68,7 +68,6 @@ public class WeatherServiceImpl implements WeatherService {
         } else if ((code >= 71 && code <= 77) || code == 85 || code == 86) {
             return Weather.SNOWY; // Snow fall, Snow grains, Snow showers
         }
-
         // Default safe fallback if an unknown code is returned
         return Weather.SUNNY;
     }

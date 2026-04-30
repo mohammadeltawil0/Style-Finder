@@ -34,7 +34,6 @@ public class OutfitServiceImpl implements OutfitService {
         Outfit outfit = outfitMapper.toEntity(dto, user);
         Outfit saved = outfitRepository.save(outfit);
 
-        // Link items to the outfit if itemIds were provided
         if (dto.getItemIds() != null && !dto.getItemIds().isEmpty()) {
             for (Long itemId : dto.getItemIds()) {
                 Item item = itemRepository.findById(itemId)

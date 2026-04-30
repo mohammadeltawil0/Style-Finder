@@ -26,6 +26,7 @@ public class StyleFinderApplication {
                 admin.setUsername("hpAdmin@13");
                 admin.setPassword(encoder.encode("honey1Admin@26")); // change if needed
                 admin.setRole(Role.ADMIN);
+                admin.setEmail("admin@stylefinder.com");
                 userRepo.save(admin);
                 System.out.println("Admin user created");
             } else {

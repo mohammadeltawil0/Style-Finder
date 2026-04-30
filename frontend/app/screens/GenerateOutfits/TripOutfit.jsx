@@ -265,7 +265,10 @@ export default function TripOutfit() {
     try {
       let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        Alert.alert("Permission Denied", "Allow location access to use this feature.");
+        Alert.alert(
+            "Permission Denied",
+            "Allow location access to use this feature.",
+        );
         return;
       }
 
@@ -275,8 +278,11 @@ export default function TripOutfit() {
 
       // 2. Fetch coords (Using Balanced accuracy prevents hanging on Android/Emulators)
       const gps = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced
+        accuracy: Location.Accuracy.Balanced,
       });
+
+      const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+      setLocationCoords(coordString);
 
       // 3. Reverse geocode to get City, State, Country
       const geocode = await Location.reverseGeocodeAsync({
@@ -285,35 +291,35 @@ export default function TripOutfit() {
       });
 
       if (geocode && geocode.length > 0) {
-        const place = geocode;
+        const place = geocode[0];
         const city = place.city || place.subregion || place.district || "";
         const state = place.region || "";
         const country = place.country || "";
 
         // Filter out empty strings and join with commas
-        const formattedLocation = [city, state, country].filter(Boolean).join(", ");
+        const formattedLocation = [city, state, country]
+            .filter(Boolean)
+            .join(", ");
 
         // 4. If we successfully got a name, use it. Otherwise, fallback to coordinates!
         if (formattedLocation.trim() !== "") {
           setLocation(formattedLocation);
         } else {
-          const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
-          setLocationCoords(coordString); // Save exact coords for payload
-          setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString);
+          setLocation(coordString);
         }
       } else {
-        // Fallback if the geocoder completely fails to return an array
-        const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
-        setLocationCoords(coordString); // Save exact coords for payload
-        setLocation(formattedLocation.trim() !== "" ? formattedLocation : coordString);
+        setLocation(coordString);
       }
-
     } catch (error) {
       console.error("Location error:", error);
       setLocation(""); // Clear the "Locating..." text if it crashes
-      Alert.alert("Error", "Could not fetch current location. Please try typing it manually.");
+      Alert.alert(
+          "Error",
+          "Could not fetch current location. Please try typing it manually.",
+      );
     }
   };
+
 
   // Handles confirm date range to later show per-date outfit  controls and enable generation
   const handleConfirmRange = () => {
@@ -361,96 +367,76 @@ export default function TripOutfit() {
     return null;
   };
 
-  // COPIED AND SIMILAR VERSION OF REGULAR GENERATE CALL, PROBABLY WILL BE DIFFERENT ENDPOINT AND/OR PAYLOAD
-  const handleGenerateTrip = async () => {
-    if (!locationCoords) {
-      Alert.alert("Missing Fields", "Location is required.");
+  const handleGenerateAndSaveTrip = async () => {
+    if (!locationCoords && !location) {
+      Alert.alert("Missing", "Please select a location.");
       return;
     }
+    if (!dateConfig || Object.keys(dateConfig).length === 0) {
+      Alert.alert("Missing", "Please select your travel dates and configure outfit counts.");
+      return;
+    }
+
     try {
       setIsGenerating(true);
       const userId = await getUserId();
       const isoKeys = Object.keys(dateConfig).sort();
 
-      console.log("Trip Generate Request Here");
-      console.log("UserId:", userId);
-      console.log("Date config:", JSON.stringify(dateConfig, null, 2));
+      // 1. Calculate total outfits needed
+      const totalOutfits = isoKeys.reduce((sum, iso) => sum + (dateConfig[iso]?.outfitCount || 1), 0);
+      const finalLocationString = locationCoords
+          ? `${locationCoords}|${location}`
+          : location;
 
-      const results = await Promise.all(
-        isoKeys.map(iso => {
-          const finalLocation = locationCoords || location;
-          const { outfitCount } = dateConfig[iso];
-          const data = {
-            location: finalLocation,
-            event: formality,
-            weatherType,
-            tripDate: iso,
-            outfitsPerDate: outfitCount,
-            useMemory: false,
-            totalDays: isoKeys.length,
-          };
-          console.log(`Requesting ${outfitCount} outfits for ${iso}`);
+      const generatePayload = {
+        location: finalLocationString || location,
+        event: formality,
+        memory: false
+      };
 
-          // THIS MAY BE DIFFERENT ENDPOINT THAN REGULAR GENERATE I JUST COPIED FOR PLACEHOLDER
-          return apiClient.post(`/api/v1/suggestions/hub/${userId}`, data)
-            .then(res => ({ iso, suggestions: res.data?.slice(0, outfitCount) || [] }))
-            .catch(err => { console.error(`Date ${iso} failed:`, err); return { iso, suggestions: [] }; });
-        })
-      );
-      console.log("Results:", JSON.stringify(results, null, 2));
-      // const byDate = {};
-      // results.forEach(({ iso, suggestions }) => { byDate[iso] = suggestions; });
-      // setSuggestionsByDate(byDate);
+      // 2. Generate the outfits from the algorithm
+      const genRes = await apiClient.post(`/api/v1/suggestions/trip/${userId}?totalOutfits=${totalOutfits}`, generatePayload);
+      const flatOutfits = genRes.data || [];
 
-    } catch (error) {
-      Alert.alert("Error", "Generation failed. Please try again.");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  // COPIED AND SIMILAR VERSION OF REGULAR GENERATE CALL, PROBABLY WILL BE DIFFERENT ENDPOINT AND/OR PAYLOAD
-  const handleAction = async (actionType, editedItemIds = null) => {
-    if (!selectedOutfit || !activeDate) return;
-
-    try {
-      await apiClient.post(`/api/v1/suggestions/feedback`, {
-        userId: await getUserId(),
-        suggestionId: selectedOutfit.suggestionId,
-        originalItemIds: selectedOutfit.itemIds,
-        finalItemIds: editedItemIds || selectedOutfit.itemIds,
-        action: actionType,
-        contextTemp: 72,
-        contextOccasion: formality || "Casual",
-        tripDate: activeDate,
-      });
-
-      console.log("Feedback");
-      setSuggestionsByDate(prev => ({
-        ...prev,
-        [activeDate]: prev[activeDate].filter(o => o.suggestionId !== selectedOutfit.suggestionId)
-      }));
-      setIsModalVisible(false);
-      setSelectedOutfit(null);
-      setActiveDate(null);
-
-    } catch (error) {
-      const status = error?.response?.status;
-      if (status === 409) {
-        console.warn("Feedback already recorded; treating as success.");
-        setSuggestionsByDate((prev) => ({
-          ...prev,
-          [activeDate]: (prev[activeDate] || []).filter(
-            (o) => o.suggestionId !== selectedOutfit.suggestionId,
-          ),
-        }));
-        setIsModalVisible(false);
-        setSelectedOutfit(null);
-        setActiveDate(null);
+      if (flatOutfits.length === 0) {
+        Alert.alert("Error", "No outfits could be generated based on your wardrobe and these constraints.");
         return;
       }
 
-      Alert.alert("Error", "Failed to process your choice.");
+      // 3. Slice and format the outfits for the Trip payload
+      let currentIndex = 0;
+      const daysPayload = isoKeys.map((iso) => {
+        const amountForDay = dateConfig[iso]?.outfitCount || 1;
+        const dailyOutfits = flatOutfits.slice(currentIndex, currentIndex + amountForDay);
+        currentIndex += amountForDay;
+
+        return {
+          date: iso,
+          outfits: dailyOutfits
+        };
+      });
+
+      // 4. Save the Trip to the database
+      const savePayload = {
+        userId: userId,
+        tripLocation: location,
+        startDate: toISO(startDate),
+        endDate: toISO(endDate),
+        days: daysPayload
+      };
+
+      await apiClient.post("/api/trips", savePayload);
+
+      Alert.alert("Success", "Your trip has been generated and saved to your closet!");
+
+      // Optional: Reset the form or navigate away here
+      // setRangeConfirmed(false);
+
+    } catch (error) {
+      console.error("Trip generation/save error:", error);
+      Alert.alert("Error", "Failed to generate and save the trip. Please try again.");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -621,15 +607,23 @@ export default function TripOutfit() {
           </View>
         )}
 
-        {/* Generate button */}
-        <TouchableOpacity onPress={handleGenerateTrip} activeOpacity={0.7} disabled={isGenerating || !rangeConfirmed}
-          style={[styles.generateBtn, { backgroundColor: rangeConfirmed ? theme.colors.tabIconSelected : '#ccc' }]} >
-          {isGenerating ? <ActivityIndicator color="#fff" /> : <Text style={styles.generateBtnText}>{buttonText}</Text>}
+        <TouchableOpacity
+            onPress={handleGenerateAndSaveTrip}
+            activeOpacity={0.7}
+            disabled={isGenerating || !rangeConfirmed}
+            style={[styles.generateBtn, { backgroundColor: rangeConfirmed ? theme.colors.tabIconSelected : '#ccc', marginTop: 10 }]}
+        >
+          {isGenerating ? (
+              <ActivityIndicator color="#fff" />
+          ) : (
+              <Text style={styles.generateBtnText}>Generate & Save Trip</Text>
+          )}
         </TouchableOpacity>
+
         {!rangeConfirmed && (
-          <ThemedText style={[styles.helperText, { textAlign: 'center', marginTop: 6 }]}>
-            Confirm date range to enable generation
-          </ThemedText>
+            <ThemedText style={[styles.helperText, { textAlign: 'center', marginTop: 6 }]}>
+              Confirm date range to enable generation
+            </ThemedText>
         )}
       </View>
 
@@ -670,14 +664,6 @@ export default function TripOutfit() {
           </View>
         );
       })}
-      {/* Outfit Details Modal */}
-      <OutfitDetailsModal
-        visible={isModalVisible}
-        outfit={selectedOutfit}
-        onClose={() => { setIsModalVisible(false); setSelectedOutfit(null); setActiveDate(null); }}
-        onAction={handleAction}
-        theme={theme}
-      />
     </View>
   );
 }

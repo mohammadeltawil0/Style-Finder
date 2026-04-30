@@ -28,6 +28,9 @@ public class Outfit {
     @Column(name = "saved", nullable = false)
     private Boolean saved;
 
+    @Column(name = "trip_outfit")
+    private Boolean isTripOutfit;
+
     @Column(name = "comments")
     private String comments;
 

@@ -613,6 +613,9 @@ export default function RegularOutfit() {
         accuracy: Location.Accuracy.Balanced,
       });
 
+      const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
+      setLocationCoords(coordString);
+
       // 3. Reverse geocode to get City, State, Country
       const geocode = await Location.reverseGeocodeAsync({
         latitude: gps.coords.latitude,
@@ -620,7 +623,7 @@ export default function RegularOutfit() {
       });
 
       if (geocode && geocode.length > 0) {
-        const place = geocode;
+        const place = geocode[0];
         const city = place.city || place.subregion || place.district || "";
         const state = place.region || "";
         const country = place.country || "";
@@ -634,19 +637,10 @@ export default function RegularOutfit() {
         if (formattedLocation.trim() !== "") {
           setLocation(formattedLocation);
         } else {
-          const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
-          setLocationCoords(coordString); // Save exact coords for payload
-          setLocation(
-            formattedLocation.trim() !== "" ? formattedLocation : coordString,
-          ); // Display readable name
+          setLocation(coordString);
         }
       } else {
-        // Fallback if the geocoder completely fails to return an array
-        const coordString = `${gps.coords.latitude},${gps.coords.longitude}`;
-        setLocationCoords(coordString); // Save exact coords for payload
-        setLocation(
-          formattedLocation.trim() !== "" ? formattedLocation : coordString,
-        ); // Display readable name
+        setLocation(coordString);
       }
     } catch (error) {
       console.error("Location error:", error);
@@ -658,7 +652,6 @@ export default function RegularOutfit() {
     }
   };
 
-  // On screen focus, load any saved constraints from AsyncStorage (if user navigated back from different screen)
   useFocusEffect(
     useCallback(() => {
       const load = async () => {
@@ -761,7 +754,9 @@ export default function RegularOutfit() {
         setIsGenerating(false);
         return;
       }
-      const finalLocation = locationCoords || location;
+      const finalLocation = locationCoords
+          ? `${locationCoords}|${location}`
+          : location;
       const userId = await getUserId();
 
       const data = {
@@ -815,7 +810,7 @@ export default function RegularOutfit() {
       originalItemIds: selectedOutfit.itemIds,
       finalItemIds: finalItemIds || selectedOutfit.itemIds,
       action: actionType,
-      contextTemp: 72,
+      location: locationCoords,
       contextOccasion: formality || "Casual",
     });
   };

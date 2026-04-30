@@ -1,6 +1,4 @@
 package CS431.Style_Finder.model;
-
-
 import jakarta.persistence.*;
 import lombok.*;
 
