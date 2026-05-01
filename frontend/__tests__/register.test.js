@@ -74,7 +74,7 @@ const renderScreen = () =>
     </NavigationContainer>
   );
 
-// ✅ valid base input (passes ALL validation)
+//valid base input (passes ALL validation)
 const fillValidForm = (getByPlaceholderText) => {
   fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
   fireEvent.changeText(getByPlaceholderText("Email"), "stella@gmail.com");
@@ -137,7 +137,7 @@ describe("Register Screen (JWT)", () => {
     const { getByPlaceholderText, getByText } = renderScreen();
 
     fireEvent.changeText(getByPlaceholderText("First Name"), "Stella");
-    fireEvent.changeText(getByPlaceholderText("Email"), "bademail"); // ❌
+    fireEvent.changeText(getByPlaceholderText("Email"), "bademail"); 
     fireEvent.changeText(getByPlaceholderText("Username"), "stella123");
     fireEvent.changeText(getByPlaceholderText("Password"), "Password1@");
     fireEvent.changeText(

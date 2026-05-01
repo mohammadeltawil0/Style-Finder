@@ -21,6 +21,7 @@ afterEach(async () => {
   await new Promise(setImmediate);
 });
 
-afterAll(() => {
-  jest.useRealTimers();
+jest.spyOn(global, "setTimeout").mockImplementation((fn) => {
+  fn();
+  return 0;
 });
