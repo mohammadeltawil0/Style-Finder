@@ -1,3 +1,17 @@
+## [1.1.1] - 2026-05-01
+
+### Added
+- Full algorithm for outfit genration 
+- Share feature
+- Trip Optimizer Functionality 
+- Admin Feature
+- Profile Settings
+- Add home screen functionality
+
+
+### Fixed
+- Outfit generation errors (#158)
+
 ## [1.1.0] - 2026-04-02
 
 ### Added
