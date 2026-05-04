@@ -6,4 +6,5 @@ public interface WeatherService {
     WeatherContext getWeatherForLocation(String location);
 
     record WeatherContext(int temp, Weather condition) {}
+
 }
