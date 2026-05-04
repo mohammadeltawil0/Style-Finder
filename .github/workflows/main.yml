@@ -6,7 +6,7 @@ on:
     paths:
       - 'server/**'
   pull_request:
-    branches: [ "A_Local" ]
+    branches: [ "final-release" ]
     paths:
       - 'server/**'
 

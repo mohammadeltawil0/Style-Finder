@@ -13,6 +13,7 @@ import CS431.Style_Finder.model.enums.ItemType;
 import CS431.Style_Finder.repository.ItemRepository;
 import CS431.Style_Finder.repository.OutfitItemRepository;
 import CS431.Style_Finder.repository.UserRepository;
+import CS431.Style_Finder.service.HuggingFaceService;
 import CS431.Style_Finder.service.ItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -30,6 +31,7 @@ public class ItemServiceImpl implements ItemService {
     private final OutfitRepository outfitRepository;
     private final UserRepository userRepository;
     private final ItemMapper itemMapper;
+    private final HuggingFaceService huggingFaceService;
 
     @Override
     public ItemDto createItem(ItemDto dto) {
@@ -49,7 +51,14 @@ public class ItemServiceImpl implements ItemService {
             .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + dto.getUserId()));
 
         try {
+            // 1. Save the item
             Item saved = itemRepository.save(itemMapper.toEntity(dto, user));
+            // 2. Trigger the AI Background task
+            if (saved.getImageUrl() != null && !saved.getImageUrl().isEmpty()) {
+                String filename = saved.getImageUrl().substring(saved.getImageUrl().lastIndexOf('/') + 1);
+                huggingFaceService.processImageBackground(filename);
+            }
+
             return itemMapper.toDto(saved);
         } catch (Exception e) {
             throw new ItemCreationException("Failed to create item", e);

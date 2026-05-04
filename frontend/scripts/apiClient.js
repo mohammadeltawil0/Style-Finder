@@ -1,10 +1,10 @@
-import { API_URL } from '@env';
+// import { API_URL } from '@env';
 import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 
 // 1. Verify the URL loaded correctly (Debugging)
-// const API_URL = "https://api.stylefinder.tech";
+const API_URL = "https://api.stylefinder.tech";
 
 // If using web 
 // const API_URL = "http://localhost:8080";
